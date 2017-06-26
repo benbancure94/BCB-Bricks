@@ -1,6 +1,287 @@
 (function(_window_) {
 
 	/**** GLOBAL VARIABLES ****/
+	var letterTiles = 
+	[
+		{ 
+			letter: 'A', 
+			tiles: [
+				{ x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 }, 
+				{ x: 1, y: 0 }, { x: 1, y: 2 },
+				{ x: 2, y: 0 }, { x: 2, y: 2 },
+				{ x: 3, y: 0 }, { x: 3, y: 2 },
+				{ x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 }, { x: 4, y: 5 },  
+			], 
+		},
+		{ 
+			letter: 'B', 
+			tiles: [
+				{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 }, 
+				{ x: 1, y: 0 }, { x: 1, y: 2 }, { x: 1, y: 5 }, 
+				{ x: 2, y: 0 }, { x: 2, y: 2 }, { x: 2, y: 5 }, 
+				{ x: 3, y: 0 }, { x: 3, y: 2 }, { x: 3, y: 5 }, 
+				{ x: 4, y: 1 }, { x: 4, y: 3 }, { x: 4, y: 4 }, 
+			],
+			gameType: "race1",
+			speedTimeout: [300, 280, 260, 240, 220, 200, 180, 160, 140, 120]
+		},
+		{ 
+			letter: 'C', 
+			tiles: [
+				{ x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 },
+				{ x: 1, y: 0 }, { x: 1, y: 5 },
+				{ x: 2, y: 0 }, { x: 2, y: 5 },
+				{ x: 3, y: 0 }, { x: 3, y: 5 },
+				{ x: 4, y: 1 }, { x: 4, y: 4 },
+			],
+			gameType: "war1",
+			speedTimeout: [1000, 950, 900, 850, 800, 750, 700, 650, 600, 500]
+		},
+		{ 
+			letter: 'D', 
+			tiles: [
+				{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 },
+				{ x: 1, y: 0 }, { x: 1, y: 5 }, 
+				{ x: 2, y: 0 }, { x: 2, y: 5 }, 
+				{ x: 3, y: 0 }, { x: 3, y: 5 },
+				{ x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 }, 
+			],
+			gameType: "pinball",
+			speedTimeout: [250, 235, 220, 205, 190, 175, 160, 145, 130, 115] 
+		},
+		{ 
+			letter: 'E', 
+			tiles: [
+				{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 }, 
+				{ x: 1, y: 0 }, { x: 1, y: 2 }, { x: 1, y: 5 }, 
+				{ x: 2, y: 0 }, { x: 2, y: 2 }, { x: 2, y: 5 }, 
+				{ x: 3, y: 0 }, { x: 3, y: 2 }, { x: 3, y: 5 }, 
+				{ x: 4, y: 0 }, { x: 4, y: 2 }, { x: 4, y: 5 }, 
+			], 
+			gameType: "war2",
+			speedTimeout: [10000, 9000, 8000, 7000, 6500, 6000, 5500, 5000, 4500, 4000]
+		},
+		{ 
+			letter: 'F', 
+			tiles: [
+				{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 }, 
+				{ x: 1, y: 0 }, { x: 1, y: 2 },  
+				{ x: 2, y: 0 }, { x: 2, y: 2 }, 
+				{ x: 3, y: 0 }, { x: 3, y: 2 }, 
+				{ x: 4, y: 0 }
+			],  
+			gameType: "" 
+		},
+		{ 
+			letter: 'G', 
+			tiles: [
+				{ x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 },
+				{ x: 1, y: 0 }, { x: 1, y: 5 },
+				{ x: 2, y: 0 }, { x: 2, y: 3 }, { x: 2, y: 5 },
+				{ x: 3, y: 0 }, { x: 3, y: 3 }, { x: 3, y: 5 },
+				{ x: 4, y: 1 }, { x: 4, y: 3 }, { x: 4, y: 4 },
+			], 
+			gameType: "cross" 
+		},
+		{ 
+			letter: 'H', 
+			tiles: [
+				{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 },
+				{ x: 1, y: 2 }, 
+				{ x: 2, y: 2 }, 
+				{ x: 3, y: 2 }, 
+				{ x: 4, y: 0 }, { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 }, { x: 4, y: 5 },
+			],
+			gameType: "war3"
+		},
+		{ 
+			letter: 'I', 
+			tiles: [
+				{ x: 1, y: 0 }, { x: 1, y: 5 },
+				{ x: 2, y: 0 }, { x: 2, y: 1 }, { x: 2, y: 2 }, { x: 2, y: 3 }, { x: 2, y: 4 }, { x: 2, y: 5 }, 
+				{ x: 3, y: 0 }, { x: 3, y: 5 },
+			], 
+			gameType: "snake",
+			speedTimeout: [550, 500, 450, 400, 350, 300, 250, 200, 150, 100]
+		},
+		{ 
+			letter: 'J', 
+			tiles: [
+				{ x: 0, y: 3 }, { x: 0, y: 4 },
+				{ x: 1, y: 5 },
+				{ x: 2, y: 5 },
+				{ x: 3, y: 5 }, 
+				{ x: 4, y: 0 }, { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 }
+			],
+			gameType: "obstacle" },
+		{ 
+			letter: 'K', 
+			tiles: [
+				{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 }, 
+				{ x: 1, y: 2 },
+				{ x: 2, y: 2 },
+				{ x: 3, y: 1 }, { x: 3, y: 3 },
+				{ x: 4, y: 0 }, { x: 4, y: 4 }, { x: 4, y: 5 },
+			], 
+			gameType: "match",
+			speedTimeout: [1000, 940, 880, 820, 760, 700, 640, 580, 520, 460]
+		},
+		{ 
+			letter: 'L', 
+			tiles: [[2, 3, 4, 5, 6, 7], [7], [7], [7], [7]], 
+			tiles: [
+				{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 }, 
+				{ x: 1, y: 5 },
+				{ x: 2, y: 5 },
+				{ x: 3, y: 5 }, 
+				{ x: 4, y: 5 }, 
+			],
+			gameType: "race2",
+			speedTimeout: [300, 280, 260, 240, 220, 200, 180, 160, 140, 120] 
+		},
+		{ 
+			letter: 'M', 
+			tiles: [
+				{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 },
+				{ x: 1, y: 1 },
+				{ x: 2, y: 2 }, { x: 2, y: 3 },
+				{ x: 3, y: 1 },
+				{ x: 4, y: 0 }, { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 }, { x: 4, y: 5 },
+			] 
+		},
+		{ 
+			letter: 'N', 
+			tiles: [
+				{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 },
+				{ x: 1, y: 1 },
+				{ x: 2, y: 2 }, 
+				{ x: 3, y: 3 },
+				{ x: 4, y: 0 }, { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 }, { x: 4, y: 5 },
+			]
+		},
+		{ 
+			letter: 'O', 
+			tiles: [
+				{ x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, 
+				{ x: 1, y: 0 }, { x: 1, y: 5 },
+				{ x: 2, y: 0 }, { x: 2, y: 5 },
+				{ x: 3, y: 0 }, { x: 3, y: 5 },
+				{ x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 }
+			]
+		},
+		{ 
+			letter: 'P', 
+			tiles: [
+				{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 },
+				{ x: 1, y: 0 }, { x: 1, y: 2 },
+				{ x: 2, y: 0 }, { x: 2, y: 2 },
+				{ x: 3, y: 0 }, { x: 3, y: 2 },
+				{ x: 4, y: 1 }
+			]
+		},
+		{ 
+			letter: 'Q', 
+			tiles: [
+				{ x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, 
+				{ x: 1, y: 0 }, { x: 1, y: 5 },
+				{ x: 2, y: 0 }, { x: 2, y: 3 }, { x: 2, y: 5 },
+				{ x: 3, y: 0 }, { x: 3, y: 4 }, { x: 3, y: 5 },
+				{ x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 }, { x: 4, y: 5 },
+			]
+		},
+		{ 
+			letter: 'R', 
+			tiles: [
+				{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 }, 
+				{ x: 1, y: 0 }, { x: 1, y: 2 },
+				{ x: 2, y: 0 }, { x: 2, y: 2 },
+				{ x: 3, y: 0 }, { x: 3, y: 2 },
+				{ x: 4, y: 1 }, { x: 4, y: 3 }, { x: 4, y: 4 }, { x: 4, y: 5 },
+			] 
+		},
+		{ 
+			letter: 'S', 
+			tiles: [
+				{ x: 0, y: 1 }, { x: 0, y: 5 },
+				{ x: 1, y: 0 }, { x: 1, y: 2 }, { x: 1, y: 5 },
+				{ x: 2, y: 0 }, { x: 2, y: 2 }, { x: 2, y: 5 },
+				{ x: 3, y: 0 }, { x: 3, y: 2 }, { x: 3, y: 5 },
+				{ x: 4, y: 0 }, { x: 4, y: 3 }, { x: 4, y: 4 },
+			]
+		},
+		{ 
+			letter: 'T', 
+			tiles: [
+				{ x: 0, y: 0 }, 
+				{ x: 1, y: 0 }, 
+				{ x: 2, y: 0 }, { x: 2, y: 1 }, { x: 2, y: 2 }, { x: 2, y: 3 }, { x: 2, y: 4 }, { x: 2, y: 5 },
+				{ x: 3, y: 0 },
+				{ x: 4, y: 0 },
+			]
+		},
+		{ 
+			letter: 'U', 
+			tiles: [
+				{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 },
+				{ x: 1, y: 5 },
+				{ x: 2, y: 5 },
+				{ x: 3, y: 5 }, 
+				{ x: 4, y: 0 }, { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 }
+			],
+		},
+		{ 
+			letter: 'V', 
+			tiles: [
+				{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, 
+				{ x: 1, y: 4 },
+				{ x: 2, y: 5 },
+				{ x: 3, y: 4 }, 
+				{ x: 4, y: 0 }, { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }
+			]
+		},
+		{ 
+			letter: 'W', 
+			tiles: [
+				{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 },
+				{ x: 1, y: 5 },
+				{ x: 2, y: 3 }, { x: 2, y: 4 },
+				{ x: 3, y: 5 }, 
+				{ x: 4, y: 0 }, { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 }
+			]
+		},
+		{ 
+			letter: 'X', 
+			tiles: [
+				{ x: 0, y: 0 }, { x: 0, y: 4 }, { x: 0, y: 5 }, 
+				{ x: 1, y: 1 }, { x: 1, y: 3 },
+				{ x: 2, y: 2 },
+				{ x: 3, y: 1 }, { x: 3, y: 3 }, 
+				{ x: 4, y: 0 }, { x: 4, y: 4 }, { x: 4, y: 5 }
+			]
+		},
+		{ 
+			letter: 'Y', 
+			tiles: [
+				{ x: 0, y: 0 }, { x: 0, y: 1 }, 
+				{ x: 1, y: 2 },
+				{ x: 2, y: 3 }, { x: 2, y: 4 }, { x: 2, y: 5 }, 
+				{ x: 3, y: 2 }, 
+				{ x: 4, y: 0 }, { x: 4, y: 1 }
+			]
+		},
+		{ 
+			letter: 'Z', 
+			tiles: [
+				{ x: 0, y: 0 }, { x: 0, y: 4 }, { x: 0, y: 5 }, 
+				{ x: 1, y: 0 }, { x: 1, y: 3 }, { x: 1, y: 5 },
+				{ x: 2, y: 0 }, { x: 2, y: 2 }, { x: 2, y: 5 }, 
+				{ x: 3, y: 0 }, { x: 3, y: 1 }, { x: 3, y: 5 }, 
+				{ x: 4, y: 0 }, { x: 4, y: 5 }
+			]
+		},
+		{ letter: ' ' },
+	];
+
 	var brickGameModel = new function() {
 		var level = 1;
 		var speed = 1;
@@ -198,7 +479,8 @@
 			console.log(selectedGame);
 			 
 			fillScreen("white");
-			var brickLetter = new BrickObject(selectedGame.tiles, "black");
+			var letterTile = letterTiles.filter(function(l) { return l.letter == selectedGame.letter }).first().tiles;
+			var brickLetter = new BrickObject(letterTile, "black");
 			brickLetter.setLocation(2, 2);
 		}
 
@@ -379,13 +661,6 @@
 		mode: 0,
 		score: 0,
 		speedTimeout: [300, 280, 260, 240, 220, 200, 180, 160, 140, 120],
-		tiles: [
-			{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 }, 
-			{ x: 1, y: 0 }, { x: 1, y: 2 }, { x: 1, y: 5 }, 
-			{ x: 2, y: 0 }, { x: 2, y: 2 }, { x: 2, y: 5 }, 
-			{ x: 3, y: 0 }, { x: 3, y: 2 }, { x: 3, y: 5 }, 
-			{ x: 4, y: 1 }, { x: 4, y: 3 }, { x: 4, y: 4 }, 
-		],
 		load: function() {
 			var level = brickGameModel.getLevel();
 			var speedInMillis = brickGameModel.getSpeedInMillis();
@@ -511,13 +786,6 @@
 		mode: 0,
 		score: 0,
 		speedTimeout: [1000, 950, 900, 850, 800, 750, 700, 650, 600, 500],
-		tiles: [
-			{ x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 },
-			{ x: 1, y: 0 }, { x: 1, y: 5 },
-			{ x: 2, y: 0 }, { x: 2, y: 5 },
-			{ x: 3, y: 0 }, { x: 3, y: 5 },
-			{ x: 4, y: 1 }, { x: 4, y: 4 },
-		],
 		load: function() {
 			var level = brickGameModel.getLevel();
 			var speedInMillis = brickGameModel.getSpeedInMillis();
@@ -646,13 +914,6 @@
 		mode: 0,
 		score: 0,
 		speedTimeout: [250, 235, 220, 205, 190, 175, 160, 145, 130, 115],
-		tiles: [
-			{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 },
-			{ x: 1, y: 0 }, { x: 1, y: 5 }, 
-			{ x: 2, y: 0 }, { x: 2, y: 5 }, 
-			{ x: 3, y: 0 }, { x: 3, y: 5 },
-			{ x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 }, 
-		],
 		load: function() {
 			var level = brickGameModel.getLevel();
 			var speedInMillis = brickGameModel.getSpeedInMillis();
@@ -999,13 +1260,6 @@
 		mode: 0,
 		score: 0,
 		speedTimeout:  [10000, 9000, 8000, 7000, 6500, 6000, 5500, 5000, 4500, 4000],
-		tiles: [
-			{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 }, 
-			{ x: 1, y: 0 }, { x: 1, y: 2 }, { x: 1, y: 5 }, 
-			{ x: 2, y: 0 }, { x: 2, y: 2 }, { x: 2, y: 5 }, 
-			{ x: 3, y: 0 }, { x: 3, y: 2 }, { x: 3, y: 5 }, 
-			{ x: 4, y: 0 }, { x: 4, y: 2 }, { x: 4, y: 5 }, 
-		],
 		load: function() {
 			var level = brickGameModel.getLevel();
 			var speedInMillis = brickGameModel.getSpeedInMillis();
@@ -1150,13 +1404,6 @@
 		mode: 0,
 		score: 0,
 		speedTimeout: [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000],
-		tiles: [
-			{ x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 },
-			{ x: 1, y: 0 }, { x: 1, y: 5 },
-			{ x: 2, y: 0 }, { x: 2, y: 3 }, { x: 2, y: 5 },
-			{ x: 3, y: 0 }, { x: 3, y: 3 }, { x: 3, y: 5 },
-			{ x: 4, y: 1 }, { x: 4, y: 3 }, { x: 4, y: 4 },
-		], 
 		load: function() {
 			var level = brickGameModel.getLevel();
 			var speedInMillis = brickGameModel.getSpeedInMillis();
@@ -1258,13 +1505,6 @@
 		mode: 0,
 		score: 0,
 		speedTimeout: [550, 500, 450, 400, 350, 300, 250, 200, 150, 100],
-		tiles: [
-			{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 },
-			{ x: 1, y: 2 }, 
-			{ x: 2, y: 2 }, 
-			{ x: 3, y: 2 }, 
-			{ x: 4, y: 0 }, { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 }, { x: 4, y: 5 },
-		], 
 		load: function() {
 			var soldierObject = new BrickObject([{ x: 0, y: 1 }, { x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }]);
 			
@@ -1503,11 +1743,6 @@
 		mode: 0,
 		score: 0,
 		speedTimeout: [550, 500, 450, 400, 350, 300, 250, 200, 150, 100],
-		tiles: [
-			{ x: 1, y: 0 }, { x: 1, y: 5 },
-			{ x: 2, y: 0 }, { x: 2, y: 1 }, { x: 2, y: 2 }, { x: 2, y: 3 }, { x: 2, y: 4 }, { x: 2, y: 5 }, 
-			{ x: 3, y: 0 }, { x: 3, y: 5 },
-		], 
 		load: function() {
 			var gameLevelTiles = [
 			{
@@ -1797,14 +2032,7 @@
 		gameType: "match",
 		mode: 0,
 		score: 0,
-		speedTimeout: [1000, 940, 880, 820, 760, 700, 640, 580, 520, 460], 
-		tiles: [
-			{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 }, 
-			{ x: 1, y: 2 },
-			{ x: 2, y: 2 },
-			{ x: 3, y: 1 }, { x: 3, y: 3 },
-			{ x: 4, y: 0 }, { x: 4, y: 4 }, { x: 4, y: 5 },
-		], 
+		speedTimeout: [1000, 940, 880, 820, 760, 700, 640, 580, 520, 460],  
 		load: function() {
 			var brickTiles = [
 				[{ x: 0, y: 1 }],
@@ -1967,13 +2195,6 @@
 		mode: 0,
 		score: 0,
 		speedTimeout: [300, 280, 260, 240, 220, 200, 180, 160, 140, 120],
-		tiles: [
-			{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 }, 
-			{ x: 1, y: 5 },
-			{ x: 2, y: 5 },
-			{ x: 3, y: 5 }, 
-			{ x: 4, y: 5 },
-		],
 		load: function() {
 			var level = brickGameModel.getLevel();
 			var speedInMillis = brickGameModel.getSpeedInMillis();
