@@ -1271,6 +1271,8 @@
 			var level = brickGameModel.getLevel();
 			var speedInMillis = brickGameModel.getSpeedInMillis();
 
+			var position = 4;
+
 			var pinballTiles = [
 				[
 					{ x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 7 }, { x: 0, y: 8 },
@@ -1430,10 +1432,12 @@
 			]
 
 			var pinballTile = new BrickObject(pinballTiles[level - 1]);
+			var movePinballTileAnim = new Timer(movePinballTile, 2000);
+
 			pinballTile.setLocation(0, 0); 
 
 			function moveSoldier(direction) {
-				var position = direction == undefined ? 4: soldierObject.getLocation().y;
+				position = direction == undefined ? 4: soldierObject.getLocation().y;
 				
 				position = soldierObject.getLocation().y;
 
@@ -1452,6 +1456,17 @@
 				soldierObject.setLocation(18, position);
 			}
 
+			function movePinballTile() {
+				var location = pinballTile.getLocation();
+				pinballTile.setLocation(location.x + 1, location.y);
+			}
+
+			function fire() {
+				if (pinballTile.removeSideTile("right", position + 1)) {
+					Game.score();
+				}
+			}
+
 			this.keydownfunctions = {
 				onLeft: function() { 
 					
@@ -1466,7 +1481,7 @@
 					moveSoldier("Down");
 				},
 				onSpace: function() {
-					
+					fire();
 				},
 			}
 
@@ -1477,6 +1492,7 @@
 			}
 
 			moveSoldier();
+			movePinballTileAnim.start();
 
 			return this;
 		}
@@ -2088,6 +2104,8 @@
 
 		var _tileLocations = [];
 
+		this.overlapIndex = 0;
+
 		this.appearToggle = function() {
 			visible = !visible;
 			showHideTiles(visible);
@@ -2137,9 +2155,14 @@
 				else {
 					tiles[t].backColor = undefined;
 				}
-			}
+
+				// tiles[t].x = tileX;
+				// tiles[t].y = tileY;
+ 			}
 
 			X = x; Y = y;
+
+			console.log(tiles);
 		}
 		
 		this.remove = function() {
@@ -2190,25 +2213,16 @@
 		}
 
 		this.removeTile = function(left, top) {
+			return _removeTile(left, top);
+		}
 
-			var tileX, tileY;
-
-			tileX = left;
-			tileY = top;
-
-			var a = 0;
-			while(a < tiles.length && !(tiles[a].x + X == left && tiles[a].y + Y == top)) {
-				a++;
+		this.removeSideTile = function(side, position) {
+			var lastPosition = 0;
+			if (side == "right") {
+				var tilesRow = tiles.filter(function(tile) { return tile.y == position });
+				if (tilesRow != undefined && tilesRow.length > 0) lastPosition = tilesRow.last().x;
 			}
-
-			var isTileRemoved = tiles[a] != undefined;
-
-			if(isTileRemoved) {
-				changeTileColor(tileX, tileY, tiles[a].backColor);
-				tiles.splice(a, 1);
-			}
-			
-			return isTileRemoved;
+			return _removeTile(lastPosition, position);
 		}
 
 		this.tileCount = function() {
@@ -2243,6 +2257,9 @@
 				}
 			}, interval);
 		}
+		this.getSidePosition = function(side) {
+
+		}
 
 		function showHideTiles(_visible) {
 			var tileX, tileY;
@@ -2263,6 +2280,27 @@
 					}
 				}
 			}
+		}
+
+		function _removeTile(left, top) {
+			var tileX, tileY;
+
+			tileX = left;
+			tileY = top;
+
+			var a = 0;
+			while(a < tiles.length && !(tiles[a].x + X == left && tiles[a].y + Y == top)) {
+				a++;
+			}
+
+			var isTileRemoved = tiles[a] != undefined;
+
+			if(isTileRemoved) {
+				changeTileColor(tileX, tileY, tiles[a].backColor);
+				tiles.splice(a, 1);
+			}
+			
+			return isTileRemoved;
 		}
 
 		function getTileObject(x, y) {
