@@ -1139,8 +1139,6 @@
 				}
 
 				function changeDirection() {
-					// var pinballLocation = pinball.getLocation();
-					// var x = pinballLocation.x, y = pinballLocation.y;
 					switch(pinballDirection) {
 						case "BottomLeft":
 							if (x == 0 || hasPinballTile(x - 1, y)) {
@@ -2324,7 +2322,7 @@
 
 		var visible = true;
 
-	    tiles = JSON.parse(JSON.stringify(tiles));
+	    tiles = JSON.parse(JSON.stringify(ifUndefined(tiles, [])));
 
 		this.bt = tiles;
 
@@ -2342,8 +2340,18 @@
 		this.hide = function() {
 			showHideTiles(false);
 		}
-		this.getLocation = function() {
-			return { x: X, y: Y };
+		this.getLocation = function(corner) {
+			var a = 0, b = 0;
+			corner = ifUndefined(corner, "TopLeft");
+			switch (corner) {
+				case "TopLeft":
+					a = X; b = Y;
+					break;
+				case "TopRight":
+					//a = X; b = 
+					break;
+			}
+			return { x: a, y: b };
 		}
 		this.setLocation = function(x, y, _tiles) {
 			var tileX, tileY;
@@ -2391,7 +2399,12 @@
 
 			console.log(tiles);
 		}
-		
+		this.getTrimLocation = function(direction) {
+			switch(direction) {
+				case "TopLeft":
+					break;
+			}
+		}
 		this.remove = function() {
 			var tileX, tileY;
 			if(X != undefined && Y != undefined) {
@@ -2607,4 +2620,13 @@ Array.prototype.first = function() {
 }
 Array.prototype.last = function() {
 	return this[this.length - 1];
+}
+
+String.prototype.ifNullOrEmpty = function(replaceValue) {
+	var isNullOrEmpty = this == null || this == undefined;
+	return isNullOrEmpty ? replaceValue: this;
+}
+
+function ifUndefined(object, replaceValue) {
+	return object == undefined ? replaceValue: object;
 }
