@@ -537,6 +537,21 @@
 			var game = selectedGame.load();
 
 			gamekeydownfunctions = function() {
+
+				var keydownfunctions = game.keydownfunctions;
+
+				if(keydownfunctions.onTop.action == undefined) keydownfunctions.onTop.action = keydownfunctions.onTop;
+				if(keydownfunctions.onBottom.action == undefined) keydownfunctions.onBottom.action = keydownfunctions.onBottom;
+				if(keydownfunctions.onLeft.action == undefined) keydownfunctions.onLeft.action = keydownfunctions.onLeft;
+				if(keydownfunctions.onRight.action == undefined) keydownfunctions.onRight.action = keydownfunctions.onRight;
+				if(keydownfunctions.onSpace.action == undefined) keydownfunctions.onSpace.action = keydownfunctions.onSpace;
+
+				if(keydownfunctions.onTop.allowRepeat == undefined) keydownfunctions.onTop.allowRepeat = false;
+				if(keydownfunctions.onBottom.allowRepeat == undefined) keydownfunctions.onBottom.allowRepeat = false;
+				if(keydownfunctions.onLeft.allowRepeat == undefined) keydownfunctions.onLeft.allowRepeat = false;
+				if(keydownfunctions.onRight.allowRepeat == undefined) keydownfunctions.onRight.allowRepeat = false;
+				if(keydownfunctions.onSpace.allowRepeat == undefined) keydownfunctions.onSpace.allowRepeat = true;
+
 				switch(event.key) {
 					case "ArrowUp":
 						game.keydownfunctions.onTop();
@@ -551,7 +566,8 @@
 						game.keydownfunctions.onRight();
 						break;
 					case " ":
-						game.keydownfunctions.onSpace();
+						var onSpace = keydownfunctions.onSpace;
+						if(onSpace.allowRepeat || !event.repeat) onSpace.action();
 						break;
 					case "Enter":
 						//pause();
@@ -701,6 +717,7 @@
 				var lastCarLocation = cars.last().getLocation();
 				if (lastCarLocation.x > 12 && lastCarLocation.y == myCar.getLocation().y) {
 					moveRoadAnim.stop();
+					console.log("blinked over and over again");
 					blinkCrashedCars();
 				}
 				else {
@@ -743,6 +760,7 @@
 			}
 
 			function blinkCrashedCars() {
+
 				Game.blinkBrickObjects([cars.last(), myCar], 400, 3, Game.gameOver);
 			}
 
@@ -759,9 +777,14 @@
 				onBottom: function() { 
 					myCar.setLocation(16, 5);
 				},
-				onSpace: function() {
-					moveRoadAnim.setTimerInterval(50);
-				},
+				onSpace: {
+					action: function() {
+						console.log("boost");
+						moveRoadAnim.setTimerInterval(50);
+					},
+					allowRepeat: false
+				}
+				
 			}
 
 			this.keyupfunctions = {
@@ -1100,11 +1123,11 @@
 				switch(direction) {
 					case "Top":
 						pinballCatcher.setLocation(19, cy == 0 ? 0: cy - 1);
-						if(!isPinballThrown) pinball.setLocation(18, cy == 0 ? py: py - 1);
+						if(!isPinballThrown || isCaught) pinball.setLocation(18, cy == 0 ? py: py - 1);
 						break;
 					case "Bottom":
 						pinballCatcher.setLocation(19, cy == 6 ? 6: cy + 1);
-						if(!isPinballThrown) pinball.setLocation(18, cy == 6 ? py: py + 1);
+						if(!isPinballThrown || isCaught) pinball.setLocation(18, cy == 6 ? py: py + 1);
 						break;
 				}
 			}
@@ -1232,15 +1255,16 @@
 				onBottom: function() { 
 					moveCatcher("Bottom");
 				},
-				onSpace: function() {
-					if (isPinballThrown) {
-						pinballThrowAnim.setTimerInterval(50);
-					}
-					else {
-						isPinballThrown = true;
-						pinballThrowAnim.start();
-					}
-				},
+				onSpace: {
+					action: function() {
+						if (!isPinballThrown) {
+							isPinballThrown = true;
+							pinballThrowAnim.start();
+						}
+						pinballThrowAnim.setTimerInterval(20);
+					},
+					allowRepeat: false
+				}
 			}
 
 			this.keyupfunctions = {
@@ -1395,6 +1419,360 @@
 
 			return this;
 		},
+	},
+	{
+		letter: 'F',
+		gameType: "doublepinball",
+		mode: 0,
+		score: 0,
+		speedTimeout: [250, 235, 220, 205, 190, 175, 160, 145, 130, 115],
+		load: function() {
+			// DECLARATIONS
+			var level = brickGameModel.getLevel();
+			var speedInMillis = brickGameModel.getSpeedInMillis();
+
+			var pinballCatcher1 = new BrickObject([{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 } ]);
+			var pinballCatcher2 = new BrickObject([{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 } ]); 
+			var pinball = new BrickObject([{ x: 0, y: 0 }], "Green");
+
+			var isPinballThrown = false;
+
+			var pinballDirection = "BottomLeft";
+
+			var pinballTiles = [
+				[
+					{ x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 7 }, { x: 0, y: 8 },
+					{ x: 1, y: 1 }, { x: 1, y: 4 }, { x: 1, y: 6 }, { x: 1, y: 9 },
+					{ x: 2, y: 1 }, { x: 2, y: 5 }, { x: 2, y: 9 },
+					{ x: 3, y: 2 }, { x: 3, y: 8 },
+					{ x: 4, y: 3 }, { x: 4, y: 7 },
+					{ x: 5, y: 4 }, { x: 5, y: 6 },
+					{ x: 6, y: 5 },  
+				],
+
+				(function() {
+					var tiles = [];
+					for(var y = 0; y < 10; y++) {
+						tiles.push({ x: 2, y: y });
+						tiles.push({ x: 3, y: y });
+					}
+
+					for(var y = 0; y < 3; y++) {
+						tiles.push({ x: 1, y: y });
+						tiles.push({ x: 4, y: y });
+						tiles.push({ x: 1, y: 9 - y });
+						tiles.push({ x: 4, y: 9 - y });
+					}
+
+					for(var y = 1; y < 3; y++) {
+						tiles.push({ x: 0, y: y });
+						tiles.push({ x: 5, y: y });
+						tiles.push({ x: 0, y: 9 - y });
+						tiles.push({ x: 5, y: 9 - y });
+					}
+					return tiles;
+				})(),
+
+				(function() {
+					var tiles = [];
+
+					for (var x = 0; x < 7; x++) {
+						var i = -(Math.abs(3 - x) - 3);
+						for (var y = i; y < 10 - i; y++) {
+							tiles.push({ x: x, y: y });
+						}
+					}
+
+					return tiles;
+				})(),
+
+				(function() {
+					var tiles = [];
+
+					for (var x = 0; x < 7; x++) {
+						var i = Math.abs(3 - x);
+						for (var y = i; y < 10 - i; y++) {
+							tiles.push({ x: x, y: y });
+						}
+					}
+
+					return tiles;
+				})(),
+
+				(function(){
+					var tiles = [];
+
+					for (var x = 0; x < 7; x++) {   
+						var i = x % 2;
+						for (var y = i; y < 10; y+=2) {
+							tiles.push({ x: x, y: y });
+						}
+					}
+
+					return tiles;
+				})(),
+
+				(function(){
+					var tiles = [];
+
+					for (var x = 0; x < 3; x+=2) { 
+						for (var y = x; y < 10 - x; y++) {
+							tiles.push({ x: x, y: y });
+							tiles.push({ x: 7 - x, y: y });
+						}
+					}
+
+					for(var y = 0; y < 3; y+=2) {
+						for (var x = y + 1; x < 7 - y; x++) {
+							tiles.push({ x: x, y: y });
+							tiles.push({ x: x, y: 9 - y });
+						}
+					}
+
+					return tiles;
+				})(),
+
+				(function(){
+					var tiles = [];
+
+					for (var x = 1; x < 7; x++) { 
+						tiles.push({ x: x, y: 0 });
+						tiles.push({ x: x, y: 9 });
+					}
+
+					for (var y = 1; y < 9; y++) { 
+						tiles.push({ x: 0, y: y });
+						tiles.push({ x: 6, y: y });
+					}
+
+					for (var x = 0; x < 7; x++) {
+						var i = -(Math.abs(3 - x) - 3);
+						tiles.push({ x: x, y: i });
+						tiles.push({ x: x, y: 9 - i });
+					}
+
+					return tiles;
+				})(),
+
+				(function(){
+					var tiles = [];
+
+					for (var x = 2; x < 5; x++) { 
+						for (var y = 0; y < 10; y++) {
+							tiles.push({ x: x, y: y });
+						}
+					}
+					for (var x = 0; x < 2; x++) { 
+						for (var y = 3; y < 7; y++) {
+							tiles.push({ x: x, y: y });
+							tiles.push({ x: 5 + x, y: y });
+						}
+					}
+
+					return tiles;
+				})(),
+
+				(function(){
+					var tiles = [];
+
+					for (var x = 0; x < 7; x++) { 
+						for (var y = 0; y < 10; y++) {
+							if(Math.round(Math.random() * 100) % 2 == 0) tiles.push({ x: x, y: y });
+						}
+					}
+
+					return tiles;
+				})(),
+
+				(function(){
+					var tiles = [];
+
+					for (var x = 0; x < 7; x++) { 
+						for (var y = 0; y < 10; y++) {
+							tiles.push({ x: x, y: y });
+						}
+					}
+
+					return tiles;
+				})()
+			]
+
+			var pinballTile = new BrickObject(pinballTiles[level - 1]);
+
+			var pinballThrowAnim = new Timer(throwPinball, speedInMillis);
+
+			pinballTile.setLocation(7, 0);
+			pinballCatcher1.setLocation(0, 3);
+			pinballCatcher2.setLocation(19, 3);
+			pinball.setLocation(18, 5);
+
+			function moveCatcher(direction) {
+				var cy = pinballCatcher1.getLocation().y;
+				var pinballLocation = pinball.getLocation();
+				var px = pinballLocation.x;
+				var py = pinballLocation.y;
+				var isCaught = (px == 18 && hasPinballTile(px + 1, py)) || (px == 1 && hasPinballTile(px - 1, py));
+				switch(direction) {
+					case "Top":
+						pinballCatcher1.setLocation(0, cy == 0 ? 0: cy - 1);
+						pinballCatcher2.setLocation(19, cy == 0 ? 0: cy - 1);
+						if(!isPinballThrown || isCaught) {
+							pinball.setLocation(18, cy == 0 ? py: py - 1);
+						}
+						break;
+					case "Bottom":
+						pinballCatcher1.setLocation(0, cy == 6 ? 6: cy + 1);
+						pinballCatcher2.setLocation(19, cy == 6 ? 6: cy + 1);
+						if(!isPinballThrown || isCaught) pinball.setLocation(18, cy == 6 ? py: py + 1);
+						break;
+				}
+			}
+
+			function throwPinball() {
+				var pinballLocation = pinball.getLocation();
+				var x = pinballLocation.x, y = pinballLocation.y;
+				switch(pinballDirection) {
+					case "BottomLeft":
+						x -= 1; y += 1;
+						break;
+					case "TopLeft":
+						x -= 1; y -= 1;
+						break;
+					case "TopRight":
+						x += 1; y -= 1;
+						break;
+					case "BottomRight":
+						x += 1; y += 1;
+						break;
+					default:
+						break;
+				}
+				pinball.setLocation(x, y);
+
+				if(x == 19 || x == 0) {
+					pinballThrowAnim.stop();
+					blinkPinball();
+				}
+				else {
+					changeDirection();
+				}
+
+				function changeDirection() {
+					switch(pinballDirection) {
+						case "BottomLeft":
+							if (x == 0 || hasPinballTile(x - 1, y)) {
+								pinballDirection = "BottomRight";
+								changeDirection();
+							}
+							else if (y == 9 || hasPinballTile(x, y + 1)) {
+								pinballDirection = "TopLeft";
+								changeDirection();
+							}
+							else if (hasPinballTile(x - 1, y + 1)) {
+								pinballDirection = "TopRight";
+								changeDirection();
+							}
+							break;
+						case "TopLeft":
+							if (x == 0 || hasPinballTile(x - 1, y)) {
+								pinballDirection = "TopRight";
+								changeDirection();
+							}
+							else if (y == 0 || hasPinballTile(x, y - 1)) {
+								pinballDirection = "BottomLeft";
+								changeDirection();
+							}
+							else if (hasPinballTile(x - 1, y - 1)) {
+								pinballDirection = "BottomRight";
+								changeDirection();
+							}
+							break;
+						case "TopRight":
+							if (hasPinballTile(x + 1, y)) {
+								pinballDirection = "TopLeft";
+								changeDirection();
+							}
+							else if (y == 0 || hasPinballTile(x, y - 1)) {
+								pinballDirection = "BottomRight";
+								changeDirection();
+							}
+							else if (hasPinballTile(x + 1, y - 1)) {
+								pinballDirection = "BottomLeft";
+								changeDirection();
+							}
+							break;
+						case "BottomRight":
+							if (hasPinballTile(x + 1, y)) {
+								pinballDirection = "BottomLeft";
+								changeDirection();
+							}
+							else if (y == 9 || hasPinballTile(x, y + 1)) {
+								pinballDirection = "TopRight";
+								changeDirection();
+							}
+							else if (hasPinballTile(x + 1, y + 1)) {
+								pinballDirection = "TopLeft";
+								changeDirection();
+							}
+							break;
+						default:
+							break;
+					}
+				}
+			}
+
+			function hasPinballTile(x, y) {
+				var isCaught1 = pinballCatcher1.hasTile(x, y);
+				var isCaught2 = pinballCatcher2.hasTile(x, y);
+				var hasTile = pinballTile.hasTile(x, y);
+				if (hasTile) {
+					pinballTile.removeTile(x, y);
+					Game.score();
+					if (pinballTile.tileCount() == 0) {
+						Game.levelUp();
+					}
+				}
+				return isCaught1 || isCaught2 || hasTile;
+			}
+
+			function blinkPinball() {
+				Game.blinkBrickObjects([pinballCatcher1, pinballCatcher2, pinball], 400, 3, Game.gameOver);
+			}
+
+			// KEY FUNCTIONS
+			this.keydownfunctions = {
+				onLeft: function() { 
+					
+				},
+				onRight: function() { 
+					
+				},
+				onTop: function() { 
+					moveCatcher("Top");
+				},
+				onBottom: function() { 
+					moveCatcher("Bottom");
+				},
+				onSpace: {
+					action: function() {
+						if (!isPinballThrown) {
+							isPinballThrown = true;
+							pinballThrowAnim.start();
+						}
+						pinballThrowAnim.setTimerInterval(20);
+					},
+					allowRepeat: false
+				}
+			}
+
+			this.keyupfunctions = {
+				onSpace: function() {
+					pinballThrowAnim.setTimerInterval(speedInMillis);
+				},
+			}
+
+			return this;
+		}
 	},
 	{
 		letter: 'G',
@@ -1906,61 +2284,61 @@
 			    }
 			}
 
+
 			function crawlSnake() {
-				var snakeCrawlAnim = new Timer(function() {
-					var location = snakeObject[0].getLocation();
-					var foodLocation = foodObject.getLocation();
+			
+				var location = snakeObject[0].getLocation();
+				var foodLocation = foodObject.getLocation();
 
-					var x = location.x;
-					var y = location.y;
+				var x = location.x;
+				var y = location.y;
 
-					switch(direction) {
-						case "Right":
-							x++;
-							if(x == 20) x = 0;
-							break;
-						case "Up":
-							y--;
-							if(y < 0) y = 9;
-							break;
-						case "Left":
-							x--;
-							if(x < 0) x = 19;
-							break;
-						case "Down":
-							y++;
-							if(y == 10) y = 0;
-							break;
-						default:
-							break;
-					}
+				switch(direction) {
+					case "Right":
+						x++;
+						if(x == 20) x = 0;
+						break;
+					case "Up":
+						y--;
+						if(y < 0) y = 9;
+						break;
+					case "Left":
+						x--;
+						if(x < 0) x = 19;
+						break;
+					case "Down":
+						y++;
+						if(y == 10) y = 0;
+						break;
+					default:
+						break;
+				}
 
-					
-					if (isObstacle(x, y) || isSnakeTile(x, y)) {
-						snakeCrawlAnim.stop();
-						Game.blinkBrickObjects(snakeObject, 400, 3, Game.gameOver);
-					}
-					else {
-						if(x == foodLocation.x && y == foodLocation.y) {
-							loadFood();
-							var tailLocation = snakeObject[snakeObject.length - 1].getLocation();
-							snakeObject.push(new BrickObject([{ x: 0, y: 0 }], "Black"));
-							Game.score();
-						}
-						snakeObject[0].setLocation(x, y);
-						for (var i = 1; i < snakeObject.length; i++) {
-							var l = snakeObject[i].getLocation();
-							snakeObject[i].setLocation(location.x, location.y);
-							location = l;
-						}
-
-						location = snakeObject[0].getLocation();
-					}
-				}, speedInMillis);
-
-				snakeCrawlAnim.start();
 				
+				if (isObstacle(x, y) || isSnakeTile(x, y)) {
+					snakeCrawlAnim.stop();
+					Game.blinkBrickObjects(snakeObject, 400, 3, Game.gameOver);
+				}
+				else {
+					if(x == foodLocation.x && y == foodLocation.y) {
+						loadFood();
+						var tailLocation = snakeObject[snakeObject.length - 1].getLocation();
+						snakeObject.push(new BrickObject([{ x: 0, y: 0 }], "Black"));
+						Game.score();
+					}
+					snakeObject[0].setLocation(x, y);
+					for (var i = 1; i < snakeObject.length; i++) {
+						var l = snakeObject[i].getLocation();
+						snakeObject[i].setLocation(location.x, location.y);
+						location = l;
+					}
+
+					location = snakeObject[0].getLocation();
+				}
 			}
+
+			var snakeCrawlAnim = new Timer(crawlSnake, speedInMillis);
+			snakeCrawlAnim.start();
 
 			function loadObstacles() {
 				gameLevelTiles[brickGameModel.getLevel() - 1].obstacles.setLocation(0, 0);
@@ -2006,14 +2384,18 @@
 				onBottom: function() { 
 					changeDirection("Down");
 				},
-				onSpace: function() {
-					// loadFood();
-				},
+				onSpace: {
+					action: function() {
+						snakeCrawlAnim.setTimerInterval(50);
+					},
+					allowRepeat: false
+				}
+				
 			}
 
 			this.keyupfunctions = {
 				onSpace: function() {
-					
+					snakeCrawlAnim.setTimerInterval(speedInMillis);
 				},
 			}
 
@@ -2292,9 +2674,12 @@
 					var y = myCar.getLocation().y;
 					myCar.setLocation(16, y == 7 ? 7: y + 3);
 				},
-				onSpace: function() {
-					moveRoadAnim.setTimerInterval(50);
-				},
+				onSpace: {
+					action: function() {
+						moveRoadAnim.setTimerInterval(50);
+					},
+					allowRepeat: false
+				}
 			}
 
 			this.keyupfunctions = {
@@ -2396,8 +2781,6 @@
  			}
 
 			X = x; Y = y;
-
-			console.log(tiles);
 		}
 		this.getTrimLocation = function(direction) {
 			switch(direction) {
@@ -2489,8 +2872,14 @@
 				}
 			}, interval);
 		}
-		this.getSidePosition = function(side) {
+		this.getEdgePosition = function(side) {
+			switch(side) {
+				case "Right":
 
+					break;
+				default:
+					break;
+			}
 		}
 
 		function showHideTiles(_visible) {
@@ -2570,7 +2959,7 @@
 		};
 		this.stop = function() {
 			console.log("timer stopped")
-			clearTimeout(timer);
+			clearInterval(timer);
 			this.timeoutState = timeoutState.stopped;
 			_timeoutState = this.timeoutState;
 			
@@ -2582,12 +2971,10 @@
 			clearTimeout(timer);
 		};
 		this.setTimerInterval = function(interval) {
-			
 			console.log("interval set");
-			clearTimeout(timer);
+			clearInterval(timer);
 			if(_timeoutState == timeoutState.stopped) return;
 			timer = setTimeout(function() { 
-				console.log("stopped but sill running 000");
 				_timeoutFunction(); 
 				timer = setInterval(_timeoutFunction, _interval); 
 			}, 0);
