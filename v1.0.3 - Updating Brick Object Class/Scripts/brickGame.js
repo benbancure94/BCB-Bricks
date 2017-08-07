@@ -1616,14 +1616,12 @@
 					case "Top":
 						pinballCatcher1.setLocation(0, cy == 0 ? 0: cy - 1);
 						pinballCatcher2.setLocation(19, cy == 0 ? 0: cy - 1);
-						if(!isPinballThrown || isCaught) {
-							pinball.setLocation(18, cy == 0 ? py: py - 1);
-						}
+						if(!isPinballThrown || isCaught) pinball.setLocation(px, cy == 0 ? py: py - 1);
 						break;
 					case "Bottom":
 						pinballCatcher1.setLocation(0, cy == 6 ? 6: cy + 1);
 						pinballCatcher2.setLocation(19, cy == 6 ? 6: cy + 1);
-						if(!isPinballThrown || isCaught) pinball.setLocation(18, cy == 6 ? py: py + 1);
+						if(!isPinballThrown || isCaught) pinball.setLocation(px, cy == 6 ? py: py + 1);
 						break;
 				}
 			}
@@ -2072,6 +2070,10 @@
 				soldierObject.setLocation(18, position);
 			}
 
+			function fallTile() {
+
+			}
+
 			function movePinballTile() {
 				var location = pinballTile.getLocation();
 				pinballTile.setLocation(location.x + 1, location.y);
@@ -2430,12 +2432,12 @@
 
 			var brickInvasionAnim = new Timer(function() {
 
-				for (var i = 0; i < matchBrickObjects.length; i++) {
-					console.log("-----");
-					console.log(i);
-					console.log(matchBrickObjects[i].bt[0].screenX);
-					console.log(brickObjects[i].bt[0].screenX);
-				}
+				// for (var i = 0; i < matchBrickObjects.length; i++) {
+				// 	console.log("-----");
+				// 	console.log(i);
+				// 	console.log(matchBrickObjects[i].bt[0].screenX);
+				// 	console.log(brickObjects[i].bt[0].screenX);
+				// }
 
 				if(brickLocation == 15) {
 					brickInvasionAnim.stop();
@@ -2838,6 +2840,16 @@
 				if (tilesRow != undefined && tilesRow.length > 0) lastPosition = tilesRow.last().screenX;
 			}
 			return _removeTile(lastPosition, position);
+		}
+		this.removeTileByDirection = function(side, start) {
+			switch(side) {
+				case "Left":
+					switch(start) {
+						case "Large":
+							break;
+					}
+					break;
+			}
 		}
 
 		this.tileCount = function() {
