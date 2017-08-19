@@ -801,7 +801,7 @@
 				{ x: 0, y: 1 },
 				{ x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }, 
 				{ x: 2, y: 0 }, { x: 2, y: 1 }, { x: 2, y: 2 }, 
-			]);
+			], undefined, undefined, 2, 2);
 			tankTile.setLocation(10, 3);
 
 			function moveTank(x, y) {
@@ -828,7 +828,7 @@
 				onSpace: {
 					action: function() {
 						console.log("boost");
-						tankTile.rotate();
+						tankTile.rotate("Left");
 					},
 					allowRepeat: false
 				}
@@ -2914,9 +2914,12 @@
 	];
 
 	// BRICK GAME FUNCTIONS
-	function BrickObject(tiles, color, brickDirection) {
+	function BrickObject(tiles, color, brickDirection, _originX, _originY) {
 		var X = undefined;
 		var Y = undefined;
+
+		var originX = _originX == undefined ? 0: _originX;
+		var originY = _originY == undefined ? 0: _originY;
 
 		if (brickDirection == undefined) brickDirection = "Right";
 
@@ -3099,12 +3102,12 @@
 
 			var rotation = "rotate180";
 
-			var tileX, tileY;
+			var tileX = 0, tileY = 0, _tw = 0, _th = 0, x = 0, y = 0;
 
 			var brickSize = _getSize();
 
-			var originX = Math.round(brickSize.width / 2);
-			var originY = Math.round(brickSize.height / 2);
+			// var originX = Math.round(brickSize.width / 2);
+			// var originY = Math.round(brickSize.height / 2);
 
 			if (
 				(direction == "Right" && brickDirection == "Left") ||
@@ -3147,16 +3150,22 @@
 				}
 			}
 
+			if (rotation == "rotate180") {
+				x = (X + originX) - (brickSize.width - 1 - originX);
+				y = (Y + originY) - (brickSize.height - 1 - originY);
+				_tw = brickSize.width - 1;
+				_th = brickSize.height - 1;
+				originX = _tw - originX;
+				originY = _tw - originY;
+			}
+			else if (rotation == "clockwise") {
+
+			}
+
 			for(var t = 0; t < tiles.length; t++) {
-				var x = 0, y = 0;
 
-				if (rotation == "rotate180") {
-					x = X + tiles[t].x - brickSize.width - 1;
-					y = Y + tiles[t].y - brickSize.height - 1;
-
-					tiles[t].x = brickSize.width - tiles[t].x - 1;
-					tiles[t].y = brickSize.height - tiles[t].y - 1;
-				}
+				tiles[t].x = _tw - tiles[t].x;
+				tiles[t].y = _th - tiles[t].y;
 
 				tileX = x + tiles[t].x;
 				tileY = y + tiles[t].y;
@@ -3198,7 +3207,7 @@
 				if(tiles[i].y <= y_smallest) y_smallest = tiles[i].y;
 				if(tiles[i].y >= y_largest) y_largest = tiles[i].y ;
 			}
-			return { width: width, height: height };
+			return { width: x_largest + 1, height: y_largest + 1 };
 		}
 
 		function showHideTiles(_visible) {
