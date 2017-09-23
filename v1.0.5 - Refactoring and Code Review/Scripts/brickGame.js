@@ -562,28 +562,62 @@
 				}
 				return tiles;
 			})()
+		},
+		{
+			name: "verticalLine",
+			tiles: (function() {
+				var tiles = [];
+				for (var j = 0; j < 10; j++) {
+					tiles.push({ x: 0, y: j });
+				}
+				return tiles;
+			})()
 		}
 	];
 
 	var GameSound = new function() {
 
-		var audio;
+		var selectedAudio;
+
+		var audios = [
+			new Audio("Sounds/opening.wav"),
+			new Audio("Sounds/startgame.wav"),
+			new Audio("Sounds/move.wav"),
+			new Audio("Sounds/gameover.wav"),
+			new Audio("Sounds/hit.wav"),
+			new Audio("Sounds/move2.wav"),
+			new Audio("Sounds/fire.wav"),
+			new Audio("Sounds/levelUp.wav"),
+			new Audio("Sounds/score.wav")
+		];
 
 		// LOAD SOUNDS
 		this.opening = function() {
-			play("Sounds/opening.wav"); // sitsiritsit
+			play(0) // sitsiritsit
 		};
 		this.startGame = function() {
-			play("Sounds/startgame.wav");
+			play(1);
 		};
-		this.fire = function() {
-			play("Sounds/fire.wav");
+		this.move = function() {
+			play(2);
 		};
 		this.gameOver = function() {
-			play("Sounds/gameover.wav");
+			play(3);
 		};
 		this.explosion = function() {
-			play("Sounds/hit.wav");
+			play(4);
+		};
+		this.move2 = function() {
+			play(5);
+		};
+		this.fire = function() {
+			play(6);
+		};
+		this.levelUp = function() {
+			play(7);
+		};
+		this.score = function() {
+			play(8);
 		};
 
 		this.pause = function() {
@@ -593,10 +627,13 @@
 			if (audio == undefined) throw new Error("Error: undefined");
 		};
 
-		function play(soundPath) {
-			if (audio != undefined) audio.pause();
-			audio = new Audio(soundPath);
-			audio.play();
+		function play(index) {
+			if(selectedAudio != undefined && selectedAudio.currentTime > 0 && !selectedAudio.paused && !selectedAudio.ended && selectedAudio.readyState > 2) {
+				selectedAudio.pause();
+				selectedAudio.currentTime = 0;
+			}
+			selectedAudio = audios[index];
+			selectedAudio.play();
 		}
 	};
 
@@ -1064,15 +1101,17 @@
 				onUnload: function() { GameProperties() }
 			});
 		};
-		// this.levelUp = function() {
-		// 	var level = brickGameModel.getLevel() + 1;
-		// 	brickGameModel.setLevel(level > 10 ? 1: level);
-		// 	fillScreen("black");
-		// 	// var c = new Audio("C:/Users/benbancure94/Desktop/Mga Salansan/Mga Tugtugin/Nokia Tunes/nokia6210-01-thats_it.mp3"); 
-		// 	// c.play();
-		// 	var brickGameMarquee = new Marquee(function() { load() });
-		// 	brickGameMarquee.load("LEVEL UP");
-		// };
+		this.levelUp = function() {
+			var level = brickGameModel.getLevel() + 1;
+			brickGameModel.setLevel(level > 10 ? 1: level);
+			// var c = new Audio("C:/Users/benbancure94/Desktop/Mga Salansan/Mga Tugtugin/Nokia Tunes/nokia6210-01-thats_it.mp3"); 
+			// c.play();
+			GameSound.levelUp();
+			var brickGameMarquee = new Marquee({
+				word: "LEVEL UP",
+				onUnload: function() { this.load() }
+			});
+		};
 		this.blinkBrickObjects = function(params) {
 			var brickObjects = params.brickObjects
 			var interval = params.interval == undefined ? 1000: params.interval;
@@ -1685,12 +1724,15 @@
 					
 				},
 				onTop: function() { 
+					GameSound.move();
 					moveSoldier("Up");
 				},
 				onBottom: function() { 
+					GameSound.move();
 					moveSoldier("Down");
 				},
 				onSpace: function() {
+					GameSound.fire();
 					fire();
 				},
 			}
@@ -1711,18 +1753,16 @@
 		score: 0,
 		speedTimeout: [250, 235, 220, 205, 190, 175, 160, 145, 130, 115],
 		load: function($game) {
+			// DECLARATIONS
 			var level = brickGameModel.getLevel();
 			var speedInMillis = brickGameModel.getSpeedInMillis();
-
 			var pinballCatcher = $game.newBrickObject({ name: "quadrupleTiles", brickLocation: { x: 19, y: 3 } });
 			var pinball = $game.newBrickObject({ 
 				name: "singleTile", 
 				color: "Green",
 				brickLocation: { x: 18, y: 5 }
 			});
-
 			var isPinballThrown = false;
-
 			var pinballDirection = "BottomLeft";
 			var params = {};
 
@@ -1746,139 +1786,133 @@
 			}
 			
 			params.brickLocation = { x: 0, y: 0 };
+
 			var pinballTile = $game.newBrickObject(params);
+			var pinballThrowAnim = $game.newTimer({ func: throwPinball, interval: speedInMillis });
 
-			var pinballThrowAnim = new Timer(throwPinball, speedInMillis);
-
-
+			// FUNCTIONS
+			function hasPinballTile(x, y) {
+				var hasTile = pinballTile.hasTile(x, y);
+				if (hasTile) {
+					pinballTile.removeTile(x, y);
+					GameSound.fire();
+					$game.score();
+					if (pinballTile.tileCount() == 0) {
+						$game.stop();
+						$game.levelUp();
+					}
+				}
+				return hasTile;
+			}
+			function isPinballCaught(x, y) {
+				var catched = pinballCatcher.hasTile(x, y);
+				if (catched) GameSound.move();
+				return catched;
+			}
 			function moveCatcher(direction) {
 				var cy = pinballCatcher.getLocation().y;
 				var pinballLocation = pinball.getLocation();
 				var px = pinballLocation.x;
 				var py = pinballLocation.y;
-				var isCaught = px == 18 && hasPinballTile(px + 1, py);
 				switch(direction) {
 					case "Top":
+						if(isPinballCaught(px + 1, py)) pinball.setLocation(18, cy == 0 ? py: py - 1);
 						pinballCatcher.setLocation(19, cy == 0 ? 0: cy - 1);
-						if(!isPinballThrown || isCaught) pinball.setLocation(18, cy == 0 ? py: py - 1);
 						break;
 					case "Bottom":
+						if(isPinballCaught(px + 1, py)) pinball.setLocation(18, cy == 6 ? py: py + 1);
 						pinballCatcher.setLocation(19, cy == 6 ? 6: cy + 1);
-						if(!isPinballThrown || isCaught) pinball.setLocation(18, cy == 6 ? py: py + 1);
 						break;
 				}
 			}
-
 			function throwPinball() {
 				var pinballLocation = pinball.getLocation();
-				var x = pinballLocation.x, y = pinballLocation.y;
-				switch(pinballDirection) {
-					case "BottomLeft":
-						x -= 1; y += 1;
-						break;
-					case "TopLeft":
-						x -= 1; y -= 1;
-						break;
-					case "TopRight":
-						x += 1; y -= 1;
-						break;
-					case "BottomRight":
-						x += 1; y += 1;
-						break;
-					default:
-						break;
-				}
-				pinball.setLocation(x, y);
-
-				if(x == 19) {
-					pinballThrowAnim.stop();
-					blinkPinball();
+				var pinballX = pinballLocation.x, pinballY = pinballLocation.y;
+				
+				if(pinballX == 19) {
+					$game.stop();
+					GameSound.explosion();
+					$game.blinkBrickObjects({ 
+						brickObjects: [pinballCatcher, pinball],
+						interval: 400,
+						count: 3,
+						endFunction: $game.gameOver
+					});
 				}
 				else {
-					changeDirection();
-				}
+					var isBumped = false;
 
-				function changeDirection() {
+					do {
+						var oldPinballDirection = pinballDirection;
+
+						if (pinballDirection == "TopRight") {
+							if (pinballY == 0 || hasPinballTile(pinballX, pinballY - 1)) {
+								pinballDirection = "BottomRight";
+							}
+							else if (isPinballCaught(pinballX + 1, pinballY) || hasPinballTile(pinballX + 1, pinballY)) {
+								pinballDirection = "TopLeft";
+							}
+							else if (isPinballCaught(pinballX + 1, pinballY - 1) || hasPinballTile(pinballX + 1, pinballY - 1)) {
+								pinballDirection = "BottomLeft"
+							}
+						}
+						else if(pinballDirection == "BottomRight") {
+							if ((pinballY == 9 || hasPinballTile(pinballX, pinballY + 1))) {
+								pinballDirection = "TopRight";
+							}
+							else if (isPinballCaught(pinballX + 1, pinballY) || hasPinballTile(pinballX + 1, pinballY)) {
+								pinballDirection = "BottomLeft";
+							}
+							else if (isPinballCaught(pinballX + 1, pinballY + 1) || hasPinballTile(pinballX + 1, pinballY + 1)) {
+								pinballDirection = "TopLeft";
+							}
+						}
+						else if(pinballDirection == "BottomLeft") {
+							if ((pinballY == 9 || hasPinballTile(pinballX, pinballY + 1))) {
+								pinballDirection = "TopLeft";
+							}
+							else if (pinballX == 0 || hasPinballTile(pinballX - 1, pinballY)) {
+								pinballDirection = "BottomRight";
+							}
+							else if (hasPinballTile(pinballX - 1, pinballY + 1)) {
+								pinballDirection = "TopRight";
+							}
+						}
+						else if(pinballDirection == "TopLeft") {
+							if (pinballY == 0 || hasPinballTile(pinballX, pinballY - 1)) {
+								pinballDirection = "BottomLeft";
+							}
+							else if (pinballX == 0 || hasPinballTile(pinballX - 1, pinballY)) {
+								pinballDirection = "TopRight";
+							}
+							else if (hasPinballTile(pinballX - 1, pinballY - 1)) {
+								pinballDirection = "BottomRight";
+							}
+						}
+						isBumped = oldPinballDirection != pinballDirection;
+					} while(isBumped);
 					switch(pinballDirection) {
 						case "BottomLeft":
-							if (x == 0 || hasPinballTile(x - 1, y)) {
-								pinballDirection = "BottomRight";
-								changeDirection();
-							}
-							else if (y == 9 || hasPinballTile(x, y + 1)) {
-								pinballDirection = "TopLeft";
-								changeDirection();
-							}
-							else if (hasPinballTile(x - 1, y + 1)) {
-								pinballDirection = "TopRight";
-								changeDirection();
-							}
+							pinballX -= 1; pinballY += 1;
 							break;
 						case "TopLeft":
-							if (x == 0 || hasPinballTile(x - 1, y)) {
-								pinballDirection = "TopRight";
-								changeDirection();
-							}
-							else if (y == 0 || hasPinballTile(x, y - 1)) {
-								pinballDirection = "BottomLeft";
-								changeDirection();
-							}
-							else if (hasPinballTile(x - 1, y - 1)) {
-								pinballDirection = "BottomRight";
-								changeDirection();
-							}
+							pinballX -= 1; pinballY -= 1;
 							break;
 						case "TopRight":
-							if (hasPinballTile(x + 1, y)) {
-								pinballDirection = "TopLeft";
-								changeDirection();
-							}
-							else if (y == 0 || hasPinballTile(x, y - 1)) {
-								pinballDirection = "BottomRight";
-								changeDirection();
-							}
-							else if (hasPinballTile(x + 1, y - 1)) {
-								pinballDirection = "BottomLeft";
-								changeDirection();
-							}
+							pinballX += 1; pinballY -= 1;
 							break;
 						case "BottomRight":
-							if (hasPinballTile(x + 1, y)) {
-								pinballDirection = "BottomLeft";
-								changeDirection();
-							}
-							else if (y == 9 || hasPinballTile(x, y + 1)) {
-								pinballDirection = "TopRight";
-								changeDirection();
-							}
-							else if (hasPinballTile(x + 1, y + 1)) {
-								pinballDirection = "TopLeft";
-								changeDirection();
-							}
+							pinballX += 1; pinballY += 1;
 							break;
 						default:
 							break;
 					}
+					pinball.setLocation(pinballX, pinballY);
+					if (pinballX == 0 || pinballY == 0 || pinballY == 9) GameSound.move2();
 				}
 			}
 
-			function hasPinballTile(x, y) {
-				var isCaught = pinballCatcher.hasTile(x, y);
-				var hasTile = pinballTile.hasTile(x, y);
-				if (hasTile) {
-					pinballTile.removeTile(x, y);
-					Game.score();
-					if (pinballTile.tileCount() == 0) {
-						Game.levelUp();
-					}
-				}
-				return isCaught || hasTile;
-			}
-
-			function blinkPinball() {
-				Game.blinkBrickObjects([pinballCatcher, pinball], 400, 3, Game.gameOver);
-			}
-
+			// KEY FUNCTIONS
 			this.keydownfunctions = {
 				onLeft: function() { 
 					
@@ -1903,7 +1937,6 @@
 					allowRepeat: false
 				}
 			}
-
 			this.keyupfunctions = {
 				onSpace: function() {
 					pinballThrowAnim.setTimerInterval(speedInMillis);
@@ -2086,702 +2119,475 @@
 	// 		return this;
 	// 	},
 	// },
-	// {
-	// 	character: 'F',
-	// 	gameType: "doublepinball",
-	// 	mode: 5,
-	// 	score: 0,
-	// 	speedTimeout: [250, 235, 220, 205, 190, 175, 160, 145, 130, 115],
-	// 	load: function() {
-	// 		// DECLARATIONS
-	// 		var level = brickGameModel.getLevel();
-	// 		var speedInMillis = brickGameModel.getSpeedInMillis();
+	{
+		character: 'F',
+		gameType: "doublepinball",
+		mode: 5,
+		score: 0,
+		speedTimeout: [250, 235, 220, 205, 190, 175, 160, 145, 130, 115],
+		load: function($game) {
+			// DECLARATIONS
+			var level = brickGameModel.getLevel();
+			var speedInMillis = brickGameModel.getSpeedInMillis();
+			var pinballCatcher1 = $game.newBrickObject({ name: "quadrupleTiles", brickLocation: { x: 0, y: 3 } });
+			var pinballCatcher2 = $game.newBrickObject({ name: "quadrupleTiles", brickLocation: { x: 19, y: 3 } }); 
+			var pinball = $game.newBrickObject({ 
+				name: "singleTile", 
+				color: "Green",
+				brickLocation: { x: 18, y: 5 }
+			});
+			var isPinballThrown = false;
+			var pinballDirection = "BottomLeft";
 
-	// 		var pinballCatcher1 = new BrickObject({ tiles: [{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 } ] });
-	// 		var pinballCatcher2 = new BrickObject({ tiles: [{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 } ] }); 
-	// 		var pinball = new BrickObject({ tiles: [{ x: 0, y: 0 }], color: "Green" });
+			var params = {};
 
-	// 		var isPinballThrown = false;
-
-	// 		var pinballDirection = "BottomLeft";
-
-	// 		var pinballTiles = [
-	// 			[
-	// 				{ x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 7 }, { x: 0, y: 8 },
-	// 				{ x: 1, y: 1 }, { x: 1, y: 4 }, { x: 1, y: 6 }, { x: 1, y: 9 },
-	// 				{ x: 2, y: 1 }, { x: 2, y: 5 }, { x: 2, y: 9 },
-	// 				{ x: 3, y: 2 }, { x: 3, y: 8 },
-	// 				{ x: 4, y: 3 }, { x: 4, y: 7 },
-	// 				{ x: 5, y: 4 }, { x: 5, y: 6 },
-	// 				{ x: 6, y: 5 },  
-	// 			],
-
-	// 			(function() {
-	// 				var tiles = [];
-	// 				for(var y = 0; y < 10; y++) {
-	// 					tiles.push({ x: 2, y: y });
-	// 					tiles.push({ x: 3, y: y });
-	// 				}
-
-	// 				for(var y = 0; y < 3; y++) {
-	// 					tiles.push({ x: 1, y: y });
-	// 					tiles.push({ x: 4, y: y });
-	// 					tiles.push({ x: 1, y: 9 - y });
-	// 					tiles.push({ x: 4, y: 9 - y });
-	// 				}
-
-	// 				for(var y = 1; y < 3; y++) {
-	// 					tiles.push({ x: 0, y: y });
-	// 					tiles.push({ x: 5, y: y });
-	// 					tiles.push({ x: 0, y: 9 - y });
-	// 					tiles.push({ x: 5, y: 9 - y });
-	// 				}
-	// 				return tiles;
-	// 			})(),
-
-	// 			(function() {
-	// 				var tiles = [];
-
-	// 				for (var x = 0; x < 7; x++) {
-	// 					var i = -(Math.abs(3 - x) - 3);
-	// 					for (var y = i; y < 10 - i; y++) {
-	// 						tiles.push({ x: x, y: y });
-	// 					}
-	// 				}
-
-	// 				return tiles;
-	// 			})(),
-
-	// 			(function() {
-	// 				var tiles = [];
-
-	// 				for (var x = 0; x < 7; x++) {
-	// 					var i = Math.abs(3 - x);
-	// 					for (var y = i; y < 10 - i; y++) {
-	// 						tiles.push({ x: x, y: y });
-	// 					}
-	// 				}
-
-	// 				return tiles;
-	// 			})(),
-
-	// 			(function(){
-	// 				var tiles = [];
-
-	// 				for (var x = 0; x < 7; x++) {   
-	// 					var i = x % 2;
-	// 					for (var y = i; y < 10; y+=2) {
-	// 						tiles.push({ x: x, y: y });
-	// 					}
-	// 				}
-
-	// 				return tiles;
-	// 			})(),
-
-	// 			(function(){
-	// 				var tiles = [];
-
-	// 				for (var x = 0; x < 3; x+=2) { 
-	// 					for (var y = x; y < 10 - x; y++) {
-	// 						tiles.push({ x: x, y: y });
-	// 						tiles.push({ x: 7 - x, y: y });
-	// 					}
-	// 				}
-
-	// 				for(var y = 0; y < 3; y+=2) {
-	// 					for (var x = y + 1; x < 7 - y; x++) {
-	// 						tiles.push({ x: x, y: y });
-	// 						tiles.push({ x: x, y: 9 - y });
-	// 					}
-	// 				}
-
-	// 				return tiles;
-	// 			})(),
-
-	// 			(function(){
-	// 				var tiles = [];
-
-	// 				for (var x = 1; x < 7; x++) { 
-	// 					tiles.push({ x: x, y: 0 });
-	// 					tiles.push({ x: x, y: 9 });
-	// 				}
-
-	// 				for (var y = 1; y < 9; y++) { 
-	// 					tiles.push({ x: 0, y: y });
-	// 					tiles.push({ x: 6, y: y });
-	// 				}
-
-	// 				for (var x = 0; x < 7; x++) {
-	// 					var i = -(Math.abs(3 - x) - 3);
-	// 					tiles.push({ x: x, y: i });
-	// 					tiles.push({ x: x, y: 9 - i });
-	// 				}
-
-	// 				return tiles;
-	// 			})(),
-
-	// 			(function(){
-	// 				var tiles = [];
-
-	// 				for (var x = 2; x < 5; x++) { 
-	// 					for (var y = 0; y < 10; y++) {
-	// 						tiles.push({ x: x, y: y });
-	// 					}
-	// 				}
-	// 				for (var x = 0; x < 2; x++) { 
-	// 					for (var y = 3; y < 7; y++) {
-	// 						tiles.push({ x: x, y: y });
-	// 						tiles.push({ x: 5 + x, y: y });
-	// 					}
-	// 				}
-
-	// 				return tiles;
-	// 			})(),
-
-	// 			(function(){
-	// 				var tiles = [];
-
-	// 				for (var x = 0; x < 7; x++) { 
-	// 					for (var y = 0; y < 10; y++) {
-	// 						if(Math.round(Math.random() * 100) % 2 == 0) tiles.push({ x: x, y: y });
-	// 					}
-	// 				}
-
-	// 				return tiles;
-	// 			})(),
-
-	// 			(function(){
-	// 				var tiles = [];
-
-	// 				for (var x = 0; x < 7; x++) { 
-	// 					for (var y = 0; y < 10; y++) {
-	// 						tiles.push({ x: x, y: y });
-	// 					}
-	// 				}
-
-	// 				return tiles;
-	// 			})()
-	// 		]
-
-	// 		var pinballTile = new BrickObject({ tiles: pinballTiles[level - 1] });
-
-	// 		var pinballThrowAnim = new Timer(throwPinball, speedInMillis);
-
-	// 		pinballTile.setLocation(7, 0);
-	// 		pinballCatcher1.setLocation(0, 3);
-	// 		pinballCatcher2.setLocation(19, 3);
-	// 		pinball.setLocation(18, 5);
-
-	// 		function moveCatcher(direction) {
-	// 			var cy = pinballCatcher1.getLocation().y;
-	// 			var pinballLocation = pinball.getLocation();
-	// 			var px = pinballLocation.x;
-	// 			var py = pinballLocation.y;
-	// 			var isCaught = (px == 18 && hasPinballTile(px + 1, py)) || (px == 1 && hasPinballTile(px - 1, py));
-	// 			switch(direction) {
-	// 				case "Top":
-	// 					pinballCatcher1.setLocation(0, cy == 0 ? 0: cy - 1);
-	// 					pinballCatcher2.setLocation(19, cy == 0 ? 0: cy - 1);
-	// 					if(!isPinballThrown || isCaught) pinball.setLocation(px, cy == 0 ? py: py - 1);
-	// 					break;
-	// 				case "Bottom":
-	// 					pinballCatcher1.setLocation(0, cy == 6 ? 6: cy + 1);
-	// 					pinballCatcher2.setLocation(19, cy == 6 ? 6: cy + 1);
-	// 					if(!isPinballThrown || isCaught) pinball.setLocation(px, cy == 6 ? py: py + 1);
-	// 					break;
-	// 			}
-	// 		}
-
-	// 		function throwPinball() {
-	// 			var pinballLocation = pinball.getLocation();
-	// 			var x = pinballLocation.x, y = pinballLocation.y;
-	// 			switch(pinballDirection) {
-	// 				case "BottomLeft":
-	// 					x -= 1; y += 1;
-	// 					break;
-	// 				case "TopLeft":
-	// 					x -= 1; y -= 1;
-	// 					break;
-	// 				case "TopRight":
-	// 					x += 1; y -= 1;
-	// 					break;
-	// 				case "BottomRight":
-	// 					x += 1; y += 1;
-	// 					break;
-	// 				default:
-	// 					break;
-	// 			}
-	// 			pinball.setLocation(x, y);
-
-	// 			if(x == 19 || x == 0) {
-	// 				pinballThrowAnim.stop();
-	// 				blinkPinball();
-	// 			}
-	// 			else {
-	// 				changeDirection();
-	// 			}
-
-	// 			function changeDirection() {
-	// 				switch(pinballDirection) {
-	// 					case "BottomLeft":
-	// 						if (x == 0 || hasPinballTile(x - 1, y)) {
-	// 							pinballDirection = "BottomRight";
-	// 							changeDirection();
-	// 						}
-	// 						else if (y == 9 || hasPinballTile(x, y + 1)) {
-	// 							pinballDirection = "TopLeft";
-	// 							changeDirection();
-	// 						}
-	// 						else if (hasPinballTile(x - 1, y + 1)) {
-	// 							pinballDirection = "TopRight";
-	// 							changeDirection();
-	// 						}
-	// 						break;
-	// 					case "TopLeft":
-	// 						if (x == 0 || hasPinballTile(x - 1, y)) {
-	// 							pinballDirection = "TopRight";
-	// 							changeDirection();
-	// 						}
-	// 						else if (y == 0 || hasPinballTile(x, y - 1)) {
-	// 							pinballDirection = "BottomLeft";
-	// 							changeDirection();
-	// 						}
-	// 						else if (hasPinballTile(x - 1, y - 1)) {
-	// 							pinballDirection = "BottomRight";
-	// 							changeDirection();
-	// 						}
-	// 						break;
-	// 					case "TopRight":
-	// 						if (hasPinballTile(x + 1, y)) {
-	// 							pinballDirection = "TopLeft";
-	// 							changeDirection();
-	// 						}
-	// 						else if (y == 0 || hasPinballTile(x, y - 1)) {
-	// 							pinballDirection = "BottomRight";
-	// 							changeDirection();
-	// 						}
-	// 						else if (hasPinballTile(x + 1, y - 1)) {
-	// 							pinballDirection = "BottomLeft";
-	// 							changeDirection();
-	// 						}
-	// 						break;
-	// 					case "BottomRight":
-	// 						if (hasPinballTile(x + 1, y)) {
-	// 							pinballDirection = "BottomLeft";
-	// 							changeDirection();
-	// 						}
-	// 						else if (y == 9 || hasPinballTile(x, y + 1)) {
-	// 							pinballDirection = "TopRight";
-	// 							changeDirection();
-	// 						}
-	// 						else if (hasPinballTile(x + 1, y + 1)) {
-	// 							pinballDirection = "TopLeft";
-	// 							changeDirection();
-	// 						}
-	// 						break;
-	// 					default:
-	// 						break;
-	// 				}
-	// 			}
-	// 		}
-
-	// 		function hasPinballTile(x, y) {
-	// 			var isCaught1 = pinballCatcher1.hasTile(x, y);
-	// 			var isCaught2 = pinballCatcher2.hasTile(x, y);
-	// 			var hasTile = pinballTile.hasTile(x, y);
-	// 			if (hasTile) {
-	// 				pinballTile.removeTile(x, y);
-	// 				Game.score();
-	// 				if (pinballTile.tileCount() == 0) {
-	// 					Game.levelUp();
-	// 				}
-	// 			}
-	// 			return isCaught1 || isCaught2 || hasTile;
-	// 		}
-
-	// 		function blinkPinball() {
-	// 			Game.blinkBrickObjects([pinballCatcher1, pinballCatcher2, pinball], 400, 3, Game.gameOver);
-	// 		}
-
-	// 		// KEY FUNCTIONS
-	// 		this.keydownfunctions = {
-	// 			onLeft: function() { 
-					
-	// 			},
-	// 			onRight: function() { 
-					
-	// 			},
-	// 			onTop: function() { 
-	// 				moveCatcher("Top");
-	// 			},
-	// 			onBottom: function() { 
-	// 				moveCatcher("Bottom");
-	// 			},
-	// 			onSpace: {
-	// 				action: function() {
-	// 					if (!isPinballThrown) {
-	// 						isPinballThrown = true;
-	// 						pinballThrowAnim.start();
-	// 					}
-	// 					pinballThrowAnim.setTimerInterval(20);
-	// 				},
-	// 				allowRepeat: false
-	// 			}
-	// 		}
-
-	// 		this.keyupfunctions = {
-	// 			onSpace: function() {
-	// 				pinballThrowAnim.setTimerInterval(speedInMillis);
-	// 			},
-	// 		}
-
-	// 		return this;
-	// 	}
-	// },
-	// {
-	// 	character: 'G',
-	// 	gameType: "cross",
-	// 	mode: 6,
-	// 	score: 0,
-	// 	speedTimeout: [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000],
-	// 	load: function() {
-	// 		var level = brickGameModel.getLevel();
-	// 		var speedInMillis = brickGameModel.getSpeedInMillis();
-
-	// 		var crossers = [];
-	// 		var crosser;
+			if(level == 9) {
+				params = {
+					tiles: (function(){
+						var tiles = [];
+						for (var x = 0; x < 7; x++) { 
+							for (var y = 0; y < 10; y++) {
+								if(Math.round(Math.random() * 100) % 2 == 0) tiles.push({ x: x, y: y });
+							}
+						}
+						return tiles;
+					})()
+				}
+			}
+			else {
+				params = {
+					name: "pinballTileLevel" + level.toString()
+				}
+			}
 			
-	// 		function addCrosser() {
-	// 			crosser = new BrickObject({ tiles: [{ x: 0, y: 0 }], color: "Green" });
-	// 			crosser.setLocation(19, 5);
-	// 		}
+			params.brickLocation = { x: 7, y: 0 };
 
-	// 		function loadWalls() {
-	// 			for (var i = 2; i < 19; i += 2) {
-	// 				var wall = new BrickObject({
-	// 					tiles: function(){
-	// 						var w = [];
-	// 						for (var j = 0; j < 10; j++) {
-	// 							w.push({ x: 0, y: j });
-	// 						}
-	// 						return w;
-	// 					}()});
-	// 				wall.setLocation(i, 0);
-	// 			}
-	// 		}
+			var pinballTile = $game.newBrickObject(params);
+			var pinballThrowAnim = $game.newTimer({ func: throwPinball, interval: speedInMillis });
 
-	// 		function moveCrosser(direction) {
-	// 			var location = crosser.getLocation();
-
-	// 			switch(direction) {
-	// 				case "Left":
-	// 					crosser.setLocation(location.x == 0 ? 0: (location.x - (location.x == 1 ? 1: 2)), location.y);
-	// 					location = crosser.getLocation();
-	// 					if (location.x == 0) {
-	// 						var bumpedCrosser = crossers.filter(function(crosser) { return crosser.getLocation().y == location.y }).first();
-							
-	// 						if(bumpedCrosser == null || bumpedCrosser == undefined) {
-	// 							crossers.push(crosser);
-	// 							Game.score();
-	// 							if(crossers.length == 10) {
-	// 								Game.levelUp();
-	// 							}
-	// 							else {
-	// 								addCrosser();
-	// 							}
-	// 						}
-	// 						else {
-	// 							Game.blinkBrickObjects([bumpedCrosser, crosser], 400, 3, Game.gameOver);
-	// 						}
-	// 					}
-	// 					break;
-
-	// 				case "Right":
-	// 					crosser.setLocation(location.x == 19 ? 19: location.x + 2, location.y);
-	// 					break;
-	// 				case "Top":
-	// 					crosser.setLocation(location.x, location.y == 0 ? 0: location.y - 1);
-	// 					break;
-	// 				case "Bottom":
-	// 					crosser.setLocation(location.x, location.y == 9 ? 9: location.y + 1);
-	// 					break;
-	// 			}
-	// 		}
-
-
-	// 		loadWalls();
-
-	// 		this.keydownfunctions = {
-	// 			onLeft: function() { 
-	// 				moveCrosser("Left");
-	// 			},
-	// 			onRight: function() { 
-	// 				moveCrosser("Right");
-	// 			},
-	// 			onTop: function() {
-	// 				moveCrosser("Top");
-	// 			},
-	// 			onBottom: function() { 
-	// 				moveCrosser("Bottom");
-	// 			},
-	// 			onSpace: function() {
-	// 				moveCrosser("Left");
-	// 			},
-	// 		}
-
-	// 		this.keyupfunctions = {
-	// 			onSpace: function() {
-					
-	// 			},
-	// 		}
-
-	// 		addCrosser();
-
-	// 		return this;
-	// 	}
-	// },
-	// {
-	// 	character: 'H',
-	// 	gameType: "unnamed1",
-	// 	mode: 7,
-	// 	score: 0,
-	// 	speedTimeout: [550, 500, 450, 400, 350, 300, 250, 200, 150, 100],
-	// 	load: function() {
-	// 		var soldierObject = new BrickObject({ tiles: [{ x: 0, y: 1 }, { x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }] });
-			
-	// 		var level = brickGameModel.getLevel();
-	// 		var speedInMillis = brickGameModel.getSpeedInMillis();
-
-	// 		var position = 4;
-
-	// 		var pinballTiles = [
-	// 			[
-	// 				{ x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 7 }, { x: 0, y: 8 },
-	// 				{ x: 1, y: 1 }, { x: 1, y: 4 }, { x: 1, y: 6 }, { x: 1, y: 9 },
-	// 				{ x: 2, y: 1 }, { x: 2, y: 5 }, { x: 2, y: 9 },
-	// 				{ x: 3, y: 2 }, { x: 3, y: 8 },
-	// 				{ x: 4, y: 3 }, { x: 4, y: 7 },
-	// 				{ x: 5, y: 4 }, { x: 5, y: 6 },
-	// 				{ x: 6, y: 5 },  
-	// 			],
-
-	// 			(function() {
-	// 				var tiles = [];
-	// 				for(var y = 0; y < 10; y++) {
-	// 					tiles.push({ x: 2, y: y });
-	// 					tiles.push({ x: 3, y: y });
-	// 				}
-
-	// 				for(var y = 0; y < 3; y++) {
-	// 					tiles.push({ x: 1, y: y });
-	// 					tiles.push({ x: 4, y: y });
-	// 					tiles.push({ x: 1, y: 9 - y });
-	// 					tiles.push({ x: 4, y: 9 - y });
-	// 				}
-
-	// 				for(var y = 1; y < 3; y++) {
-	// 					tiles.push({ x: 0, y: y });
-	// 					tiles.push({ x: 5, y: y });
-	// 					tiles.push({ x: 0, y: 9 - y });
-	// 					tiles.push({ x: 5, y: 9 - y });
-	// 				}
-	// 				return tiles;
-	// 			})(),
-
-	// 			(function() {
-	// 				var tiles = [];
-
-	// 				for (var x = 0; x < 7; x++) {
-	// 					var i = -(Math.abs(3 - x) - 3);
-	// 					for (var y = i; y < 10 - i; y++) {
-	// 						tiles.push({ x: x, y: y });
-	// 					}
-	// 				}
-
-	// 				return tiles;
-	// 			})(),
-
-	// 			(function() {
-	// 				var tiles = [];
-
-	// 				for (var x = 0; x < 7; x++) {
-	// 					var i = Math.abs(3 - x);
-	// 					for (var y = i; y < 10 - i; y++) {
-	// 						tiles.push({ x: x, y: y });
-	// 					}
-	// 				}
-
-	// 				return tiles;
-	// 			})(),
-
-	// 			(function(){
-	// 				var tiles = [];
-
-	// 				for (var x = 0; x < 7; x++) {   
-	// 					var i = x % 2;
-	// 					for (var y = i; y < 10; y+=2) {
-	// 						tiles.push({ x: x, y: y });
-	// 					}
-	// 				}
-
-	// 				return tiles;
-	// 			})(),
-
-	// 			(function(){
-	// 				var tiles = [];
-
-	// 				for (var x = 0; x < 3; x+=2) { 
-	// 					for (var y = x; y < 10 - x; y++) {
-	// 						tiles.push({ x: x, y: y });
-	// 						tiles.push({ x: 7 - x, y: y });
-	// 					}
-	// 				}
-
-	// 				for(var y = 0; y < 3; y+=2) {
-	// 					for (var x = y + 1; x < 7 - y; x++) {
-	// 						tiles.push({ x: x, y: y });
-	// 						tiles.push({ x: x, y: 9 - y });
-	// 					}
-	// 				}
-
-	// 				return tiles;
-	// 			})(),
-
-	// 			(function(){
-	// 				var tiles = [];
-
-	// 				for (var x = 1; x < 7; x++) { 
-	// 					tiles.push({ x: x, y: 0 });
-	// 					tiles.push({ x: x, y: 9 });
-	// 				}
-
-	// 				for (var y = 1; y < 9; y++) { 
-	// 					tiles.push({ x: 0, y: y });
-	// 					tiles.push({ x: 6, y: y });
-	// 				}
-
-	// 				for (var x = 0; x < 7; x++) {
-	// 					var i = -(Math.abs(3 - x) - 3);
-	// 					tiles.push({ x: x, y: i });
-	// 					tiles.push({ x: x, y: 9 - i });
-	// 				}
-
-	// 				return tiles;
-	// 			})(),
-
-	// 			(function(){
-	// 				var tiles = [];
-
-	// 				for (var x = 2; x < 5; x++) { 
-	// 					for (var y = 0; y < 10; y++) {
-	// 						tiles.push({ x: x, y: y });
-	// 					}
-	// 				}
-	// 				for (var x = 0; x < 2; x++) { 
-	// 					for (var y = 3; y < 7; y++) {
-	// 						tiles.push({ x: x, y: y });
-	// 						tiles.push({ x: 5 + x, y: y });
-	// 					}
-	// 				}
-
-	// 				return tiles;
-	// 			})(),
-
-	// 			(function(){
-	// 				var tiles = [];
-
-	// 				for (var x = 0; x < 7; x++) { 
-	// 					for (var y = 0; y < 10; y++) {
-	// 						if(Math.round(Math.random() * 100) % 2 == 0) tiles.push({ x: x, y: y });
-	// 					}
-	// 				}
-
-	// 				return tiles;
-	// 			})(),
-
-	// 			(function(){
-	// 				var tiles = [];
-
-	// 				for (var x = 0; x < 7; x++) { 
-	// 					for (var y = 0; y < 10; y++) {
-	// 						tiles.push({ x: x, y: y });
-	// 					}
-	// 				}
-
-	// 				return tiles;
-	// 			})()
-	// 		]
-
-	// 		var pinballTile = new BrickObject({ tiles: pinballTiles[level - 1] });
-	// 		var movePinballTileAnim = new Timer(movePinballTile, 2000);
-
-	// 		pinballTile.setLocation(0, 0); 
-
-	// 		function moveSoldier(direction) {
-	// 			position = direction == undefined ? 4: soldierObject.getLocation().y;
+			// FUNCTIONS
+			function hasPinballTile(x, y) {
+				var hasTile = pinballTile.hasTile(x, y);
+				if (hasTile) {
+					pinballTile.removeTile(x, y);
+					GameSound.fire();
+					$game.score();
+					if (pinballTile.tileCount() == 0) {
+						pinballTile.remove();
+						$game.stop();
+						$game.levelUp();
+					}
+				}
+				return hasTile;
+			}
+			function isPinballCaught(x, y) {
+				var catched = pinballCatcher1.hasTile(x, y) || pinballCatcher2.hasTile(x, y);
+				if (catched) GameSound.move();
+				return catched;
+			}
+			function moveCatcher(direction) {
+				var cy = pinballCatcher1.getLocation().y;
+				var pinballLocation = pinball.getLocation();
+				var px = pinballLocation.x;
+				var py = pinballLocation.y;
 				
-	// 			position = soldierObject.getLocation().y;
+				switch(direction) {
+					case "Top":
+						if(isPinballCaught(px + 1, py)) pinball.setLocation(18, cy == 0 ? py: py - 1);
+						else if(isPinballCaught(px - 1, py)) pinball.setLocation(1, cy == 0 ? py: py - 1);
+						pinballCatcher1.setLocation(0, cy == 0 ? 0: cy - 1);
+						pinballCatcher2.setLocation(19, cy == 0 ? 0: cy - 1);
+						break;
+					case "Bottom":
+						if(isPinballCaught(px + 1, py)) pinball.setLocation(18, cy == 6 ? py: py + 1);
+						else if(isPinballCaught(px - 1, py)) pinball.setLocation(1, cy == 6 ? py: py + 1);
+						pinballCatcher1.setLocation(0, cy == 6 ? 6: cy + 1);
+						pinballCatcher2.setLocation(19, cy == 6 ? 6: cy + 1);
+						break;
+				}
+			}
+			function throwPinball() {
+				var pinballLocation = pinball.getLocation();
+				var pinballX = pinballLocation.x, pinballY = pinballLocation.y;
+				
+				if(pinballX == 0 || pinballX == 19) {
+					$game.stop();
+					GameSound.explosion();
+					$game.blinkBrickObjects({ 
+						brickObjects: [pinballX == 0 ? pinballCatcher1: pinballCatcher2, pinball],
+						interval: 400,
+						count: 3,
+						endFunction: $game.gameOver
+					});
+				}
+				else {
+					var isBumped = false;
 
-	// 			switch(direction) {
-	// 				case "Up":
-	// 					if(position > -1) position--;
-	// 					break;
-	// 				case "Down":
-	// 					if(position < 8) position++;
-	// 					break;
-	// 				default:
-	// 					position = 4;
-	// 					break;
-	// 			}
+					do {
+						var oldPinballDirection = pinballDirection;
 
-	// 			soldierObject.setLocation(18, position);
-	// 		}
+						if (pinballDirection == "TopRight") {
+							if (pinballY == 0 || hasPinballTile(pinballX, pinballY - 1)) {
+								pinballDirection = "BottomRight";
+							}
+							else if (isPinballCaught(pinballX + 1, pinballY) || hasPinballTile(pinballX + 1, pinballY)) {
+								pinballDirection = "TopLeft";
+							}
+							else if (isPinballCaught(pinballX + 1, pinballY - 1) || hasPinballTile(pinballX + 1, pinballY - 1)) {
+								pinballDirection = "BottomLeft"
+							}
+						}
+						else if(pinballDirection == "BottomRight") {
+							if ((pinballY == 9 || hasPinballTile(pinballX, pinballY + 1))) {
+								pinballDirection = "TopRight";
+							}
+							else if (isPinballCaught(pinballX + 1, pinballY) || hasPinballTile(pinballX + 1, pinballY)) {
+								pinballDirection = "BottomLeft";
+							}
+							else if (isPinballCaught(pinballX + 1, pinballY + 1) || hasPinballTile(pinballX + 1, pinballY + 1)) {
+								pinballDirection = "TopLeft";
+							}
+						}
+						else if(pinballDirection == "BottomLeft") {
+							if ((pinballY == 9 || hasPinballTile(pinballX, pinballY + 1))) {
+								pinballDirection = "TopLeft";
+							}
+							else if (isPinballCaught(pinballX - 1, pinballY) || hasPinballTile(pinballX - 1, pinballY)) {
+								pinballDirection = "BottomRight";
+							}
+							else if (isPinballCaught(pinballX - 1, pinballY + 1) || hasPinballTile(pinballX - 1, pinballY + 1)) {
+								pinballDirection = "TopRight";
+							}
+						}
+						else if(pinballDirection == "TopLeft") {
+							if (pinballY == 0 || hasPinballTile(pinballX, pinballY - 1)) {
+								pinballDirection = "BottomLeft";
+							}
+							else if (isPinballCaught(pinballX - 1, pinballY) || hasPinballTile(pinballX - 1, pinballY)) {
+								pinballDirection = "TopRight";
+							}
+							else if (isPinballCaught(pinballX - 1, pinballY - 1) || hasPinballTile(pinballX - 1, pinballY - 1)) {
+								pinballDirection = "BottomRight";
+							}
+						}
+						isBumped = oldPinballDirection != pinballDirection;
+					} while(isBumped);
+					switch(pinballDirection) {
+						case "BottomLeft":
+							pinballX -= 1; pinballY += 1;
+							break;
+						case "TopLeft":
+							pinballX -= 1; pinballY -= 1;
+							break;
+						case "TopRight":
+							pinballX += 1; pinballY -= 1;
+							break;
+						case "BottomRight":
+							pinballX += 1; pinballY += 1;
+							break;
+						default:
+							break;
+					}
+					pinball.setLocation(pinballX, pinballY);
+					if (pinballY == 0 || pinballY == 9) GameSound.move2();
+				}
+			}
 
-	// 		function fallTile() {
-
-	// 		}
-
-	// 		function movePinballTile() {
-	// 			var location = pinballTile.getLocation();
-	// 			pinballTile.setLocation(location.x + 1, location.y);
-	// 		}
-
-	// 		function fire() {
-	// 			if (pinballTile.removeSideTile("right", position + 1)) {
-	// 				Game.score();
-	// 			}
-	// 		}
-
-	// 		this.keydownfunctions = {
-	// 			onLeft: function() { 
+			// KEY FUNCTIONS
+			this.keydownfunctions = {
+				onLeft: function() { 
 					
-	// 			},
-	// 			onRight: function() { 
+				},
+				onRight: function() { 
 					
-	// 			},
-	// 			onTop: function() { 
-	// 				moveSoldier("Up");
-	// 			},
-	// 			onBottom: function() { 
-	// 				moveSoldier("Down");
-	// 			},
-	// 			onSpace: function() {
-	// 				fire();
-	// 			},
-	// 		}
+				},
+				onTop: function() { 
+					moveCatcher("Top");
+				},
+				onBottom: function() { 
+					moveCatcher("Bottom");
+				},
+				onSpace: {
+					action: function() {
+						if (!isPinballThrown) {
+							isPinballThrown = true;
+							pinballThrowAnim.start();
+						}
+						pinballThrowAnim.setTimerInterval(20);
+					},
+					allowRepeat: false
+				}
+			}
+			this.keyupfunctions = {
+				onSpace: function() {
+					pinballThrowAnim.setTimerInterval(speedInMillis);
+				},
+			}
+		}
+	},
+	{
+		character: 'G',
+		gameType: "cross",
+		mode: 6,
+		score: 0,
+		speedTimeout: [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000],
+		load: function($game) {
+			// DECLARATIONS
+			var level = brickGameModel.getLevel();
+			var speedInMillis = brickGameModel.getSpeedInMillis();
+			var crossers = [];
+			var crosser;
+			
+			// FUNCTIONS
+			function addCrosser() {
+				crosser = $game.newBrickObject({ name: "singleTile", color: "Green" , brickLocation: { x: 19, y: 5 }});
+			}
+			function loadWalls() {
+				for (var i = 2; i < 19; i += 2) {
+					$game.newBrickObject({
+						name: "verticalLine",
+						brickLocation: { x: i, y: 0 }
+					});
+				}
+			}
+			function moveCrosser(direction) {
+				var location = crosser.getLocation();
 
-	// 		this.keyupfunctions = {
-	// 			onSpace: function() {
+				GameSound.move();
+				switch(direction) {
+					case "Left":
+						location.x = location.x == 1 ? 0: location.x - 2;
+						crosser.setLocation(location.x, location.y);
+						if (location.x == 0) {
+							var bumpedCrosser = $game.willBeOverlappedBy(crosser).first();
+							
+							if(bumpedCrosser == null || bumpedCrosser == undefined) {
+								crossers.push(crosser);
+								GameSound.score();
+								$game.score();
+								if(crossers.length == 10) Game.levelUp();
+								else addCrosser();
+							}
+							else {
+								GameSound.explosion();
+								$game.blinkBrickObjects({
+									brickObjects: [bumpedCrosser, crosser],
+									interval: 400,
+									count: 3,
+									endFunction: $game.gameOver
+								});
+							}
+						}
+						break;
+					case "Right":
+						crosser.setLocation(location.x == 19 ? 19: location.x + 2, location.y);
+						break;
+					case "Top":
+						crosser.setLocation(location.x, location.y == 0 ? 0: location.y - 1);
+						break;
+					case "Bottom":
+						crosser.setLocation(location.x, location.y == 9 ? 9: location.y + 1);
+						break;
+					default:
+						break;
+				}
+			}
+
+			// KEY FUNCTIONS
+			this.keydownfunctions = {
+				onLeft: function() { 
+					moveCrosser("Left");
+				},
+				onRight: function() { 
+					moveCrosser("Right");
+				},
+				onTop: function() {
+					moveCrosser("Top");
+				},
+				onBottom: function() { 
+					moveCrosser("Bottom");
+				},
+				onSpace: function() {
+					moveCrosser("Left");
+				},
+			}
+			this.keyupfunctions = {
+				onSpace: function() {
 					
-	// 			},
-	// 		}
+				},
+			}
 
-	// 		moveSoldier();
-	// 		movePinballTileAnim.start();
+			// INITIALIZATION
+			loadWalls();
+			addCrosser();
+		}
+	},
+	{
+		character: 'H',
+		gameType: "unnamed1",
+		mode: 7,
+		score: 0,
+		speedTimeout: [2000, 1900, 1800, 1700, 1600, 1500, 1400, 1300, 1200, 1100],
+		load: function($game) {
+			// DECLARATIONS
+			var position = 4;
+			var soldierObject = $game.newBrickObject({ name: "soldierTile", brickLocation: { x: 18, y: 4 } });
+			var level = brickGameModel.getLevel();
+			var speedInMillis = brickGameModel.getSpeedInMillis();
+			var params = {}, fallenTiles = [];
 
-	// 		return this;
-	// 	}
-	// },
+			if(level == 9) {
+				params = {
+					tiles: (function(){
+						var tiles = [];
+						for (var x = 0; x < 7; x++) { 
+							for (var y = 0; y < 10; y++) {
+								if(Math.round(Math.random() * 100) % 2 == 0) tiles.push({ x: x, y: y });
+							}
+						}
+						return tiles;
+					})()
+				}
+			}
+			else {
+				params = {
+					name: "pinballTileLevel" + level.toString()
+				}
+			}
+			
+			params.brickLocation = { x: 0, y: 0 };
+
+			var pinballTile = $game.newBrickObject(params);
+			var movePinballTileAnim = $game.newTimer({ func: movePinballTile, interval: speedInMillis });
+
+			// FUNCTIONS
+			function levelUp() {
+				pinballTile.remove();
+				$game.stop();
+				$game.levelUp();
+			}
+			function gameOver(fallenTile) {
+				$game.stop();
+				if(fallenTile != undefined) $game.disappear(fallenTile);
+				GameSound.explosion();
+				$game.blinkBrickObjects({ 
+					brickObjects: [soldierObject],
+					interval: 400,
+					count: 3,
+					endFunction: $game.gameOver
+				});
+			}
+			function moveSoldier(direction) {
+				position = soldierObject.getLocation().y;
+				switch(direction) {
+					case "Up":
+						if (position > -1) position--;
+						break;
+					case "Down":
+						if (position < 8) position++;
+						break;
+					default:
+						break;
+				}
+				soldierObject.setLocation(18, position);
+			}
+			function movePinballTile() {
+				var location = pinballTile.getLocation();
+				var brickWidth = pinballTile.getSize().width - 1;
+
+				if (location.x + brickWidth == 17) gameOver();
+				else {
+					pinballTile.setLocation(location.x + 1, location.y);
+
+					var fallenTileDirection = Math.floor(Math.random() * 100) % 2 == 0 ? "TopRight": "BottomRight";
+					var fallTileAnim = $game.newTimer({ func: function() { 
+						fallTile(fallenTile) 
+					}, interval: 100 });
+					var fallenTile = pinballTile.getSideTiles("Right").first();
+					
+					pinballTile.removeTile(fallenTile.screenX, fallenTile.screenY);
+					if (pinballTile.tileCount() == 0) $game.disappear(pinballTile);
+					fallenTile = $game.newBrickObject({
+						name: "singleTile",
+						brickLocation: { x: fallenTile.screenX, y: fallenTile.screenY },
+						color: "red",
+						onRemove: fallTileAnim.stop
+					});
+					fallenTiles.push(fallenTile);
+					fallTileAnim.start();
+
+					function fallTile(fallenTile) {
+						var location = fallenTile.getLocation();
+
+						location.x++;
+						if (location.y == 0) fallenTileDirection = "BottomRight";
+						else if (location.y == 9) fallenTileDirection = "TopRight";
+						switch (fallenTileDirection) {
+							case "TopRight":
+								location.y--;
+								break;
+							case "BottomRight":
+								location.y++;
+								break;
+						}
+						if (soldierObject.hasTile(location.x, location.y) || soldierObject.hasTile(location.x, location.y)) gameOver(fallenTile);
+						else {
+							fallenTile.setLocation(location.x, location.y);
+							if (location.x == 20) {
+								$game.disappear(fallenTile);
+								fallenTiles.splice(fallenTiles.indexOf(fallenTile), 1);
+								if (pinballTile.tileCount() == 0) levelUp();
+							}
+						}
+					}
+				}	
+			}
+			function fire() {
+				var fallenTile = fallenTiles.filter(function(ft) { 
+					return ft.getLocation().y == position + 1;
+				}).sort(function(t1, t2) {
+					return t1.x - t2.x;
+				}).first();
+
+				GameSound.fire();
+				if (fallenTile != undefined) {
+					$game.disappear(fallenTile);
+					fallenTiles.splice(fallenTiles.indexOf(fallenTile), 1);
+					$game.score();
+				}
+				else if (pinballTile.removeSideTile("Right", position + 1)) {
+					$game.score();
+				}
+				if (pinballTile.tileCount() == 0 && fallenTiles.length == 0) levelUp();
+			}
+
+			// KEY FUNCTIONS
+			this.keydownfunctions = {
+				onLeft: function() { 
+					
+				},
+				onRight: function() { 
+					
+				},
+				onTop: function() { 
+					moveSoldier("Up");
+				},
+				onBottom: function() { 
+					moveSoldier("Down");
+				},
+				onSpace: function() {
+					fire();
+				},
+			}
+			this.keyupfunctions = {
+				onSpace: function() {
+					
+				},
+			}
+
+			movePinballTileAnim.start();
+		}
+	},
 	// {
 	// 	character: 'I',
 	// 	gameType: "snake",
@@ -3252,131 +3058,115 @@
 	// 		return this;
 	// 	},
 	// },
-	// {
-	// 	character: 'L',
-	// 	gameType: "race2",
-	// 	mode: 10,
-	// 	score: 0,
-	// 	speedTimeout: [300, 280, 260, 240, 220, 200, 180, 160, 140, 120],
-	// 	load: function() {
-	// 		var level = brickGameModel.getLevel();
-	// 		var speedInMillis = brickGameModel.getSpeedInMillis();
+	{
+		character: 'L',
+		gameType: "race2",
+		mode: 10,
+		score: 0,
+		speedTimeout: [300, 280, 260, 240, 220, 200, 180, 160, 140, 120],
+		load: function($game) {
+			// DECLARATIONS
+			var level = brickGameModel.getLevel();
+			var speedInMillis = brickGameModel.getSpeedInMillis();
+			var _road1 = [], cars = [];
+			var myCar = newCar(16, 7);
+			var moveRoadAnim = $game.newTimer({ func: moveRoad, interval: speedInMillis });
 
-	// 		var _road1 = [];
+			// FUNCTIONS
+			function newCar(x, y) {
+				return $game.newBrickObject({
+					name: "carTile",
+					brickLocation: { x: x, y: y }, 
+				});
+			}
+			function addCar() {
+				return newCar(-4, ((Math.floor(Math.random() * 100) % 3) * 3) + 1);
+			}
+			function loadRoadAndCars() {
+				for (var i = 0; i < 5; i++) _road1.push($game.newBrickObject({ name: "tripleTiles", color: "red" }));
+				cars.push(addCar());
+			}
+			function moveRoad() {
+				var lastCar = cars.last();
+				var willCollide = $game.willBeCollidedBy(myCar, "Left").filter(function(c) { return c.getName() == "carTile" }).length > 0;
+				var willOverlap = $game.willBeOverlappedBy(myCar).filter(function(c) { return c.getName() == "carTile" }).length > 0;
+				
+				if (willCollide || willOverlap) {
+					console.log("blinked over and over again");
+					GameSound.explosion();
+					$game.stop();
+					$game.blinkBrickObjects({ 
+						brickObjects: [cars.last(), myCar],
+						interval: 400,
+						count: 3,
+						endFunction: $game.gameOver
+					});
+				}
+				else {
+					var _firstRoad1 = _road1.first();
+					var _lastRoad1 = _road1.last();
 
-	// 		var cars = [];
+					for (var i = 0; i < _road1.length; i++) {
+						var x = _road1[i].getLocation().x;
 
-	// 		var myCar = newCar(16, 7);
+						_road1[i].setLocation(x == undefined ? i * 4: x + 1, 0);
+					}
+					if (_firstRoad1.getLocation().x == 2) {
+						var _r1 = $game.newBrickObject({
+							name: "tripleTiles", color: "red", brickLocation: { x: -2, y: 0 }
+						});
+						_road1.unshift(_r1);
+					}
+					if (_lastRoad1.isGottenOutOfScreen()) {
+						$game.disappear(_lastRoad1); _road1.pop();
+					}
+					for (var i = 0; i < cars.length; i++) {
+						var location = cars[i].getLocation();
+						cars[i].setLocation(location.x + 1, location.y);
+					}
+					if(cars.first().getLocation().x == 6) cars.unshift(addCar());
+					if(lastCar.isGottenOutOfScreen()) {
+						cars.pop(); $game.score();
+					}
+				}
+			}
 
-	// 		function loadRoadAndCars() {
-	// 			for (var i = 0; i < 5; i++) {
-	// 				_road1.push(new BrickObject({ tiles: [{x: 0, y: 0}, {x: 1, y: 0}, {x: 2, y: 0}], color: "red" }));
-	// 			}
-
-	// 			cars.push(addCar());
-	// 		}
-
-	// 		function addCar() {
-	// 			var y = ((Math.floor(Math.random() * 100) % 3) * 3) + 1;
-	// 			return newCar(-4, y);
-	// 		}
-
-	// 		function newCar(x, y) {
-	// 			var car = new BrickObject({
-	// 				tiles: [
-	// 					{ x: 0, y: 1 }, { x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 },
-	// 					{ x: 2, y: 1 }, { x: 3, y: 0 }, { x: 3, y: 2 }
-	// 				]});
-
-	// 			car.setLocation(x, y);
-
-	// 			return car;
-	// 		}
-
-	// 		function moveRoad() {
-	// 			var lastCarLocation = cars.last().getLocation();
-	// 			if (lastCarLocation.x > 12 && lastCarLocation.y == myCar.getLocation().y) {
-	// 				moveRoadAnim.stop();
-	// 				blinkCrashedCars();
-	// 			}
-	// 			else {
-	// 				for (var i = 0; i < _road1.length; i++) {
-	// 					var x = _road1[i].getLocation().x;
-
-	// 					_road1[i].setLocation(x == undefined ? i * 4: x + 1, 0);
-	// 				}
-
-	// 				if (_road1.first().getLocation().x == 2) {
-	// 					var _r1 = new BrickObject({ tiles: [{x: 0, y: 0}, {x: 1, y: 0}, {x: 2, y: 0}], color: "red" });
-
-	// 					_r1.setLocation(-2, 0);
-
-	// 					_road1.insertAbove(_r1);
-	// 				}
-
-	// 				if (_road1.last().getLocation().x == 20) {
-	// 					_road1.removeLast();
-	// 				}
-
-	// 				for (var i = 0; i < cars.length; i++) {
-	// 					var location = cars[i].getLocation();
-	// 					cars[i].setLocation(location.x + 1, location.y);
-	// 				}
-
-	// 				if(cars.first().getLocation().x == 6) {
-	// 					cars.insertAbove(addCar());
-	// 				}
-
-	// 				if(lastCarLocation.x == 20) {
-	// 					cars.removeLast();
-	// 					Game.score();
-	// 				}
-	// 			}
-	// 		}
-
-	// 		function blinkCrashedCars() {
-	// 			Game.blinkBrickObjects([cars.last(), myCar], 400, 3, Game.gameOver);
-	// 		}
-
-	// 		this.keydownfunctions = {
-	// 			onLeft: function() { 
+			// KEY FUNCTIONS
+			this.keydownfunctions = {
+				onLeft: function() { 
 					
-	// 			},
-	// 			onRight: function() { 
+				},
+				onRight: function() { 
 					
-	// 			},
-	// 			onTop: function() { 
-	// 				var y = myCar.getLocation().y;
-	// 				myCar.setLocation(16, y == 1 ? 1: y - 3)
-	// 			},
-	// 			onBottom: function() { 
-	// 				var y = myCar.getLocation().y;
-	// 				myCar.setLocation(16, y == 7 ? 7: y + 3);
-	// 			},
-	// 			onSpace: {
-	// 				action: function() {
-	// 					moveRoadAnim.setTimerInterval(50);
-	// 				},
-	// 				allowRepeat: false
-	// 			}
-	// 		}
+				},
+				onTop: function() { 
+					var y = myCar.getLocation().y;
+					myCar.setLocation(16, y == 1 ? 1: y - 3)
+				},
+				onBottom: function() { 
+					var y = myCar.getLocation().y;
+					myCar.setLocation(16, y == 7 ? 7: y + 3);
+				},
+				onSpace: {
+					action: function() {
+						moveRoadAnim.setTimerInterval(50);
+					},
+					allowRepeat: false
+				}
+			}
+			this.keyupfunctions = {
+				onSpace: function() {
+					moveRoadAnim.setTimerInterval(speedInMillis);
+				},
+			}
 
-	// 		this.keyupfunctions = {
-	// 			onSpace: function() {
-	// 				moveRoadAnim.setTimerInterval(speedInMillis);
-	// 			},
-	// 		}
+			// INITIALIZATION
+			loadRoadAndCars();
+			moveRoad();
 
-	// 		loadRoadAndCars();
-
-	// 		var moveRoadAnim = new Timer(moveRoad, speedInMillis);
-	// 		moveRoadAnim.start();
-
-	// 		moveRoad();
-
-	// 		return this;
-	// 	}
-	// },
+			moveRoadAnim.start();
+		}
+	},
 	];
 
 	// BRICK GAME FUNCTIONS
@@ -3501,9 +3291,12 @@
 
 		this.removeSideTile = function(side, position) {
 			var lastPosition = 0;
-			if (side == "right") {
+			if (side == "Right") {
 				var tilesRow = tiles.filter(function(tile) { return tile.screenY == position });
-				if (tilesRow != undefined && tilesRow.length > 0) lastPosition = tilesRow.last().screenX;
+				if (tilesRow != undefined && tilesRow.length > 0) 
+					lastPosition = tilesRow.sort(function(t1, t2) {
+						return t1.screenX - t2.screenX;
+					}).last().screenX;
 			}
 			return _removeTile(lastPosition, position);
 		}
@@ -3984,6 +3777,21 @@
 					}
 			}
 
+			return edgeTiles;
+		}
+
+		this.getSideTiles = function(direction) {
+			var edgeTiles = [];
+			switch(direction) {
+				case "Right":
+					edgeTiles = tiles.sort(function(t1, t2) {
+						return t1.x - t2.x;
+					});
+					edgeTiles = edgeTiles.filter(function(t) {
+						return t.x == edgeTiles.last().x;
+					});
+					break;
+			}
 			return edgeTiles;
 		}
 	}
