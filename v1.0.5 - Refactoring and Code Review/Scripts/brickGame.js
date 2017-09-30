@@ -401,6 +401,7 @@
 		{ name: "doubleTile", tiles: [ { x: 0, y: 0 }, { x: 0, y: 1 } ]},
 		{ name: "tripleTiles", tiles: [ { x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 } ] },
 		{ name: "squareTile1", tiles: [ { x: 0, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 } ] },
+		{ name: "rightTile1", tiles: [{x: 0, y: 0}, {x: 0, y: 1}, {x: 1, y: 1}] },
 		{ name: "quadrupleTiles", tiles: [{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 } ] },
 		{
 			name: "carTile",
@@ -425,12 +426,10 @@
 				var tiles = [];
 				for(var y = 0; y < 10; y++) { tiles.push({ x: 2, y: y }); tiles.push({ x: 3, y: y }); }
 				for(var y = 0; y < 3; y++) {
-					tiles.push({ x: 1, y: y }); tiles.push({ x: 4, y: y });
-					tiles.push({ x: 1, y: 9 - y }); tiles.push({ x: 4, y: 9 - y });
+					tiles.push({ x: 1, y: y }); tiles.push({ x: 4, y: y }); tiles.push({ x: 1, y: 9 - y }); tiles.push({ x: 4, y: 9 - y });
 				}
 				for(var y = 1; y < 3; y++) {
-					tiles.push({ x: 0, y: y }); tiles.push({ x: 5, y: y });
-					tiles.push({ x: 0, y: 9 - y }); tiles.push({ x: 5, y: 9 - y });
+					tiles.push({ x: 0, y: y }); tiles.push({ x: 5, y: y }); tiles.push({ x: 0, y: 9 - y }); tiles.push({ x: 5, y: 9 - y });
 				}
 				return tiles;
 			})()
@@ -439,10 +438,7 @@
 			name: "pinballTileLevel3",
 			tiles: (function() {
 				var tiles = [];
-				for (var x = 0; x < 7; x++) {
-					var i = -(Math.abs(3 - x) - 3);
-					for (var y = i; y < 10 - i; y++) tiles.push({ x: x, y: y });
-				}
+				for (var x = 0; x < 7; x++) { var i = -(Math.abs(3 - x) - 3); for (var y = i; y < 10 - i; y++) tiles.push({ x: x, y: y }); }
 				return tiles;
 			})()
 		},
@@ -450,22 +446,14 @@
 			name: "pinballTileLevel4",
 			tiles: (function() {
 				var tiles = [];
-				for (var x = 0; x < 7; x++) {
-					var i = Math.abs(3 - x);
-					for (var y = i; y < 10 - i; y++) tiles.push({ x: x, y: y });
-				}
+				for (var x = 0; x < 7; x++) { var i = Math.abs(3 - x); for (var y = i; y < 10 - i; y++) tiles.push({ x: x, y: y }); }
 				return tiles;
 			})()
 		},
 		{
 			name: "pinballTileLevel5",
 			tiles: (function(){
-				var tiles = [];
-				for (var x = 0; x < 7; x++) {   
-					var i = x % 2;
-					for (var y = i; y < 10; y+=2) tiles.push({ x: x, y: y });
-				}
-				return tiles;
+				var tiles = []; for (var x = 0; x < 7; x++) { var i = x % 2; for (var y = i; y < 10; y+=2) tiles.push({ x: x, y: y }); } return tiles;
 			})()
 		},
 		{
@@ -502,18 +490,48 @@
 		{
 			name: "pinballTileLevel10",
 			tiles: (function(){
-				var tiles = [];
-				for (var x = 0; x < 7; x++) { for (var y = 0; y < 10; y++) tiles.push({ x: x, y: y }); }
-				return tiles;
+				var tiles = []; for (var x = 0; x < 7; x++) { for (var y = 0; y < 10; y++) tiles.push({ x: x, y: y }); } return tiles;
 			})()
 		},
+		{ name: "verticalLine", tiles: (function() { var tiles = []; for (var j = 0; j < 10; j++) tiles.push({ x: 0, y: j }); return tiles; })() },
+		{ name: "twentyByOne", tiles: function() { var tiles = []; for(var i = 0; i < 20; i++) tiles.push({ x: i, y: 0 }); return tiles; }() },
+		{ name: "fourteenByOne", tiles: function() { var tiles = []; for(var i = 0; i < 14; i++) tiles.push({ x: i, y: 0 }); return tiles; }() },
+		{ name: "twelveByOne", tiles: function() { var tiles = []; for(var i = 0; i < 12; i++) tiles.push({ x: i, y: 0 }); return tiles; }() },
+		{ name: "tenByOne", tiles: function() { var tiles = []; for(var i = 0; i < 10; i++) tiles.push({ x: i, y: 0 }); return tiles; }() },
+		{ name: "eightByOne", tiles: function() { var tiles = []; for(var i = 0; i < 8; i++) tiles.push({ x: i, y: 0 }); return tiles; }() },
+		{ name: "fourByOne", tiles: function() { var tiles = []; for(var i = 0; i < 4; i++) tiles.push({ x: i, y: 0 }); return tiles; }() },
 		{
-			name: "verticalLine",
-			tiles: (function() {
-				var tiles = [];
-				for (var j = 0; j < 10; j++) tiles.push({ x: 0, y: j });
-				return tiles;
-			})()
+			name: "rightTile2",
+			tiles: function() { 
+				var tiles = []; 
+				for(var i = 0; i < 8; i++) tiles.push({ x: i, y: 3 }); for(var i = 0; i < 3; i++) tiles.push({ x: 0, y: i }); 
+				return tiles; 
+			}()
+		},
+		{
+			name: "crossTile1",
+			tiles: function() { 
+				var tiles = []; 
+				for(var i = 0; i < 20; i++) { tiles.push({ x: i, y: 4 }); tiles.push({ x: i, y: 5 }); } 
+				for(var i = 0; i < 4; i++) { 
+					tiles.push({ x: 9, y: i }); tiles.push({ x: 9, y: i + 6 }); tiles.push({ x: 10, y: i }); tiles.push({ x: 10, y: i + 6 }); 
+				} 	
+				return tiles; 
+			}()
+		},
+		{ name: "threeByTwo", tiles: [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }, { x: 2, y: 1 }], },
+		{ name: "sixByOne", tiles: function() { var tiles = []; for(var i = 0; i < 6; i++) tiles.push({ x: i, y: 0 }); return tiles; }() },
+		{
+			name: "eightByTwo",
+			tiles: function() { var tiles = []; for(var i = 0; i < 4; i++) { tiles.push({ x: i, y: 0 }); tiles.push({ x: i, y: 1 }); } return tiles; }()
+		},
+		{
+			name: "cTile1",
+			tiles: function() { 
+				var tiles = []; 
+				for(var i = 0; i < 4; i++) { tiles.push({ x: i, y: 0 }); tiles.push({ x: i, y: 5 }); tiles.push({ x: 0, y: i + 1 }) } 
+				return tiles; 
+			}()
 		}
 	];
 
@@ -531,7 +549,8 @@
 			new Audio("Sounds/fire.wav"),
 			new Audio("Sounds/levelUp.wav"),
 			new Audio("Sounds/score.wav"),
-			new Audio("Sounds/carsound1.wav")
+			new Audio("Sounds/carsound1.wav"),
+			new Audio("Sounds/fire2.wav")
 		];
 
 		// LOAD SOUNDS
@@ -545,6 +564,7 @@
 		this.levelUp = function() { play(7); };
 		this.score = function() { play(8); };
 		this.carSound1 = function(loop) { play(9, loop) };
+		this.fire2 = function() { play(10); };
 		this.pause = function() { if (audio == undefined) throw new Error("Error: undefined"); };
 		this.stop = function() { if (audio == undefined) throw new Error("Error: undefined"); };
 
@@ -743,6 +763,9 @@
 			selectedGame.timers.push(newTimer);
 			return newTimer;
 		}
+		this.areEqual = function(bo1, bo2) {
+			return selectedGame.brickObjects.indexOf(bo1) == selectedGame.brickObjects.indexOf(bo2);
+		}
 		// this.getBrickObjects = function(name) {
 		// 	name = name == undefined ? "": name;
 		// 	var objs = selectedGame.brickObjects;
@@ -866,10 +889,6 @@
 
 			gamekeydownfunctions = function() {
 
-				// console.log(fireSound);
-				// fireSound.currentTime = 0;
-				// fireSound.play();
-
 				var keydownfunctions = game.keydownfunctions;
 
 				if(keydownfunctions.onTop.action == undefined) keydownfunctions.onTop.action = keydownfunctions.onTop;
@@ -878,24 +897,32 @@
 				if(keydownfunctions.onRight.action == undefined) keydownfunctions.onRight.action = keydownfunctions.onRight;
 				if(keydownfunctions.onSpace.action == undefined) keydownfunctions.onSpace.action = keydownfunctions.onSpace;
 
-				if(keydownfunctions.onTop.allowRepeat == undefined) keydownfunctions.onTop.allowRepeat = false;
-				if(keydownfunctions.onBottom.allowRepeat == undefined) keydownfunctions.onBottom.allowRepeat = false;
-				if(keydownfunctions.onLeft.allowRepeat == undefined) keydownfunctions.onLeft.allowRepeat = false;
-				if(keydownfunctions.onRight.allowRepeat == undefined) keydownfunctions.onRight.allowRepeat = false;
+				if(keydownfunctions.onTop.allowRepeat == undefined) keydownfunctions.onTop.allowRepeat = true;
+				if(keydownfunctions.onBottom.allowRepeat == undefined) keydownfunctions.onBottom.allowRepeat = true;
+				if(keydownfunctions.onLeft.allowRepeat == undefined) keydownfunctions.onLeft.allowRepeat = true;
+				if(keydownfunctions.onRight.allowRepeat == undefined) keydownfunctions.onRight.allowRepeat = true;
 				if(keydownfunctions.onSpace.allowRepeat == undefined) keydownfunctions.onSpace.allowRepeat = true;
 
 				switch(event.key) {
 					case "ArrowUp":
-						game.keydownfunctions.onTop();
+						//game.keydownfunctions.onTop();
+						var onTop = keydownfunctions.onTop;
+						if(onTop.allowRepeat || !event.repeat) onTop.action();
 						break;
 					case "ArrowDown":
-						game.keydownfunctions.onBottom();
+						//game.keydownfunctions.onBottom();
+						var onBottom = keydownfunctions.onBottom;
+						if(onBottom.allowRepeat || !event.repeat) onBottom.action();
 						break;
 					case "ArrowLeft":
-						game.keydownfunctions.onLeft();
+						//game.keydownfunctions.onLeft();
+						var onLeft = keydownfunctions.onLeft;
+						if(onLeft.allowRepeat || !event.repeat) onLeft.action();
 						break;
 					case "ArrowRight":
-						game.keydownfunctions.onRight();
+						//game.keydownfunctions.onRight();
+						var onRight = keydownfunctions.onRight;
+						if(onRight.allowRepeat || !event.repeat) onRight.action();
 						break;
 					case " ":
 						var onSpace = keydownfunctions.onSpace;
@@ -932,18 +959,18 @@
 
 			gamekeyupfunctions = function() {
 				switch(event.key) {
-					// case "ArrowUp":
-					// 	game.keydownfunctions.onTop();
-					// 	break;
-					// case "ArrowDown":
-					// 	game.keydownfunctions.onBottom();
-					// 	break;
-					// case "ArrowLeft":
-					// 	game.keydownfunctions.onLeft();
-					// 	break;
-					// case "ArrowRight":
-					// 	game.keydownfunctions.onRight();
-					// 	break;
+					case "ArrowUp":
+						game.keyupfunctions.onTop();
+						break;
+					case "ArrowDown":
+						game.keyupfunctions.onBottom();
+						break;
+					case "ArrowLeft":
+						game.keyupfunctions.onLeft();
+						break;
+					case "ArrowRight":
+						game.keyupfunctions.onRight();
+						break;
 					case " ":
 						game.keyupfunctions.onSpace();
 						break;
@@ -1067,28 +1094,29 @@
 			}
 		}
 
-		// function _tryOverlap(brickObject) {
-		// 	var brickObjectTiles = brickObject.getTiles();
+		function _tryOverlap(brickObject, x, y) {
+			brickObject.tryLocation(x, y);
+			var brickObjectTiles = brickObject.getTiles();
 
-		// 	var overlappedObjects = selectedGame.brickObjects.filter(function(bo){ 
-		// 		return selectedGame.brickObjects.indexOf(brickObject) != selectedGame.brickObjects.indexOf(bo);
-		// 	}).filter(function(bo) {
+			var overlappedObjects = selectedGame.brickObjects.filter(function(bo){ 
+				return selectedGame.brickObjects.indexOf(brickObject) != selectedGame.brickObjects.indexOf(bo);
+			}).filter(function(bo) {
 
-		// 		var isOverlapped = false;
-		// 		var boTiles = bo.getTiles();
-		// 		var tileCounter = 0;
+				var isOverlapped = false;
+				var boTiles = bo.getTiles();
+				var tileCounter = 0;
 
-		// 		while(tileCounter < boTiles.length && !isOverlapped) {
-		// 			isOverlapped = brickObjectTiles.filter(function(bt) { 
-		// 				return bt.testScreenX == boTiles[tileCounter].screenX && bt.testScreenY == boTiles[tileCounter].screenY 
-		// 			}).length > 0;
-		// 			tileCounter++;
-		// 		}
+				while(tileCounter < boTiles.length && !isOverlapped) {
+					isOverlapped = brickObjectTiles.filter(function(bt) { 
+						return bt.testScreenX == boTiles[tileCounter].screenX && bt.testScreenY == boTiles[tileCounter].screenY 
+					}).length > 0;
+					tileCounter++;
+				}
 
-		// 		return isOverlapped;
-		// 	});
-		// 	return overlappedObjects;
-		// }
+				return isOverlapped;
+			});
+			return overlappedObjects;
+		}
 
 		// this.tryRotate = function(brickObject, direction) {
 		// 	brickObject.tryRotate(direction);
@@ -1125,262 +1153,260 @@
 		// 	}
 		// }
 
-		// this.tryOverlap = function(brickObject, x, y) {
-		// 	brickObject.tryLocation(x, y);
-		// 	return _tryOverlap(brickObject);
-		// }
+		this.tryOverlap = function(brickObject, x, y) {
+			return _tryOverlap(brickObject, x, y);
+		}
 	}
 
 	// GAMES
 	var _games = [
-	// {
-	// 	character: 'A',
-	// 	gameType: "tank",
-	// 	mode: 1,
-	// 	score: 0,
-	// 	speedTimeout: [300, 280, 260, 240, 220, 200, 180, 160, 140, 120],
-	// 	load: function() {
-	// 		var level = brickGameModel.getLevel();
-	// 		var speedInMillis = brickGameModel.getSpeedInMillis();
+	{
+		character: 'A',
+		gameType: "tank",
+		mode: 1,
+		score: 0,
+		speedTimeout: [300, 280, 260, 240, 220, 200, 180, 160, 140, 120],
+		load: function() {
+			var level = brickGameModel.getLevel();
+			var speedInMillis = brickGameModel.getSpeedInMillis();
 
-	// 		var tankTile = Game.newBrickObject({ 
-	// 			name: "tankTile", 
-	// 			origin: { x: 1, y: 1 }, 
-	// 			brickLocation: { x: 10, y: 3 }, 
-	// 			brickDirection: "Left",
-	// 			willPassThroughSide: false
-	// 		});
+			var tankTile = Game.newBrickObject({ 
+				name: "tankTile", 
+				origin: { x: 1, y: 1 }, 
+				brickLocation: { x: 10, y: 3 }, 
+				brickDirection: "Left",
+				willPassThroughSide: false
+			});
 
-	// 		var enemyTankTiles = [];
+			var enemyTankTiles = [];
 
-	// 		var spawnTankAnim = new Timer(loadEnemyTanks, 200);
+			var spawnTankAnim = new Timer(loadEnemyTanks, 200);
 
-	// 		function moveTank(_tankTile, direction) {
-	// 			var tankDirection = _tankTile.getDirection();
-	// 			var tankLocation = _tankTile.getLocation();
+			function moveTank(_tankTile, direction) {
+				var tankDirection = _tankTile.getDirection();
+				var tankLocation = _tankTile.getLocation();
 
-	// 			if (tankDirection == direction) {
-	// 				Game.move(_tankTile, direction);
-	// 			}
-	// 			else {
-	// 				Game.tryRotate(_tankTile, direction);
-	// 			}
-	// 		}
+				if (tankDirection == direction) {
+					Game.move(_tankTile, direction);
+				}
+				else {
+					Game.tryRotate(_tankTile, direction);
+				}
+			}
 
-	// 		function loadEnemyTanks() {
+			function loadEnemyTanks() {
 
-	// 			var spawn = Math.round(Math.random() * 100) % 5 == 0;
+				var spawn = Math.round(Math.random() * 100) % 5 == 0;
 
-	// 			if(spawn && enemyTankTiles.length < 6) {
+				if(spawn && enemyTankTiles.length < 6) {
 
-	// 				var posX = Math.round(Math.random() * 100) % 3;
-	// 				var posY = Math.round(Math.random() * 100) % 2;
-	// 				var direction = Math.round(Math.random() * 100) % 4;
+					var posX = Math.round(Math.random() * 100) % 3;
+					var posY = Math.round(Math.random() * 100) % 2;
+					var direction = Math.round(Math.random() * 100) % 4;
 					
-	// 				switch(posX) {
-	// 					case 0:
-	// 						posX = 0;
-	// 						break;
-	// 					case 1:
-	// 						posX = 9;
-	// 						break;
-	// 					case 2:
-	// 						posX = 17;
-	// 						break;
-	// 					default:
-	// 						break;
-	// 				}
+					switch(posX) {
+						case 0:
+							posX = 0;
+							break;
+						case 1:
+							posX = 9;
+							break;
+						case 2:
+							posX = 17;
+							break;
+						default:
+							break;
+					}
 
-	// 				switch(posY) {
-	// 					case 0:
-	// 						posY = 0;
-	// 						break;
-	// 					case 1:
-	// 						posY = 7;
-	// 						break;
-	// 					default:
-	// 						break;
-	// 				}
+					switch(posY) {
+						case 0:
+							posY = 0;
+							break;
+						case 1:
+							posY = 7;
+							break;
+						default:
+							break;
+					}
 
-	// 				switch(direction) {
-	// 					case 0:
-	// 						direction = "Left";
-	// 						break;
-	// 					case 1:
-	// 						direction = "Right";
-	// 						break;
-	// 					case 2:
-	// 						direction = "Up";
-	// 						break;
-	// 					case 3:
-	// 						direction = "Down";
-	// 						break;
-	// 					default:
-	// 						break;
-	// 				}
+					switch(direction) {
+						case 0:
+							direction = "Left";
+							break;
+						case 1:
+							direction = "Right";
+							break;
+						case 2:
+							direction = "Up";
+							break;
+						case 3:
+							direction = "Down";
+							break;
+						default:
+							break;
+					}
 
 					
 
-	// 				var enemyTankTile = Game.newBrickObject({
-	// 					name: "enemyTankTile",
-	// 					brickDirection: "Left",
-	// 					origin: { x: 1, y: 1 },
-	// 					willPassThroughSide: false,
-	// 				});
+					var enemyTankTile = Game.newBrickObject({
+						name: "enemyTankTile",
+						brickDirection: "Left",
+						origin: { x: 1, y: 1 },
+						willPassThroughSide: false,
+					});
 
-	// 				if(Game.tryOverlap(enemyTankTile, posX, posY).length == 0) {
-	// 					enemyTankTile.setLocation(posX, posY);
-	// 					enemyTankTile.rotate(direction);
-	// 					enemyTankTiles.push(enemyTankTile);
-	// 					var index = enemyTankTiles.indexOf(enemyTankTile);
-	// 					var moveEnemyTankAnim = new Timer(function() { 
-	// 						var direction = enemyTankTile.getDirection();
+					if(Game.tryOverlap(enemyTankTile, posX, posY).length == 0) {
+						enemyTankTile.setLocation(posX, posY);
+						enemyTankTile.rotate(direction);
+						enemyTankTiles.push(enemyTankTile);
+						var index = enemyTankTiles.indexOf(enemyTankTile);
+						var moveEnemyTankAnim = new Timer(function() { 
+							var direction = enemyTankTile.getDirection();
 
-	// 						var moveOrRotate = Math.floor(Math.random() * 100) % 3 == 0;
+							var moveOrRotate = Math.floor(Math.random() * 100) % 3 == 0;
 
-	// 						if (moveOrRotate) {
-	// 							direction = ["Left", "Right", "Up", "Down"][Math.floor(Math.random() * 100) % 4];
-	// 						}
+							if (moveOrRotate) {
+								direction = ["Left", "Right", "Up", "Down"][Math.floor(Math.random() * 100) % 4];
+							}
 
-	// 						moveTank(enemyTankTile, direction);
+							moveTank(enemyTankTile, direction);
 							
-	// 						if(Math.floor(Math.random() * 100) % 2 == 0 /*&& index < 1*/) {
-	// 							console.log("enemy tiles count: " + Game.getBrickObjects("enemyTankTile").length)
-	// 							fireTank(enemyTankTile, true);
-	// 						}
-	// 					}, 1000);
-	// 					enemyTankTile.onRemove(function() { moveEnemyTankAnim.stop() });
-	// 					moveEnemyTankAnim.start();
-	// 				}
-	// 				else {
-	// 					Game.disappear(enemyTankTile);
-	// 				}
-	// 			}
-	// 		}
+							if(Math.floor(Math.random() * 100) % 2 == 0 /*&& index < 1*/) {
+								console.log("enemy tiles count: " + Game.getBrickObjects("enemyTankTile").length)
+								fireTank(enemyTankTile, true);
+							}
+						}, 1000);
+						enemyTankTile.onRemove(function() { moveEnemyTankAnim.stop() });
+						moveEnemyTankAnim.start();
+					}
+					else {
+						Game.disappear(enemyTankTile);
+					}
+				}
+			}
 
-	// 		function fireTank(_tankTile, _isEnemyTank) {
+			function fireTank(_tankTile, _isEnemyTank) {
 				
-	// 			var isEnemyTank = _isEnemyTank == undefined ? false: _isEnemyTank;
-	// 			var ammoX = 0, ammoY = 0;
-	// 			var tankDirection = _tankTile.getDirection();
-	// 			var tankLocation = _tankTile.getLocation();
+				var isEnemyTank = _isEnemyTank == undefined ? false: _isEnemyTank;
+				var ammoX = 0, ammoY = 0;
+				var tankDirection = _tankTile.getDirection();
+				var tankLocation = _tankTile.getLocation();
 
-	// 			switch(tankDirection) {
-	// 				case "Right":
-	// 					ammoX = tankLocation.x + 3;
-	// 					ammoY = tankLocation.y + 1;
-	// 					break;
-	// 				case "Left":
-	// 					ammoX = tankLocation.x - 1;
-	// 					ammoY = tankLocation.y + 1;
-	// 					break;
-	// 				case "Up":
-	// 					ammoX = tankLocation.x + 1;
-	// 					ammoY = tankLocation.y - 1;
-	// 					break;
-	// 				case "Down":
-	// 					ammoX = tankLocation.x + 1;
-	// 					ammoY = tankLocation.y + 3;
-	// 					break;
-	// 				default:
-	// 					break;
-	// 			}
+				switch(tankDirection) {
+					case "Right":
+						ammoX = tankLocation.x + 3;
+						ammoY = tankLocation.y + 1;
+						break;
+					case "Left":
+						ammoX = tankLocation.x - 1;
+						ammoY = tankLocation.y + 1;
+						break;
+					case "Up":
+						ammoX = tankLocation.x + 1;
+						ammoY = tankLocation.y - 1;
+						break;
+					case "Down":
+						ammoX = tankLocation.x + 1;
+						ammoY = tankLocation.y + 3;
+						break;
+					default:
+						break;
+				}
 
-	// 			var ammoTile = Game.newBrickObject({ 
-	// 				name: "singleTile", 
-	// 				color: isEnemyTank ? "red": "yellow",
-	// 				dontShowIfOverlapped: true,
-	// 				brickDirection: tankDirection,
-	// 				willPassThroughSide: true
-	// 			});
+				var ammoTile = Game.newBrickObject({ 
+					name: "singleTile", 
+					color: isEnemyTank ? "red": "yellow",
+					dontShowIfOverlapped: true,
+					brickDirection: tankDirection,
+					willPassThroughSide: true
+				});
 
-	// 			var collidedObjects = Game.tryOverlap(ammoTile, ammoX, ammoY).filter(function(t) { return t.getName() != "singleTile" });
+				var collidedObjects = Game.tryOverlap(ammoTile, ammoX, ammoY).filter(function(t) { return t.getName() != "singleTile" });
 
-	// 			if(collidedObjects.length == 0) {
+				if(collidedObjects.length == 0) {
 
-	// 				ammoTile.setLocation(ammoX, ammoY);
+					ammoTile.setLocation(ammoX, ammoY);
 
-	// 				var _ammoX = ammoX, _ammoY = ammoY;
+					var _ammoX = ammoX, _ammoY = ammoY;
 
-	// 				var fireTankAnim = new Timer(function() {
+					var fireTankAnim = new Timer(function() {
 
-	// 					var collidedObjects = Game.willBeCollidedBy(ammoTile, tankDirection);
+						var collidedObjects = Game.willBeCollidedBy(ammoTile, tankDirection);
 						
-	// 					if (collidedObjects.length == 0 && (_ammoX > 0 && _ammoX < 19) && (_ammoY > 0 && _ammoY < 9)) {
-	// 						Game.move(ammoTile, tankDirection, true);
+						if (collidedObjects.length == 0 && (_ammoX > 0 && _ammoX < 19) && (_ammoY > 0 && _ammoY < 9)) {
+							Game.move(ammoTile, tankDirection, true);
 
-	// 						var ammoLocation = ammoTile.getLocation();
-	// 						_ammoX = ammoLocation.x;
-	// 						_ammoY = ammoLocation.y;
-	// 					}
-	// 					else {
-	// 						if (collidedObjects.length > 0) {
-	// 							var hitObject = collidedObjects.first();
-	// 							var hitObjectName = hitObject.getName();
+							var ammoLocation = ammoTile.getLocation();
+							_ammoX = ammoLocation.x;
+							_ammoY = ammoLocation.y;
+						}
+						else {
+							if (collidedObjects.length > 0) {
+								var hitObject = collidedObjects.first();
+								var hitObjectName = hitObject.getName();
 
-	// 							if (!isEnemyTank && hitObjectName == "enemyTankTile") {
-	// 								enemyTankTiles.splice(enemyTankTiles.indexOf(hitObject), 1);
-	// 								Game.score();
-	// 								Game.disappear(hitObject);
-	// 							}
+								if (!isEnemyTank && hitObjectName == "enemyTankTile") {
+									enemyTankTiles.splice(enemyTankTiles.indexOf(hitObject), 1);
+									Game.score();
+									Game.disappear(hitObject);
+								}
 
-	// 							if (hitObjectName == "singleTile") {
-	// 								Game.disappear(hitObject);
-	// 							}
-	// 							else if (hitObjectName == "tankTile") {
-	// 								//Game.blinkBrickObjects([hitObject], 400, 3, Game.gameOver);
-	// 							}
-	// 						}
-	// 						Game.disappear(ammoTile);
-	// 					}
+								if (hitObjectName == "singleTile") {
+									Game.disappear(hitObject);
+								}
+								else if (hitObjectName == "tankTile") {
+									//Game.blinkBrickObjects([hitObject], 400, 3, Game.gameOver);
+								}
+							}
+							Game.disappear(ammoTile);
+						}
 
 						
-	// 				}, 100); 
+					}, 100); 
 
-	// 				ammoTile.onRemove(function() { fireTankAnim.stop() });
-	// 				fireTankAnim.start();
-	// 			}
+					ammoTile.onRemove(function() { fireTankAnim.stop() });
+					fireTankAnim.start();
+				}
 
-	// 			else {
-	// 				if(!isEnemyTank) {
-	// 					var hitObject = collidedObjects.first();
-	// 					Game.disappear(hitObject);
-	// 					enemyTankTiles.splice(enemyTankTiles.indexOf(hitObject), 1);
-	// 					Game.score();
-	// 				} 
-	// 			}
-	// 		}
+				else {
+					if(!isEnemyTank) {
+						var hitObject = collidedObjects.first();
+						Game.disappear(hitObject);
+						enemyTankTiles.splice(enemyTankTiles.indexOf(hitObject), 1);
+						Game.score();
+					} 
+				}
+			}
 
-	// 		spawnTankAnim.start();
-	// 		//loadEnemyTanks();
+			spawnTankAnim.start();
+			//loadEnemyTanks();
 
-	// 		this.keydownfunctions = {
-	// 			onLeft: function() { 
-	// 				moveTank(tankTile, "Left");
-	// 			},
-	// 			onRight: function() { 
-	// 				moveTank(tankTile, "Right");
-	// 			},
-	// 			onTop: function() { 
-	// 				moveTank(tankTile, "Up");
-	// 			},
-	// 			onBottom: function() { 
-	// 				moveTank(tankTile, "Down");
-	// 			},
-	// 			onSpace: function(){
-	// 				fireTank(tankTile);
-	// 			}
+			this.keydownfunctions = {
+				onLeft: function() { 
+					moveTank(tankTile, "Left");
+				},
+				onRight: function() { 
+					moveTank(tankTile, "Right");
+				},
+				onTop: function() { 
+					moveTank(tankTile, "Up");
+				},
+				onBottom: function() { 
+					moveTank(tankTile, "Down");
+				},
+				onSpace: function(){
+					fireTank(tankTile);
+				}
 				
-	// 		}
+			}
 
-	// 		this.keyupfunctions = {
-	// 			onSpace: function() {
+			this.keyupfunctions = {
+				onSpace: function() {
 					
-	// 			},
-	// 		}
-	// 		return this;
-	// 	}
-	// },
+				},
+			}
+		}
+	},
 	{
 	 	character: 'B', gameType: "race1", mode: 3, score: 0, speedTimeout: [300, 280, 260, 240, 220, 200, 180, 160, 140, 120],
 		load: function($game) {
@@ -1429,7 +1455,7 @@
 						cars[i].setLocation(location.x + 1, location.y);
 					}
 					if(cars.first().getLocation().x == 6) cars.unshift(addCar());
-					if(lastCar.isGottenOutOfScreen()) { cars.pop(); $game.score(); }
+					if(lastCar.isGottenOutOfScreen()) { $game.disappear(lastCar); cars.pop(); $game.score(); }
 				}
 			}
 
@@ -1444,7 +1470,13 @@
 					allowRepeat: false
 				}
 			}
-			this.keyupfunctions = { onSpace: function() { moveRoadAnim.setTimerInterval(speedInMillis); }}
+			this.keyupfunctions = { 
+				onLeft: function() {  },
+				onRight: function() {  },
+				onTop: function() {  },
+				onBottom: function() {  },
+				onSpace: function() { moveRoadAnim.setTimerInterval(speedInMillis); }
+			}
 
 			// INITIALIZATION
 			loadRoadAndCars(); moveRoad();
@@ -1521,7 +1553,13 @@
 				onBottom: function() { moveSoldier("Down"); },
 				onSpace: function() { fire(); },
 			}
-			this.keyupfunctions = { onSpace: function() { }, }
+			this.keyupfunctions = { 
+				onLeft: function() {  },
+				onRight: function() {  },
+				onTop: function() {  },
+				onBottom: function() {  },
+				onSpace: function() {  },
+			}
 			
 			// INITIALIZATION
 			enemyInvasionAnim.start();
@@ -1667,7 +1705,13 @@
 					allowRepeat: false
 				}
 			}
-			this.keyupfunctions = { onSpace: function() { pinballThrowAnim.setTimerInterval(speedInMillis); }, }
+			this.keyupfunctions = { 
+				onLeft: function() {  },
+				onRight: function() {  },
+				onTop: function() {  },
+				onBottom: function() {  },
+				onSpace: function() { pinballThrowAnim.setTimerInterval(speedInMillis); }, 
+			}
 		}
 	},
 	{
@@ -1722,6 +1766,7 @@
 				var soldierPosition = soldierObject.getLocation().y + 1;
 				var e = enemyRows.length - 1;
 				if(!(enemyRows.length == 18 && !isSpace(e, soldierPosition))) {
+					GameSound.fire2();
 					while(e >= 0 && isSpace(e, soldierPosition)) e--; e++;
 					if(enemyRows[e] == undefined) {
 						enemyRows.push($game.newBrickObject({ tiles: [{ x: 0, y: soldierPosition }], brickLocation: { x: e, y: 0 } }));
@@ -1738,7 +1783,7 @@
 									rowRemoveAnim.stop();
 									GameSound.score();
 									$game.score();
-									enemyRows[e].remove();
+									$game.disappear(enemyRows[e]);
 									enemyRows.splice(e, 1);
 									while(e < enemyRows.length) { enemyRows[e].setLocation(e, 0); e++; }
 									$game.lockKey(false);
@@ -1760,7 +1805,13 @@
 				onBottom: function() { moveSoldier("Down"); },
 				onSpace: function() { fire(); },
 			}
-			this.keyupfunctions = { onSpace: function() { }, }
+			this.keyupfunctions = { 
+				onLeft: function() {  },
+				onRight: function() {  },
+				onTop: function() {  },
+				onBottom: function() {  },
+				onSpace: function() {  },
+			}
 
 			// INITIALIZATION
 			enemyInvasionAnim.start();
@@ -1909,7 +1960,11 @@
 					allowRepeat: false
 				}
 			}
-			this.keyupfunctions = {
+			this.keyupfunctions = { 
+				onLeft: function() {  },
+				onRight: function() {  },
+				onTop: function() {  },
+				onBottom: function() {  },
 				onSpace: function() { pinballThrowAnim.setTimerInterval(speedInMillis); },
 			}
 		}
@@ -1969,7 +2024,13 @@
 				onBottom: function() { moveCrosser("Bottom"); },
 				onSpace: function() { moveCrosser("Left"); },
 			}
-			this.keyupfunctions = { onSpace: function() { }, }
+			this.keyupfunctions = { 
+				onLeft: function() {  },
+				onRight: function() {  },
+				onTop: function() {  },
+				onBottom: function() {  },
+				onSpace: function() {  }
+			}
 
 			// INITIALIZATION
 			loadWalls(); addCrosser();
@@ -2088,7 +2149,13 @@
 				onBottom: function() { moveSoldier("Down"); },
 				onSpace: function() { fire(); },
 			}
-			this.keyupfunctions = { onSpace: function() { }, }
+			this.keyupfunctions = { 
+				onLeft: function() {  },
+				onRight: function() {  },
+				onTop: function() {  },
+				onBottom: function() {  },
+				onSpace: function() {  }
+			}
 
 			// INITIALIZATION
 			movePinballTileAnim.start();
@@ -2100,221 +2167,149 @@
 		mode: 8,
 		score: 0,
 		speedTimeout: [550, 500, 450, 400, 350, 300, 250, 200, 150, 100],
-		load: function() {
+		load: function($game) {
+			// DECLARATIONS
 			var gameLevelTiles = [
+			{ snake: { location: { x: 4, y: 9 }, direction: "Right" }, obstacles: [] },
 			{
-				snake: { location: { x: 4, y: 9 }, direction: "Right" },
-				obstacles: new BrickObject({})
+				snake: { location: { x: 11, y: 6 }, direction: "Right" },
+				obstacles: [
+					{ name: "rightTile1", location: { x: 0, y: 0 }, rotateDirection: "Down" }, 
+					{ name: "rightTile1", location: { x: 18, y: 0 }, rotateDirection: "Left" },
+					{ name: "rightTile1", location: { x: 18, y: 8 }, rotateDirection: "Up" },
+					{ name: "rightTile1", location: { x: 0, y: 8 }, rotateDirection: "Right" },
+					{ name: "squareTile1", location: { x: 9, y: 4 } }
+				]
 			},
 			{
 				snake: { location: { x: 11, y: 6 }, direction: "Right" },
-				obstacles: new BrickObject({
-					tiles: [
-						{x: 0, y: 0}, {x: 0, y: 1}, {x: 1, y: 0}, 
-						{x: 19, y: 0}, {x: 18, y: 0}, {x: 19, y: 1}, 
-						{x: 19, y: 9}, {x: 18, y: 9}, {x: 19, y: 8}, 
-						{x: 0, y: 9}, {x: 1, y: 9}, {x: 0, y: 8}, 
-						{x: 9, y: 4}, {x: 9, y: 5}, {x: 10, y: 4}, {x: 10, y: 5}]
-					})
-			},
-			{
-				snake: { location: { x: 11, y: 6 }, direction: "Right" },
-				obstacles: new BrickObject({
-					tiles: (function() {
-						var tiles = [];
-						for (var i = 0; i < 20; i++) {
-							tiles.push({ x: i, y: 0 }); tiles.push({ x: i, y: 9 });
-						}
-						for (var i = 1; i < 9; i++) {
-							tiles.push({ x: 0, y: i }); tiles.push({ x: 19, y: i });
-						};
-						return tiles;
-					})()})
+				obstacles: [
+					{ name: "twentyByOne", location: { x: 0, y: 0 }, rotateDirection: "Right" }, 
+					{ name: "twentyByOne", location: { x: 0, y: 9 }, rotateDirection: "Right" }, 
+					{ name: "eightByOne", location: { x: 0, y: 1 }, rotateDirection: "Up" }, 
+					{ name: "eightByOne", location: { x: 19, y: 1 }, rotateDirection: "Up" }, 
+				]
 			},
 			{
 				snake: { location: { x: 11, y: 5 }, direction: "Right" },
-				obstacles: new BrickObject({
-					tiles: (function() {
-						var tiles = [];
-						for (var i = 0; i < 8; i++) {
-							tiles.push({ x: i, y: 3 }); tiles.push({ x: i, y: 6 });
-							tiles.push({ x: i + 12, y: 3 }); tiles.push({ x: i + 12, y: 6 });
-						}
-						for(var i = 0; i < 3; i++) {
-							tiles.push({ x: 7, y: i + 7 }); tiles.push({ x: 12, y: i });
-						}
-						return tiles;
-					})()})
+				obstacles: [
+					{ name: "eightByOne", location: { x: 0, y: 3 } }, { name: "eightByOne", location: { x: 12, y: 6 } }, 
+					{ name: "rightTile2", location: { x: 12, y: 0 }, rotateDirection: "Right" }, 
+					{ name: "rightTile2", location: { x: 0, y: 6 }, rotateDirection: "Left" }, 
+				]
 			},
-			{
-				snake: { location: { x: 2, y: 9 }, direction: "Left" },
-				obstacles: new BrickObject({
-					tiles: (function() {
-						var tiles = [];
-						for (var i = 0; i < 20; i++) {
-							tiles.push({ x: i, y: 4 }); tiles.push({ x: i, y: 5 });
-						}
-						for (var i = 0; i < 5; i++) {
-							tiles.push({ x: 9, y: i }); tiles.push({ x: 9, y: i + 5 });
-							tiles.push({ x: 10, y: i }); tiles.push({ x: 10, y: i + 5 });
-						}
-						return tiles;
-					})()})
-			},
+			{ snake: { location: { x: 2, y: 9 }, direction: "Left" }, obstacles: [{ name: "crossTile1", location: { x: 0, y: 0 } }] },
 			{
 				snake: { location: { x: 11, y: 5 }, direction: "Right" },
-				obstacles: new BrickObject({
-					tiles: (function() {
-						var tiles = [
-							{ x: 9, y: 0 }, { x: 10, y: 0 }, { x: 9, y: 1 }, { x: 10, y: 1 },
-							{ x: 9, y: 8 }, { x: 10, y: 8 }, { x: 9, y: 9 }, { x: 10, y: 9 }
-						];
-						for(var a = 5; a < 15; a++) {
-							tiles.push({ x: a, y: 3 });
-							tiles.push({ x: a, y: 6 });
-						}
-						return tiles;
-					})()})
+				obstacles: [
+					{ name: "squareTile1", location: { x: 9, y: 0 } }, { name: "squareTile1", location: { x: 9, y: 8 } }, 
+					{ name: "tenByOne", location: { x: 5, y: 3 } }, { name: "tenByOne", location: { x: 5, y: 6 } },  
+				]
 			},
 			{
 				snake: { location: { x: 4, y: 9 }, direction: "Right" },
-				obstacles: new BrickObject({ 
-					tiles: (function() {
-						var tiles = [];
-						for(var a = 2; a < 8; a++) {
-							tiles.push({ x: 8, y: a }); tiles.push({ x: 11, y: a });
-						}
-						for (var i = 2; i < 5; i++) {
-							tiles.push({ x: i, y: 4 }); tiles.push({ x: i, y: 5 });
-							tiles.push({ x: i + 13, y: 4 }); tiles.push({ x: i + 13, y: 5 });
-						}
-						return tiles;
-					})()})
+				obstacles: [
+					{ name: "threeByTwo", location: { x: 2, y: 4 } }, { name: "threeByTwo", location: { x: 15, y: 4 } },
+					{ name: "sixByOne", location: { x: 8, y: 2 }, rotateDirection: "Up" }, 
+					{ name: "sixByOne", location: { x: 11, y: 2 }, rotateDirection: "Up" },  
+				]
 			},
 			{
 				snake: { location: { x: 4, y: 9 }, direction: "Right" },
-				obstacles: new BrickObject({
-					tiles: (function() {
-						var tiles = [];
-						for(var a = 2; a < 8; a++) {
-							tiles.push({ x: 2, y: a }); tiles.push({ x: 17, y: a });
-						} 
-						for(var a = 3; a < 6; a++) {
-							tiles.push({ x: a, y: 2 }); tiles.push({ x: a, y: 7 });
-							tiles.push({ x: a + 11, y: 2 }); tiles.push({ x: a + 11, y: 7 });
-						}
-						for (var a = 8; a < 12; a++) {
-							tiles.push({ x: a, y: 4 }); tiles.push({ x: a, y: 5 });
-						}
-						return tiles;
-					})()})
+				obstacles: [
+					{ name: "eightByTwo", location: { x: 8, y: 4 } }, 
+					{ name: "cTile1", location: { x: 2, y: 2 }, rotateDirection: "Right" }, 
+					{ name: "cTile1", location: { x: 14, y: 2 }, rotateDirection: "Left" },  
+				]
 			},
 			{
 				snake: { location: { x: 11, y: 5 }, direction: "Right" },
-				obstacles: new BrickObject({
-					tiles: (function() {
-						var tiles = [];
-						for(var a = 2; a < 8; a++){
-							tiles.push({ x: 0, y: a }); tiles.push({ x: 19, y: a });
-						}
-						for (var a = 3; a < 17; a++) {
-							tiles.push({ x: a, y: 0 }); tiles.push({ x: a, y: 3 });
-							tiles.push({ x: a, y: 6 }); tiles.push({ x: a, y: 9 });
-						}
-						return tiles;
-					})()})
+				obstacles: [
+					{ name: "fourteenByOne", location: { x: 3, y: 0 } }, { name: "fourteenByOne", location: { x: 3, y: 3 } }, 
+					{ name: "fourteenByOne", location: { x: 3, y: 6 } },{ name: "fourteenByOne", location: { x: 3, y: 9 } },  
+					{ name: "sixByOne", location: { x: 0, y: 2 }, rotateDirection: "Up" },  
+					{ name: "sixByOne", location: { x: 19, y: 2 }, rotateDirection: "Up" },  
+				]
 			},
 			{
 				snake: { location: { x: 6, y: 8 }, direction: "Right" },
-				obstacles: new BrickObject({
-					tiles: (function() {
-						var tiles = [];
-						for(var a = 2; a < 8; a++){
-							tiles.push({ x: 0, y: a }); tiles.push({ x: 19, y: a });
-						}
-						for (var a = 3; a < 7; a++) {
-							tiles.push({ x: 5, y: a }); tiles.push({ x: 8, y: a });
-							tiles.push({ x: 11, y: a }); tiles.push({ x: 14, y: a });
-						}
-						for (var a = 4; a < 16; a++) {
-							tiles.push({ x: a, y: 0 }); tiles.push({ x: a, y: 9 });
-						}
-						return tiles;
-					})()})
+				obstacles: [
+					{ name: "fourByOne", location: { x: 5, y: 3 }, rotateDirection: "Up" }, 
+					{ name: "fourByOne", location: { x: 8, y: 3 }, rotateDirection: "Up" }, 
+					{ name: "fourByOne", location: { x: 11, y: 3 }, rotateDirection: "Up" },
+					{ name: "fourByOne", location: { x: 14, y: 3 }, rotateDirection: "Up" },  
+					{ name: "sixByOne", location: { x: 0, y: 2 }, rotateDirection: "Up" },  
+					{ name: "sixByOne", location: { x: 19, y: 2 }, rotateDirection: "Up" },  
+					{ name: "twelveByOne", location: { x: 4, y: 0 } }, { name: "twelveByOne", location: { x: 4, y: 9 } },  
+				]
 			}];
-			
-			var foodObject = new BrickObject({ tiles: [{ x: 0, y: 0 }], color: "Red" });
-
-			var snakeObject;
-
-			var level = brickGameModel.getLevel();
-			var speedInMillis = brickGameModel.getSpeedInMillis();
-
+			var isCrawling = false;
+			var snakeObject = [], obstacles = [];
+			var level = brickGameModel.getLevel(), speedInMillis = brickGameModel.getSpeedInMillis();
 			var direction = gameLevelTiles[level - 1].snake.direction;
+			var currentDirection = direction;
 			var snakeLocation = gameLevelTiles[level - 1].snake.location;
-			var obstacles = gameLevelTiles[level - 1].obstacles;
-
+			var foodObject = $game.newBrickObject({ tiles: [{ x: 0, y: 0 }], color: "Red" });
+			var snakeCrawlAnim = $game.newTimer({ func: crawlSnake, interval: speedInMillis });
+			
+			// FUNCTIONS
 			function loadSnake() {
-				
-			    snakeObject = [new BrickObject({ tiles: [{ x: 0, y: 0 }], color: "Green" })];
+				var t = 1;
+			    snakeObject = [$game.newBrickObject({ tiles: [{ x: 0, y: 0 }], color: "Green" })];
 			    snakeObject[0].setLocation(snakeLocation.x, snakeLocation.y);
-			    
-			    var t = 1;
 			    while(t < 5) {
 			    	var x;
-			    	if(direction == "Right") {
-			    		x = snakeLocation.x - t;
-			    	}
-			    	else {
-			    		x = snakeLocation.x + t;
-			    	}
-			    	snakeObject.push(new BrickObject({ tiles: [{ x: 0, y: 0 }], color: "Black" }));
+			    	if(direction == "Right") x = snakeLocation.x - t;
+			    	else x = snakeLocation.x + t;
+			    	snakeObject.push($game.newBrickObject({ tiles: [{ x: 0, y: 0 }], color: "Black" }));
 			    	snakeObject[snakeObject.length - 1].setLocation(x, snakeLocation.y);
 			    	t++;
 			    }
 			}
-
-
+			function loadObstacles() {
+				gameLevelTiles[brickGameModel.getLevel() - 1].obstacles.forEach(function(gt) {
+					obstacles.push($game.newBrickObject({ name: gt.name, brickLocation: gt.location, rotateDirection: gt.rotateDirection }));
+				});
+			}
+			function loadFood() {
+				var foodX = 0, foodY = 0;
+				do { foodX = Math.round(Math.random() * 100) % 20; foodY = Math.round(Math.random() * 100) % 10; }
+				while($game.tryOverlap(foodObject, foodX, foodY).length > 0)
+				foodObject.setLocation(foodX, foodY);
+			}
 			function crawlSnake() {
-			
-				var location = snakeObject[0].getLocation();
-				var foodLocation = foodObject.getLocation();
-
-				var x = location.x;
-				var y = location.y;
-
-				switch(direction) {
+				var location = snakeObject[0].getLocation(), foodLocation = foodObject.getLocation();
+				var x = location.x, y = location.y;
+				currentDirection = direction;
+				switch(currentDirection) {
 					case "Right":
-						x++;
-						if(x == 20) x = 0;
+						x++; if(x == 20) x = 0;
 						break;
 					case "Up":
-						y--;
-						if(y < 0) y = 9;
+						y--; if(y < 0) y = 9;
 						break;
 					case "Left":
-						x--;
-						if(x < 0) x = 19;
+						x--; if(x < 0) x = 19;
 						break;
 					case "Down":
-						y++;
-						if(y == 10) y = 0;
+						y++; if(y == 10) y = 0;
 						break;
 					default:
 						break;
 				}
-
-				
-				if (isObstacle(x, y) || isSnakeTile(x, y)) {
-					snakeCrawlAnim.stop();
-					Game.blinkBrickObjects(snakeObject, 400, 3, Game.gameOver);
+				var collidedObject = $game.tryOverlap(snakeObject[0], x, y).first();
+				var isCollided = collidedObject != undefined;
+				var isFoodEaten = isCollided && $game.areEqual(collidedObject, foodObject);
+				if (isCollided && !isFoodEaten) { 
+					$game.stop();
+					GameSound.explosion();
+					$game.blinkBrickObjects({ brickObjects: snakeObject, interval: 400, count: 3, endFunction: Game.gameOver });
 				}
 				else {
-					if(x == foodLocation.x && y == foodLocation.y) {
-						loadFood();
-						var tailLocation = snakeObject[snakeObject.length - 1].getLocation();
-						snakeObject.push(new BrickObject({ tiles: [{ x: 0, y: 0 }], color: "Black" }));
-						Game.score();
+					if(isFoodEaten) {
+						var tailLocation = snakeObject[snakeObject.length - 1].getLocation(); loadFood();
+						snakeObject.push($game.newBrickObject({ name: "singleTile", color: "Black" }));
+						GameSound.score(); $game.score();
 					}
 					snakeObject[0].setLocation(x, y);
 					for (var i = 1; i < snakeObject.length; i++) {
@@ -2322,79 +2317,38 @@
 						snakeObject[i].setLocation(location.x, location.y);
 						location = l;
 					}
-
 					location = snakeObject[0].getLocation();
 				}
 			}
-
-			var snakeCrawlAnim = new Timer(crawlSnake, speedInMillis);
-			snakeCrawlAnim.start();
-
-			function loadObstacles() {
-				gameLevelTiles[brickGameModel.getLevel() - 1].obstacles.setLocation(0, 0);
-			}
-
-			function loadFood() {
-				do
-				{
-					foodX = Math.round(Math.random() * 100) % 20;
-					foodY = Math.round(Math.random() * 100) % 10;
-				}
-				while(isObstacle(foodX, foodY) || isSnakeTile(foodX, foodY))
-
-				foodObject.setLocation(foodX, foodY);
-			}
-
-			function isObstacle(x, y) {
-				return obstacles.hasTile(x, y);
-			}
-			function isSnakeTile(x, y) {
-				return snakeObject.filter(function(s) {
-					return s.hasTile(x, y);
-				}).length > 0;
-			}
 			function changeDirection(_direction) {
-				if((direction == "Right" && _direction != "Left") ||
-					(direction == "Left" && _direction != "Right") ||
-					(direction == "Up" && _direction != "Down") || 
-					(direction == "Down" && _direction != "Up"))
-					direction = _direction;
+				if(_direction == undefined) _direction = direction;
+				if(((currentDirection == "Right" && _direction != "Left") ||
+					(currentDirection == "Left" && _direction != "Right") ||
+					(currentDirection == "Up" && _direction != "Down") || 
+					(currentDirection == "Down" && _direction != "Up"))) { 
+						GameSound.move(); snakeCrawlAnim.setTimerInterval(50);
+						direction = _direction; isCrawling = true;
+					}
 			}
 
+			// KEY FUNCTIONS
 			this.keydownfunctions = {
-				onLeft: function() { 
-					changeDirection("Left");
-				},
-				onRight: function() { 
-					changeDirection("Right");
-				},
-				onTop: function() { 
-					changeDirection("Up");
-				},
-				onBottom: function() { 
-					changeDirection("Down");
-				},
-				onSpace: {
-					action: function() {
-						snakeCrawlAnim.setTimerInterval(50);
-					},
-					allowRepeat: false
-				}
-				
+				onLeft: { action: function() { changeDirection("Left") }, allowRepeat: false },
+				onRight: { action: function() { changeDirection("Right"); }, allowRepeat: false },
+				onTop: { action: function() { changeDirection("Up"); }, allowRepeat: false },
+				onBottom: { action: function() { changeDirection("Down"); }, allowRepeat: false },
+				onSpace: { action: function() { changeDirection(); }, allowRepeat: false }
+			}
+			this.keyupfunctions = { 
+				onLeft: function() { if(isCrawling) { snakeCrawlAnim.setTimerInterval(speedInMillis); isCrawling = false; } },
+				onRight: function() { if(isCrawling) { snakeCrawlAnim.setTimerInterval(speedInMillis); isCrawling = false; } },
+				onTop: function() { if(isCrawling) { snakeCrawlAnim.setTimerInterval(speedInMillis); } isCrawling = false; },
+				onBottom: function() { if(isCrawling) { snakeCrawlAnim.setTimerInterval(speedInMillis); isCrawling = false; } },
+				onSpace: function() { if(isCrawling) { snakeCrawlAnim.setTimerInterval(speedInMillis); isCrawling = false; } } 
 			}
 
-			this.keyupfunctions = {
-				onSpace: function() {
-					snakeCrawlAnim.setTimerInterval(speedInMillis);
-				},
-			}
-
-			loadObstacles();
-			loadSnake();
-			loadFood();
-			crawlSnake();
-
-			return this;
+			// INITIALIZATION
+			loadSnake(); loadObstacles(); loadFood(); snakeCrawlAnim.start();
 		},
 	},
 	{
@@ -2475,7 +2429,7 @@
 				brickLocation = brickGameModel.getLevel();
 				loadMatches();
 				brickObjects.forEach(function(bo) { bo.show(); });
-				setBrickTileLocations(17); setBrickTileToMatchLocations(1);
+				setBrickTileLocations(17); setBrickTileToMatchLocations(brickLocation);
 				brickInvasionAnim.start();
 			}
 			function changeBrickObject(number) {
@@ -2484,7 +2438,7 @@
 				if(brickMatches[number] > 3) brickMatches[number] = 0;
 				brickObjects[number].setLocation(17, 1 + (number * 3), brickTiles[brickMatches[number]]);
 			}
-			function matchBricks() { if(!matchBricksAnim.isRunning()) matchBricksAnim.start(); }
+			function matchBricks() { if(!matchBricksAnim.isRunning()) { GameSound.fire2(); matchBricksAnim.start(); } }
 			function getMatch() {
 				var isMatched = true, a = 0;
 				while(isMatched == true && a < 3) { isMatched = brickToMatch[a] == brickMatches[a]; a++; }
@@ -2495,12 +2449,17 @@
 			this.keydownfunctions = {
 				onLeft: function() { changeBrickObject(1); },
 				onRight: function() { changeBrickObject(1); },
-				onTop: function() { changeBrickObject(0); },
+				onTop: function () { changeBrickObject(0); },
 				onBottom: function() { changeBrickObject(2); },
 				onSpace: function() { matchBricks(); },
 			}
-
-			this.keyupfunctions = { onSpace: function() { }, }
+			this.keyupfunctions = { 
+				onLeft: function() {  },
+				onRight: function() {  },
+				onTop: function() {  },
+				onBottom: function() {  },
+				onSpace: function() {  },
+			}
 
 			// INITIALIZATION
 			loadBrickTiles(); startMatch();
@@ -2546,7 +2505,7 @@
 						cars[i].setLocation(location.x + 1, location.y);
 					}
 					if(cars.first().getLocation().x == 6) cars.unshift(addCar());
-					if(lastCar.isGottenOutOfScreen()) { cars.pop(); $game.score(); }
+					if(lastCar.isGottenOutOfScreen()) { $game.disappear(lastCar); cars.pop(); $game.score(); }
 				}
 			}
 
@@ -2558,7 +2517,13 @@
 				onBottom: function() { var y = myCar.getLocation().y; myCar.setLocation(16, y == 7 ? 7: y + 3); },
 				onSpace: { action: function() { moveRoadAnim.setTimerInterval(50); }, allowRepeat: false }
 			}
-			this.keyupfunctions = { onSpace: function() { moveRoadAnim.setTimerInterval(speedInMillis); }, }
+			this.keyupfunctions = { 
+				onLeft: function() {  },
+				onRight: function() {  },
+				onTop: function() {  },
+				onBottom: function() {  },
+				onSpace: function() { moveRoadAnim.setTimerInterval(speedInMillis); }
+			}
 
 			// INITIALIZATION
 			loadRoadAndCars();
@@ -2573,7 +2538,8 @@
 	function BrickObject(params) {
 		var tiles = params.tiles;
 		var color = params.color;
-		var brickDirection = params.brickDirection;
+		var brickDirection = params.brickDirection == undefined ? "Right": brickDirection;
+		var rotateDirection = params.rotateDirection == undefined ? "Right": params.rotateDirection;
 		var origin = params.origin == undefined ? 0: params.origin;
 		var brickLocation = params.brickLocation;
 		var brickTileName = params.name;
@@ -2584,15 +2550,17 @@
 		var _tileLocations = [];
 
 		// EVENTS
+		tiles = JSON.parse(JSON.stringify(ifUndefined(tiles, [])));
+		if (tiles.length > 0) _rotate();
+
 		var onRemove = params.onRemove == undefined ? function() {}: params.onRemove;
 
-		if (brickDirection == undefined) brickDirection = "Right";
 		if (brickLocation != undefined) _setLocation(brickLocation.x, brickLocation.y);
-
-	    tiles = JSON.parse(JSON.stringify(ifUndefined(tiles, [])));
 
 		this.bt = tiles;
 		this.overlapIndex = 0;
+
+
 
 		// refactored
 		function getTileObject(x, y) { return document.getElementById("tileCell" + brickObjectTiles[x].name + brickObjectTiles[y].name); }
@@ -2669,7 +2637,7 @@
 					}
 					break;
 				case "Down":
-					for (var a = 0; a < brickSize.height; a++) {
+					for (var a = 0; a < brickSize.width; a++) {
 						var edgeTile = tiles.filter(function(t) { return t.x == a; }).sort(function(a, b) { return a.y - b.y; }).last();
 						if(!(edgeTiles == undefined && edgeTiles == null) && edgeTile != undefined) edgeTiles.push(edgeTile);
 					}
@@ -2820,6 +2788,90 @@
 				}
 			}, interval);
 		}
+
+		function _rotate() {
+			var rotation = undefined;
+
+			var tileX = 0, tileY = 0, _tw = 0, _th = 0, x = 0, y = 0;
+
+			var brickSize = _getSize();
+
+			if (
+				(rotateDirection == "Right" && brickDirection == "Left") ||
+				(rotateDirection == "Left" && brickDirection == "Right") ||
+				(rotateDirection == "Up" && brickDirection == "Down") ||
+				(rotateDirection == "Down" && brickDirection == "Up")
+			) {
+				rotation = "rotate180";
+			}
+			else if (
+				(rotateDirection == "Right" && brickDirection == "Up") ||
+				(rotateDirection == "Up" && brickDirection == "Left") ||
+				(rotateDirection == "Left" && brickDirection == "Down") ||
+				(rotateDirection == "Down" && brickDirection == "Right") 
+			) {
+				rotation = "clockwise";
+			}
+			else if (
+				(rotateDirection == "Right" && brickDirection == "Down") ||
+				(rotateDirection == "Down" && brickDirection == "Left") ||
+				(rotateDirection == "Left" && brickDirection == "Up") ||
+				(rotateDirection == "Up" && brickDirection == "Right")
+			) {
+				rotation = "counterclockwise";
+			}
+
+
+
+			if (rotation != undefined) {
+				
+				if (rotation == "rotate180") {
+					// x = (X + originX) - (brickSize.width - 1 - originX);
+					// y = (Y + originY) - (brickSize.height - 1 - originY);
+					_tw = brickSize.width - 1;
+					_th = brickSize.height - 1;
+					// originX = _tw - originX;
+					// originY = _tw - originY;
+				}
+				else if (rotation == "clockwise") {
+					// x = (X + originX) - (brickSize.height - 1 - originY);
+					// y = (Y + originY) - originX;
+					_th = originX;
+					_tw = brickSize.height - 1 - originY;
+					// originY = _th;
+					// originX = _tw;
+				}
+				else if (rotation == "counterclockwise") {
+					// x = (X + originX) - originY;
+					// y = (Y + originY) - (brickSize.width - 1 - originX);
+					_th = brickSize.width - 1 - originX;
+					_tw = originY;
+					// originY = _th;
+					// originX = _tw;
+				}
+
+				for(var t = 0; t < tiles.length; t++) {
+
+					if (rotation == "rotate180") {
+						tiles[t].x = _tw - tiles[t].x;
+						tiles[t].y = _th - tiles[t].y;	
+					}
+					else if (rotation == "clockwise") {
+						_tw = brickSize.height - 1 - tiles[t].y;
+						_th = tiles[t].x;
+						tiles[t].x = _tw;
+						tiles[t].y = _th;
+					}
+					else if (rotation == "counterclockwise") {
+						_tw = tiles[t].y;
+						_th = brickSize.width - 1 - tiles[t].x;
+						tiles[t].x = _tw;
+						tiles[t].y = _th;
+					}
+	 			}
+	 		}
+		}
+
 		this.rotate = function(direction) {
 
 			var rotation = undefined;
@@ -2851,9 +2903,6 @@
 				(direction == "Up" && brickDirection == "Right")
 			) {
 				rotation = "counterclockwise";
-			}
-			else {
-				rotation = undefined;
 			}
 
 			console.log(tiles);
