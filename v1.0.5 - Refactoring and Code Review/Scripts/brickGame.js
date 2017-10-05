@@ -384,17 +384,17 @@
 		{
 			name: "tankTile",
 			tiles: [
-				{ x: 0, y: 1 },
+				{ x: 2, y: 1 },
 				{ x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }, 
-				{ x: 2, y: 0 }, { x: 2, y: 1 }, { x: 2, y: 2 }, 
+				{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, 
 			]
 		},
 		{
 			name: "enemyTankTile",
 			tiles: [
-				{ x: 0, y: 1 },
+				{ x: 2, y: 1 },
 				{ x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }, 
-				{ x: 2, y: 0 }, { x: 2, y: 2 }, 
+				{ x: 0, y: 0 }, { x: 0, y: 2 }, 
 			]
 		},
 		{ name: "singleTile", tiles: [ { x: 0, y: 0 } ] },
@@ -734,28 +734,17 @@
 	};
 
 	var Game = new function() {
-
 		var $game;
-
 		var selectedGame = {};
 		var timers = [];
 		
-		function _newBrickObject(params) {
-			return new BrickObject(params);
-		}
-		function _disappear(brickObject) {
-			console.log(selectedGame.brickObjects.indexOf(brickObject));
-			selectedGame.brickObjects.splice(selectedGame.brickObjects.indexOf(brickObject), 1);
-			brickObject.remove();
-		}
-
+		// REFACTORED
 		this.newBrickObject = function(params) {
 			params = params == undefined ? {}: params;
 			var brickTiles = brickObjectTiles.filter(function(t) { return t.name == params.name }).first();
 			params.tiles = params.tiles == undefined ? (brickTiles == undefined ? []: brickTiles.tiles): params.tiles;
 			var newBrickObject = new BrickObject(params);
 			selectedGame.brickObjects.push(newBrickObject);
-			newBrickObject.willPassThroughSide = params.willPassThroughSide ? true: params.willPassThroughSide;
 			return newBrickObject;
 		};
 		this.newTimer = function(params) {
@@ -763,9 +752,7 @@
 			selectedGame.timers.push(newTimer);
 			return newTimer;
 		}
-		this.areEqual = function(bo1, bo2) {
-			return selectedGame.brickObjects.indexOf(bo1) == selectedGame.brickObjects.indexOf(bo2);
-		}
+		this.areEqual = function(bo1, bo2) { return selectedGame.brickObjects.indexOf(bo1) == selectedGame.brickObjects.indexOf(bo2); }
 		// this.getBrickObjects = function(name) {
 		// 	name = name == undefined ? "": name;
 		// 	var objs = selectedGame.brickObjects;
@@ -775,8 +762,52 @@
 		// 	return objs;
 		// }
 		this.disappear = function(brickObject) {
-			_disappear(brickObject);
+			console.log(selectedGame.brickObjects.indexOf(brickObject));
+			selectedGame.brickObjects.splice(selectedGame.brickObjects.indexOf(brickObject), 1);
+			brickObject.remove();
 		}
+		this.stop = function() { selectedGame.timers.forEach(function(t) { t.stop(); }); }
+		this.gameOver = function() {
+			GameSound.gameOver();
+			var brickGameMarquee = new Marquee({ word: "GAME OVER", onUnload: function() { GameProperties() } });
+		};
+		this.levelUp = function() {
+			var level = brickGameModel.getLevel() + 1;
+			brickGameModel.setLevel(level > 10 ? 1: level);
+			GameSound.levelUp();
+			var brickGameMarquee = new Marquee({ word: "LEVEL UP", onUnload: function() { this.load() } });
+		};
+		this.blinkBrickObjects = function(params) {
+			var brickObjects = params.brickObjects
+			var interval = params.interval == undefined ? 1000: params.interval;
+			var count = params.count * 2, c = 0; 
+			var endFunction = params.endFunction == undefined ? function() { console.log("no function") }: params.endFunction;
+			var isKeyLocked = params.isKeyLocked == undefined ? true: params.isKeyLocked;
+			if(isKeyLocked == true) _window_.onkeydown = function() {};
+			var blinkTimeout = setInterval(function(){
+				for(var a = 0; a < brickObjects.length; a++) brickObjects[a].toggleAppear();
+				c++;
+				if(count == c && count != undefined) { 
+					clearTimeout(blinkTimeout);
+					_window_.onkeydown = gamekeydownfunctions;
+					_window_.onkeypress = gamekeypressfunctions;
+					endFunction();
+				}
+			}, interval == undefined ? 1000: interval);
+		};
+		this.score = function() {
+			var _score = brickGameModel.getScore() + 1;
+			brickGameModel.setScore(_score);
+			if(selectedGame.score < _score) selectedGame.score++;
+		};
+		this.lockKey = function(isKeyLocked) {
+			if (isKeyLocked) _window_.onkeydown = function() {}; 
+			else _window_.onkeydown = gamekeydownfunctions;
+		};
+
+
+
+		// -----
 		this.willCollide = function(brickObject, direction, ...objectsBeCollided) {
 			var xIncrement = 0, yIncrement = 0;
 			var oppositeDirection = "Left";
@@ -875,20 +906,16 @@
 			return overLappedObjects;
 		}
 		this.load = function() {
+			setCanvasColor("white");
 			$game = this;
 		    selectedGame = brickGameModel.getSelectedGame();
-		    selectedGame.brickObjects = [];
-		    selectedGame.timers = [];
-			setCanvasColor("white");
+		    selectedGame.brickObjects = [], selectedGame.timers = [];
 			brickGameModel.setScore(0);
 			brickGameModel.setSpeedInMillis(selectedGame.speedTimeout[brickGameModel.getSpeed() - 1]);
-
-			console.log($game);
 
 			var game = new selectedGame.load($game);
 
 			gamekeydownfunctions = function() {
-
 				var keydownfunctions = game.keydownfunctions;
 
 				if(keydownfunctions.onTop.action == undefined) keydownfunctions.onTop.action = keydownfunctions.onTop;
@@ -933,7 +960,6 @@
 						break; 
 				}
 			}
-
 			gamekeypressfunctions = function() {
 				switch(event.key) {
 					// case "ArrowUp":
@@ -956,7 +982,6 @@
 					// 	break; 
 				}
 			}
-
 			gamekeyupfunctions = function() {
 				switch(event.key) {
 					case "ArrowUp":
@@ -979,231 +1004,85 @@
 					// 	break; 
 				}
 			}
-
 			_window_.onkeydown = gamekeydownfunctions;
 			_window_.onkeypress = gamekeypressfunctions;
 			_window_.onkeyup = gamekeyupfunctions;
 		};
-		this.stop = function() {
-			selectedGame.timers.forEach(function(t) { t.stop(); });
-		}
-		this.gameOver = function() {
-			console.log("game over");
-			GameSound.gameOver();
-			var brickGameMarquee = new Marquee({
-				word: "GAME OVER",
-				onUnload: function() { GameProperties() }
-			});
-		};
-		this.levelUp = function() {
-			var level = brickGameModel.getLevel() + 1;
-			brickGameModel.setLevel(level > 10 ? 1: level);
-			GameSound.levelUp();
-			var brickGameMarquee = new Marquee({
-				word: "LEVEL UP",
-				onUnload: function() { this.load() }
-			});
-		};
-		this.blinkBrickObjects = function(params) {
-			var brickObjects = params.brickObjects
-			var interval = params.interval == undefined ? 1000: params.interval;
-			var count = params.count; 
-			var endFunction = params.endFunction == undefined ? function() { console.log("no function") }: params.endFunction;
-			var isKeyLocked = params.isKeyLocked == undefined ? true: params.isKeyLocked;
+		
 
-			count = count * 2;
-			var c = 0;
-			if(isKeyLocked == true) _window_.onkeydown = function() {};
-			var blinkTimeout = setInterval(function(){
-				for(var a = 0; a < brickObjects.length; a++) brickObjects[a].toggleAppear();
-				c++;
-				if(count == c && count != undefined) { 
-					clearTimeout(blinkTimeout);
-					_window_.onkeydown = gamekeydownfunctions;
-					_window_.onkeypress = gamekeypressfunctions;
-					endFunction();
-				}
-			}, interval == undefined ? 1000: interval);
-		};
-		this.score = function() {
-			var _score = brickGameModel.getScore() + 1;
-			brickGameModel.setScore(_score);
-			if(selectedGame.score < _score) selectedGame.score++;
-		};
-		this.lockKey = function(isKeyLocked) {
-			if (isKeyLocked) {
-				_window_.onkeydown = function() {};
-			}
-			else {
-				_window_.onkeydown = gamekeydownfunctions;
-			}
-		};
-		this.move = function(brickObject, direction) {
-			var oppositeDirection = "Right";
-			var brickObjectEdgeTiles = brickObject.getEdgeTiles(direction);
-			var brickLocation = brickObject.getLocation();
-			var brickSize = brickObject.getSize();
-			var xIncrement = 0, yIncrement = 0;
-
-			switch(direction) {
-				case "Left":
-					oppositeDirection = "Right";
-					if(brickLocation.x > 0 || brickObject.willPassThroughSide) brickLocation.x--;
-					xIncrement = 1; yIncrement = 0;
-					break;
-				case "Right":
-					oppositeDirection = "Left";
-					if(brickLocation.x < 20 - brickSize.width || brickObject.willPassThroughSide) brickLocation.x++;
-					xIncrement = -1; yIncrement = 0;
-					break;
-				case "Up":
-					oppositeDirection = "Down";
-					if(brickLocation.y > 0 || brickObject.willPassThroughSide) brickLocation.y--;
-					xIncrement = 0; yIncrement = 1;
-					break;
-				case "Down":
-					oppositeDirection = "Up";
-					if(brickLocation.y < 10 - brickSize.height || brickObject.willPassThroughSide) brickLocation.y++;
-					xIncrement = 0; yIncrement = -1;
-					break;
-			}
-
-			var willCollide = selectedGame.brickObjects.filter(function(bo) {
-				return selectedGame.brickObjects.indexOf(brickObject) != selectedGame.brickObjects.indexOf(bo);
-			}).filter(function(bo) { 
-
-				var boEdgeTiles = bo.getEdgeTiles(oppositeDirection);
-				var tileCounter = 0;
-				var willCollide = false;
-
-				while (tileCounter < boEdgeTiles.length && !willCollide) {
-					var bt = boEdgeTiles[tileCounter];
-					willCollide = brickObjectEdgeTiles.filter(function(bet) { 
-						return bet.screenX == bt.screenX + xIncrement && bet.screenY == bt.screenY + yIncrement;
-					}).length > 0;
-					tileCounter++;
-				}
-
-				// return brickObjectEdgeTiles.filter(function(bet) {
-					// 	return bet.screenX == bt.screenX + xIncrement && bet.screenY == bt.screenY + yIncrement;
-					// }).length > 0
-			}).length > 0;
-
-			if(!willCollide) {
-				brickObject.setLocation(brickLocation.x, brickLocation.y);
-			}
-		}
-
-		function _tryOverlap(brickObject, x, y) {
-			brickObject.tryLocation(x, y);
+		function _tryOverlap(brickObject) {
 			var brickObjectTiles = brickObject.getTiles();
-
 			var overlappedObjects = selectedGame.brickObjects.filter(function(bo){ 
 				return selectedGame.brickObjects.indexOf(brickObject) != selectedGame.brickObjects.indexOf(bo);
 			}).filter(function(bo) {
-
 				var isOverlapped = false;
 				var boTiles = bo.getTiles();
 				var tileCounter = 0;
-
 				while(tileCounter < boTiles.length && !isOverlapped) {
 					isOverlapped = brickObjectTiles.filter(function(bt) { 
 						return bt.testScreenX == boTiles[tileCounter].screenX && bt.testScreenY == boTiles[tileCounter].screenY 
 					}).length > 0;
 					tileCounter++;
 				}
-
 				return isOverlapped;
 			});
 			return overlappedObjects;
 		}
 
-		// this.tryRotate = function(brickObject, direction) {
-		// 	brickObject.tryRotate(direction);
-
-		// 	var overLappedObjects = _tryOverlap(brickObject);
-		// 	if (overLappedObjects.length == 0 && !brickObject.isGettingOutOfScreen()) {
-		// 		brickObject.rotate(direction);
-		// 	}
-		// 	else {
-		// 		var brickLocation = brickObject.getLocation();
-		// 		switch (direction) {
-		// 			case "Left":
-		// 				brickLocation.x--;
-		// 				break;
-		// 			case "Right":
-		// 				brickLocation.x++;
-		// 				break;
-		// 			case "Up":
-		// 				brickLocation.y--;
-		// 				break;
-		// 			case "Down":
-		// 				brickLocation.y++;
-		// 				break;
-		// 			default:
-		// 				break;
-		// 		}
-		// 		brickObject.tryLocation(brickLocation.x, brickLocation.y);
-
-		// 		overLappedObjects = _tryOverlap(brickObject);
-		// 		if (overLappedObjects.length == 0 && !brickObject.isGettingOutOfScreen()) {
-		// 			brickObject.setLocation(brickLocation.x, brickLocation.y)
-		// 			brickObject.rotate(direction);
-		// 		}
-		// 	}
-		// }
-
 		this.tryOverlap = function(brickObject, x, y) {
-			return _tryOverlap(brickObject, x, y);
+			brickObject.tryLocation(x, y);
+			return _tryOverlap(brickObject);
+		}
+		this.rotate = function(brickObject, direction) {
+			brickObject.tryRotate(direction);
+			var overLappedObjects = _tryOverlap(brickObject);
+			if (overLappedObjects.length == 0 && !brickObject.willGetOutOfScreen(direction)) { brickObject.rotate(direction); }
+			else {
+				var brickLocation = brickObject.getLocation();
+				switch (direction) {
+					case "Left":
+						brickLocation.x--;
+						break;
+					case "Right":
+						brickLocation.x++;
+						break;
+					case "Up":
+						brickLocation.y--;
+						break;
+					case "Down":
+						brickLocation.y++;
+						break;
+					default:
+						break;
+				}
+				brickObject.tryLocation(brickLocation.x, brickLocation.y);
+				overLappedObjects = _tryOverlap(brickObject);
+				if (overLappedObjects.length == 0 && !brickObject.willGetOutOfScreen(direction)) {
+					brickObject.setLocation(brickLocation.x, brickLocation.y); brickObject.rotate(direction);
+				}
+			}
 		}
 	}
 
 	// GAMES
 	var _games = [
 	{
-		character: 'A',
-		gameType: "tank",
-		mode: 1,
-		score: 0,
-		speedTimeout: [300, 280, 260, 240, 220, 200, 180, 160, 140, 120],
-		load: function() {
-			var level = brickGameModel.getLevel();
-			var speedInMillis = brickGameModel.getSpeedInMillis();
-
-			var tankTile = Game.newBrickObject({ 
-				name: "tankTile", 
-				origin: { x: 1, y: 1 }, 
-				brickLocation: { x: 10, y: 3 }, 
-				brickDirection: "Left",
-				willPassThroughSide: false
-			});
-
+		character: 'A', gameType: "tank", mode: 1, score: 0, speedTimeout: [1000, 950, 900, 850, 800, 750, 700, 650, 600, 550],
+		load: function($game) {
+			var level = brickGameModel.getLevel(), speedInMillis = brickGameModel.getSpeedInMillis();
 			var enemyTankTiles = [];
+			var spawnTankAnim = $game.newTimer({ func: loadEnemyTanks, interval: 200 });
+			var tankTile = $game.newBrickObject({ name: "tankTile", origin: { x: 1, y: 1 }, brickLocation: { x: 10, y: 3 }, brickDirection: "Left" });
 
-			var spawnTankAnim = new Timer(loadEnemyTanks, 200);
-
-			function moveTank(_tankTile, direction) {
-				var tankDirection = _tankTile.getDirection();
-				var tankLocation = _tankTile.getLocation();
-
-				if (tankDirection == direction) {
-					Game.move(_tankTile, direction);
-				}
-				else {
-					Game.tryRotate(_tankTile, direction);
-				}
-			}
-
+			// FUNCTIONS
 			function loadEnemyTanks() {
-
 				var spawn = Math.round(Math.random() * 100) % 5 == 0;
-
 				if(spawn && enemyTankTiles.length < 6) {
-
-					var posX = Math.round(Math.random() * 100) % 3;
-					var posY = Math.round(Math.random() * 100) % 2;
+					var posX = Math.round(Math.random() * 100) % 3, posY = Math.round(Math.random() * 100) % 2;
 					var direction = Math.round(Math.random() * 100) % 4;
-					
+					var enemyTankTile = $game.newBrickObject({
+						name: "enemyTankTile", brickDirection: "Left", origin: { x: 1, y: 1 },
+					});
 					switch(posX) {
 						case 0:
 							posX = 0;
@@ -1217,7 +1096,6 @@
 						default:
 							break;
 					}
-
 					switch(posY) {
 						case 0:
 							posY = 0;
@@ -1228,7 +1106,6 @@
 						default:
 							break;
 					}
-
 					switch(direction) {
 						case 0:
 							direction = "Left";
@@ -1245,166 +1122,149 @@
 						default:
 							break;
 					}
-
-					
-
-					var enemyTankTile = Game.newBrickObject({
-						name: "enemyTankTile",
-						brickDirection: "Left",
-						origin: { x: 1, y: 1 },
-						willPassThroughSide: false,
-					});
-
-					if(Game.tryOverlap(enemyTankTile, posX, posY).length == 0) {
+					if($game.tryOverlap(enemyTankTile, posX, posY).length == 0) {
 						enemyTankTile.setLocation(posX, posY);
 						enemyTankTile.rotate(direction);
 						enemyTankTiles.push(enemyTankTile);
-						var index = enemyTankTiles.indexOf(enemyTankTile);
-						var moveEnemyTankAnim = new Timer(function() { 
-							var direction = enemyTankTile.getDirection();
-
-							var moveOrRotate = Math.floor(Math.random() * 100) % 3 == 0;
-
-							if (moveOrRotate) {
-								direction = ["Left", "Right", "Up", "Down"][Math.floor(Math.random() * 100) % 4];
-							}
-
-							moveTank(enemyTankTile, direction);
-							
-							if(Math.floor(Math.random() * 100) % 2 == 0 /*&& index < 1*/) {
-								console.log("enemy tiles count: " + Game.getBrickObjects("enemyTankTile").length)
-								fireTank(enemyTankTile, true);
-							}
-						}, 1000);
+						var moveEnemyTankAnim = $game.newTimer({
+							func: function() { 
+								var direction = enemyTankTile.getDirection();
+								var moveOrRotate = Math.floor(Math.random() * 100) % 3 == 0;
+								if (moveOrRotate) direction = ["Left", "Right", "Up", "Down"][Math.floor(Math.random() * 100) % 4];
+								moveTank(enemyTankTile, direction);
+								if(Math.floor(Math.random() * 100) % 2 == 0) fireTank(enemyTankTile, true);
+							}, 
+							interval: speedInMillis
+						});
 						enemyTankTile.onRemove(function() { moveEnemyTankAnim.stop() });
 						moveEnemyTankAnim.start();
 					}
-					else {
-						Game.disappear(enemyTankTile);
-					}
 				}
 			}
-
+			function moveTank(_tankTile, direction) {
+				var tankDirection = _tankTile.getDirection(), tankLocation = _tankTile.getLocation();
+				if (tankDirection == direction) {
+					switch(direction) {
+						case "Left":
+							tankLocation.x--;
+							break;
+						case "Right":
+							tankLocation.x++;
+							break;
+						case "Up":
+							tankLocation.y--;
+							break;
+						case "Down":
+							tankLocation.y++;
+							break;
+					}
+					if($game.tryOverlap(_tankTile, tankLocation.x, tankLocation.y).length == 0 && !_tankTile.isOnSide(direction))
+						_tankTile.setLocation(tankLocation.x, tankLocation.y);
+				}
+				else $game.rotate(_tankTile, direction);
+			}
 			function fireTank(_tankTile, _isEnemyTank) {
-				
 				var isEnemyTank = _isEnemyTank == undefined ? false: _isEnemyTank;
 				var ammoX = 0, ammoY = 0;
-				var tankDirection = _tankTile.getDirection();
-				var tankLocation = _tankTile.getLocation();
-
+				var tankDirection = _tankTile.getDirection(), tankLocation = _tankTile.getLocation();
+				var ammoTile = $game.newBrickObject({ name: "singleTile", color: isEnemyTank ? "red": "yellow", brickDirection: tankDirection });
+				function hit(hitObject) {
+					var hitObjectName = hitObject.getName();
+					if(!isEnemyTank && hitObjectName == "enemyTankTile") {
+						GameSound.fire();
+						enemyTankTiles.splice(enemyTankTiles.indexOf(hitObject), 1);
+						$game.score();
+						$game.disappear(hitObject);
+					}
+					else {
+						if (hitObjectName == "singleTile") $game.disappear(hitObject);
+						else if (hitObjectName == "tankTile") {
+							$game.stop();
+							GameSound.explosion();
+							$game.blinkBrickObjects({ brickObjects: [tankTile], interval: 400, count: 3, endFunction: $game.gameOver });
+						}
+					}
+				}
 				switch(tankDirection) {
 					case "Right":
-						ammoX = tankLocation.x + 3;
-						ammoY = tankLocation.y + 1;
+						ammoX = tankLocation.x + 3; ammoY = tankLocation.y + 1;
 						break;
 					case "Left":
-						ammoX = tankLocation.x - 1;
-						ammoY = tankLocation.y + 1;
+						ammoX = tankLocation.x - 1; ammoY = tankLocation.y + 1;
 						break;
 					case "Up":
-						ammoX = tankLocation.x + 1;
-						ammoY = tankLocation.y - 1;
+						ammoX = tankLocation.x + 1; ammoY = tankLocation.y - 1;
 						break;
 					case "Down":
-						ammoX = tankLocation.x + 1;
-						ammoY = tankLocation.y + 3;
+						ammoX = tankLocation.x + 1; ammoY = tankLocation.y + 3;
 						break;
 					default:
 						break;
 				}
-
-				var ammoTile = Game.newBrickObject({ 
-					name: "singleTile", 
-					color: isEnemyTank ? "red": "yellow",
-					dontShowIfOverlapped: true,
-					brickDirection: tankDirection,
-					willPassThroughSide: true
-				});
-
-				var collidedObjects = Game.tryOverlap(ammoTile, ammoX, ammoY).filter(function(t) { return t.getName() != "singleTile" });
-
+				var collidedObjects = $game.tryOverlap(ammoTile, ammoX, ammoY);
 				if(collidedObjects.length == 0) {
-
-					ammoTile.setLocation(ammoX, ammoY);
-
-					var _ammoX = ammoX, _ammoY = ammoY;
-
-					var fireTankAnim = new Timer(function() {
-
-						var collidedObjects = Game.willBeCollidedBy(ammoTile, tankDirection);
-						
-						if (collidedObjects.length == 0 && (_ammoX > 0 && _ammoX < 19) && (_ammoY > 0 && _ammoY < 9)) {
-							Game.move(ammoTile, tankDirection, true);
-
-							var ammoLocation = ammoTile.getLocation();
-							_ammoX = ammoLocation.x;
-							_ammoY = ammoLocation.y;
-						}
-						else {
-							if (collidedObjects.length > 0) {
-								var hitObject = collidedObjects.first();
-								var hitObjectName = hitObject.getName();
-
-								if (!isEnemyTank && hitObjectName == "enemyTankTile") {
-									enemyTankTiles.splice(enemyTankTiles.indexOf(hitObject), 1);
-									Game.score();
-									Game.disappear(hitObject);
+					if(_tankTile.isOnSide(tankDirection)) $game.disappear(ammoTile);
+					else {
+						ammoTile.setLocation(ammoX, ammoY);
+						var fireTankAnim = $game.newTimer({
+							func: function() {
+								var ammoLocation = ammoTile.getLocation();
+								switch(tankDirection) {
+									case "Left":
+										ammoLocation.x--;
+										break;
+									case "Right":
+										ammoLocation.x++;
+										break;
+									case "Up":
+										ammoLocation.y--;
+										break;
+									case "Down":
+										ammoLocation.y++;
+										break;
 								}
-
-								if (hitObjectName == "singleTile") {
-									Game.disappear(hitObject);
+								var collidedObjects = $game.tryOverlap(ammoTile, ammoLocation.x, ammoLocation.y);
+								if (collidedObjects.length == 0 && !ammoTile.isOnSide(tankDirection)) 
+									ammoTile.setLocation(ammoLocation.x, ammoLocation.y);
+								else {
+									if (collidedObjects.length > 0) {
+										var hitObject = collidedObjects.first();
+										hit(hitObject);
+									}
+									$game.disappear(ammoTile);
 								}
-								else if (hitObjectName == "tankTile") {
-									//Game.blinkBrickObjects([hitObject], 400, 3, Game.gameOver);
-								}
-							}
-							Game.disappear(ammoTile);
-						}
-
-						
-					}, 100); 
-
-					ammoTile.onRemove(function() { fireTankAnim.stop() });
-					fireTankAnim.start();
+							}, 
+							interval: 100
+						}); 
+						ammoTile.onRemove(function() { fireTankAnim.stop() });
+						fireTankAnim.start();
+					}
 				}
-
 				else {
-					if(!isEnemyTank) {
-						var hitObject = collidedObjects.first();
-						Game.disappear(hitObject);
-						enemyTankTiles.splice(enemyTankTiles.indexOf(hitObject), 1);
-						Game.score();
-					} 
+					var hitObject = collidedObjects.first();
+					hit(hitObject);
+					$game.disappear(ammoTile);
 				}
 			}
-
-			spawnTankAnim.start();
-			//loadEnemyTanks();
-
+			
+			// KEY FUNCTIONS
 			this.keydownfunctions = {
-				onLeft: function() { 
-					moveTank(tankTile, "Left");
-				},
-				onRight: function() { 
-					moveTank(tankTile, "Right");
-				},
-				onTop: function() { 
-					moveTank(tankTile, "Up");
-				},
-				onBottom: function() { 
-					moveTank(tankTile, "Down");
-				},
-				onSpace: function(){
-					fireTank(tankTile);
-				}
-				
+				onLeft: function() { moveTank(tankTile, "Left"); },
+				onRight: function() { moveTank(tankTile, "Right"); },
+				onTop: function() { moveTank(tankTile, "Up"); },
+				onBottom: function() { moveTank(tankTile, "Down"); },
+				onSpace: function() { GameSound.move(); fireTank(tankTile); }
+			}
+			this.keyupfunctions = { 
+				onLeft: function() {  },
+				onRight: function() {  },
+				onTop: function() {  },
+				onBottom: function() {  },
+				onSpace: function() {  }
 			}
 
-			this.keyupfunctions = {
-				onSpace: function() {
-					
-				},
-			}
+			// INITIALIZATION
+			spawnTankAnim.start();
 		}
 	},
 	{
@@ -1488,7 +1348,7 @@
 		load: function($game) {
 			// DECLARATIONS
 			var level = brickGameModel.getLevel(), speedInMillis = brickGameModel.getSpeedInMillis();
-			var soldierObject = $game.newBrickObject({ name: "soldierTile", brickLocation: { x: 18, y: 4 }, willPassThroughSide: true });
+			var soldierObject = $game.newBrickObject({ name: "soldierTile", brickLocation: { x: 18, y: 4 } });
 			var enemyRows = loadEnemyTileLevel();
 			var enemyInvasionAnim = $game.newTimer({ func: invadeEnemies, interval: speedInMillis });
 
@@ -1719,7 +1579,7 @@
 		load: function($game) {
 			// DECLARATIONS
 			var level = brickGameModel.getLevel(), speedInMillis = brickGameModel.getSpeedInMillis();
-			var soldierObject = $game.newBrickObject({ name: "soldierTile", brickLocation: { x: 18, y: 4 }, willPassThroughSide: true });
+			var soldierObject = $game.newBrickObject({ name: "soldierTile", brickLocation: { x: 18, y: 4 } });
 			var enemyRows = loadEnemyTileLevel();
 			var enemyInvasionAnim = $game.newTimer({ func: invadeEnemies, interval: speedInMillis });
 			var rowRemoveAnim = $game.newTimer({ interval: 50 });
@@ -2538,7 +2398,7 @@
 	function BrickObject(params) {
 		var tiles = params.tiles;
 		var color = params.color;
-		var brickDirection = params.brickDirection == undefined ? "Right": brickDirection;
+		var brickDirection = params.brickDirection == undefined ? "Right": params.brickDirection;
 		var rotateDirection = params.rotateDirection == undefined ? "Right": params.rotateDirection;
 		var origin = params.origin == undefined ? 0: params.origin;
 		var brickLocation = params.brickLocation;
@@ -2691,6 +2551,39 @@
 			var brickSize = _getSize();
 			return X >= 20 || Y >= 10 || X <= -brickSize.width || Y <= -brickSize.height;
 		}
+		this.isOnSide = function(_direction) {
+			var directions;
+			var brickSize = _getSize();
+			var isOnLeft = X == 0, isOnRight = X + brickSize.width == 20, isOnTop = Y == 0, isOnBottom = Y + brickSize.height == 10;
+
+			if(_direction == undefined) {
+				directions = [];
+				
+				if (isOnLeft) directions.push("Left");
+				if (isOnRight) directions.push("Right");
+				if (isOnTop) directions.push("Up");
+				if (isOnBottom) directions.push("Down");
+			}
+			else {
+				directions = false;
+				switch(_direction) {
+					case "Left":
+						directions = isOnLeft;
+						break;
+					case "Right":
+						directions = isOnRight;
+						break;
+					case "Up":
+						directions = isOnTop;
+						break;
+					case "Down":
+						directions = isOnBottom;
+						break;
+				}
+				
+			}
+			return directions;
+		}
 		this.remove = function() {
 			var tileX, tileY;
 			if(X != undefined && Y != undefined) {
@@ -2736,6 +2629,9 @@
 					break;
 			}
 			return { x: a, y: b };
+		}
+		this.getTestLocation = function() {
+			return { x: testX, y: testY };
 		}
 		this.tryLocation = function(x, y, isTest) {
 			_tryLocation(x, y, isTest);
@@ -3138,9 +3034,44 @@
 			testX = x; testY = y;
 		}
 
-		this.isGettingOutOfScreen = function() {
+		this.willGetOutOfScreen = function(_direction) {
+			// var brickSize = _getSize();
+			// return testX < 0 || testY < 0 || testX + (brickSize.width - 1) > 19 || testY + (brickSize.height - 1) > 9;
+
+			var directions;
 			var brickSize = _getSize();
-			return testX < 0 || testY < 0 || testX + (brickSize.width - 1) > 19 || testY + (brickSize.height - 1) > 9;
+			var isOnLeft = testX < 0 && testX + brickSize.width > 0;
+			var isOnRight = testX < 20 && testX + brickSize.width > 20;
+			var isOnTop = testY < 0 && testY + brickSize.height > 0;
+			var isOnBottom = testY < 10 && testY + brickSize.height > 10;
+
+			if(_direction == undefined) {
+				directions = [];
+				
+				if (isOnLeft) directions.push("Left");
+				if (isOnRight) directions.push("Right");
+				if (isOnTop) directions.push("Up");
+				if (isOnBottom) directions.push("Down");
+			}
+			else {
+				directions = false;
+				switch(_direction) {
+					case "Left":
+						directions = isOnLeft;
+						break;
+					case "Right":
+						directions = isOnRight;
+						break;
+					case "Up":
+						directions = isOnTop;
+						break;
+					case "Down":
+						directions = isOnBottom;
+						break;
+				}
+				
+			}
+			return directions;
 		}
 	}
 
