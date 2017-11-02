@@ -542,15 +542,160 @@
 				for(var i = 0; i < 3; i++) { 
 					for (var j = 0; j < 3 - i; j++) {
 						tiles.push({ x: j, y: i });
+						tiles.push({ x: j, y: 9 - i });
+					}
+				} 
+				for(var i = 0; i < 3; i++) { 
+					for (var j = 0; j < i + 1; j++) {
+						tiles.push({ x: j, y: i + 7 });
 					}
 				} 
 				return tiles;
 			}()
-		}
+		},
+		{
+			name: "pinballTile2Level2",
+			tiles: function() { 
+				var tiles = []; 
+				for(var i = 0; i < 3; i++) { 
+					for (var j = 0; j < 4 - i; j++) {
+						tiles.push({ x: j, y: i });
+					}
+				} 
+				for(var i = 0; i < 3; i++) { 
+					for (var j = 0; j < i + 2; j++) {
+						tiles.push({ x: j, y: i + 7 });
+					}
+				} 
+				return tiles;
+			}()
+		},
+		{
+			name: "pinballTile2Level3",
+			tiles: function() { 
+				var tiles = []; 
+				for(var i = 0; i < 4; i++) { 
+					tiles.push({ x: i, y: 0 });
+					tiles.push({ x: i, y: 1 });
+					tiles.push({ x: i, y: 8 });
+					tiles.push({ x: i, y: 9 });
+				} 
+				tiles.push({ x: 0, y: 2 });
+				tiles.push({ x: 0, y: 7 });
+				return tiles;
+			}()
+		},
+		{
+			name: "pinballTile2Level4",
+			tiles: function() { 
+				var tiles = []; 
+				for(var i = 0; i < 4; i++) { 
+					tiles.push({ x: i, y: 0 });
+					tiles.push({ x: i, y: 1 });
+					tiles.push({ x: i, y: 8 });
+					tiles.push({ x: i, y: 9 });
+				} 
+				tiles.push({ x: 0, y: 2 });
+				tiles.push({ x: 0, y: 7 });
+				tiles.push({ x: 1, y: 2 });
+				tiles.push({ x: 1, y: 7 });
+				return tiles;
+			}()
+		},
+		{
+			name: "pinballTile2Level5",
+			tiles: function() { 
+				var tiles = []; 
+				for(var i = 0; i < 4; i++) {
+					for (var j = 0; j < 3; j++) {
+						tiles.push({ x: i, y: j });
+						tiles.push({ x: i, y: 9 - j });
+					}
+				} 
+				return tiles;
+			}()
+		},
+		{
+			name: "pinballTile2Level6",
+			tiles: function() { 
+				var tiles = []; 
+				for(var i = 0; i < 4; i++) { 
+					tiles.push({ x: 0, y: i });
+					tiles.push({ x: 0, y: i + 6 });
+				} 
+				for(var i = 0; i < 3; i++) {
+					tiles.push({ x: 1, y: i });
+					tiles.push({ x: 1, y: i + 7 });
+					tiles.push({ x: 2, y: i });
+					tiles.push({ x: 2, y: i + 7 });
+				}
+				return tiles;
+			}()
+		},
+		{
+			name: "pinballTile2Level7",
+			tiles: function() { 
+				var tiles = []; 
+				for(var i = 0; i < 3; i++) { 
+					for(var j = 0; j < 4 - i; j++) {
+						tiles.push({ x: i, y: j });
+						tiles.push({ x: i, y: 9 - j });
+					}
+				}
+				return tiles;
+			}()
+		},
+		{
+			name: "pinballTile2Level8",
+			tiles: function() { 
+				var tiles = []; 
+				for(var i = 0; i < 3; i++) { 
+					for(var j = 0; j < 4 - i; j++) {
+						tiles.push({ x: i, y: j });
+						tiles.push({ x: i, y: 9 - j });
+					}
+				}
+				tiles.push({ x: 3, y: 0 });
+				tiles.push({ x: 3, y: 1 });
+				tiles.push({ x: 3, y: 8 });
+				tiles.push({ x: 3, y: 9 });
+				return tiles;
+			}()
+		},
+		{
+			name: "pinballTile2Level9",
+			tiles: function() { 
+				var tiles = []; 
+				for(var i = 0; i < 4; i++) { 
+					for(var j = 0; j < 3; j++) {
+						tiles.push({ x: i, y: j });
+						tiles.push({ x: i, y: 9 - j });
+					}
+				}
+				tiles.push({ x: 0, y: 3 });
+				tiles.push({ x: 0, y: 6 });
+				tiles.push({ x: 1, y: 3 });
+				tiles.push({ x: 1, y: 6 });
+				return tiles;
+			}()
+		},
+		{
+			name: "pinballTile2Level10",
+			tiles: function() { 
+				var tiles = []; 
+				for(var i = 0; i < 4; i++) { 
+					for(var j = 0; j < 4; j++) {
+						tiles.push({ x: i, y: j });
+						tiles.push({ x: i, y: 9 - j });
+					}
+				}
+				return tiles;
+			}()
+		},
 	];
 
 	var GameSound = new function() {
-		var soundOn = false;
+		var soundOn = true;
 
 		var selectedAudio;
 		var audios = [
@@ -1850,11 +1995,96 @@
 			// DECLARATIONS
 			var level = brickGameModel.getLevel(), speedInMillis = brickGameModel.getSpeedInMillis();
 			var crossers = [], crosser;
+			var obstacles = [];
+			var moveObstacleAnim = $game.newTimer({ func: moveObstacle, interval: 500 });
 			
 			// FUNCTIONS
 			function addCrosser() { crosser = $game.newBrickObject({ name: "singleTile", color: "Green" , brickLocation: { x: 19, y: 5 }}); }
 			function loadWalls() {
 				for (var i = 2; i < 19; i += 2) $game.newBrickObject({ name: "verticalLine", brickLocation: { x: i, y: 0 } });
+			}
+			function loadObstacles1() {
+				var no = undefined;
+				for (var i = 3; i < 18; i += 2) {
+					var way = Math.floor(Math.random() * 100);
+					if (no == undefined) {
+						way = way % 10;
+					}
+					else {
+						way = way % 9;
+						way = (no - 4) + way;
+						if (way < 0) way = 0;
+						if (way > 9) way = 9;
+					}
+					no = way;
+					var startObsLoad = Math.floor(Math.random() * 100) % 2 == 0;
+					var obsNo = undefined;
+					for (var j = 0; j < 10; j++) {
+						
+						//var obs = Math.floor(Math.random() * 100) % 3;
+
+					    if (obsNo == undefined || j > obsNo) {
+					    	var count = (Math.floor(Math.random() * 100) % 4) + 1;
+					    	obsNo = j + no;
+				    		startObsLoad = !startObsLoad;
+				    	}
+
+					    if (startObsLoad) {
+					    	obstacles.push($game.newBrickObject({
+								name: "singleTile", brickLocation: { x: i, y: j }, color: "blue"
+							}));
+					    }
+
+
+
+						// if (obs == 1) obstacles.push($game.newBrickObject({
+						// 	name: "singleTile", brickLocation: { x: i, y: j }, color: "blue"
+						// }));
+
+						// if (j != way && obs != 1) obstacles.push($game.newBrickObject({
+						// 	name: "singleTile", brickLocation: { x: i, y: j }, color: "blue"
+						// }));
+					}
+				}
+				obstacles.sort(function(a, b) {
+					return b.getLocation().y - a.getLocation().y;
+				});
+			}
+			function loadObstacles() {
+				for (var i = 3; i < 18; i += 2) {
+					var j = 0;
+					while (j < 10) {
+						j = (Math.floor(Math.random() * 100) % 5) + j;
+						tileCount = (Math.floor(Math.random() * 100) % 5);
+						var tiles = [];
+						for (var t = 0; t < tileCount; t++) {
+							tiles.push({ x: 0, y: t });
+						}
+						$game.newBrickObject({ tiles: tiles, brickLocation: { x: i, y: j }, color: "blue" });
+						j += tileCount;
+					}
+				}
+			}
+			function moveObstacle() {
+				
+
+				for (var i = 0; i < obstacles.length; i++) {
+					var obsLocation = obstacles[i].getLocation();
+					obsLocation.y = obsLocation.y == 9 ? 0: obsLocation.y + 1;
+					obstacles[i].setLocation(obsLocation.x, obsLocation.y);
+				}
+
+				var crosserLoc = crosser.getLocation();
+
+				if (crosserLoc.x < 19) {
+					if (crosserLoc.y == 9) {
+						gameOver();
+					}
+					else {
+						crosserLoc.y++;
+						crosser.setLocation(crosserLoc.x, crosserLoc.y);
+					}
+				}
 			}
 			function moveCrosser(direction) {
 				var location = crosser.getLocation();
@@ -1862,41 +2092,81 @@
 				switch(direction) {
 					case "Left":
 						location.x = location.x == 1 ? 0: location.x - 2;
-						crosser.setLocation(location.x, location.y);
-						if (location.x == 0) {
-							var bumpedCrosser = $game.willBeOverlappedBy(crosser).first();
-							if(bumpedCrosser == null || bumpedCrosser == undefined) {
-								crossers.push(crosser);
-								GameSound.score(); $game.score();
-								if(crossers.length == 10) Game.levelUp();
-								else addCrosser();
-							}
-							else {
-								GameSound.explosion();
-								$game.blinkBrickObjects({ brickObjects: [bumpedCrosser, crosser], interval: 400, count: 3, endFunction: $game.gameOver });
-							}
-						}
+						//crosser.setLocation(location.x, location.y);
+						// if (location.x == 0) {
+						// 	// var bumpedCrosser = $game.willBeOverlappedBy(crosser).first();
+						// 	// if(bumpedCrosser == null || bumpedCrosser == undefined) {
+						// 	// 	crossers.push(crosser);
+						// 	// 	GameSound.score(); $game.score();
+						// 	// 	if(crossers.length == 10) Game.levelUp();
+						// 	// 	else addCrosser();
+						// 	// }
+						// 	// else {
+						// 	// 	gameOver();
+						// 		// GameSound.explosion();
+						// 		// $game.blinkBrickObjects({ brickObjects: [bumpedCrosser, crosser], interval: 400, count: 3, endFunction: $game.gameOver });
+						// 	//}
+
+						// 	crossers.push(crosser);
+						// 	GameSound.score(); $game.score();
+						// 	if(crossers.length == 10) Game.levelUp();
+						// 	else addCrosser();
+						// }
 						break;
 					case "Right":
-						crosser.setLocation(location.x == 19 ? 19: location.x + 2, location.y);
+						location.x = location.x == 19 ? 19: location.x + 2;
+						//crosser.setLocation(location.x, location.y);
 						break;
-					case "Top":
-						crosser.setLocation(location.x, location.y == 0 ? 0: location.y - 1);
+					case "Up":
+						//if (location.x != 19 && location.y == 0) gameOver();
+						//location.y = location.y == 0 ? 0: location.y - 1;
+						location.y = location.y - (!(location.x == 19 && location.y == 0)) * 1;
+						//else crosser.setLocation(location.x, location.y);
 						break;
-					case "Bottom":
-						crosser.setLocation(location.x, location.y == 9 ? 9: location.y + 1);
+					case "Down":
+						//if (location.x != 19 && location.y == 9) gameOver();
+						//location.y = location.y == 9 ? 9: location.y + 1;
+						location.y = location.y + (!(location.x == 19 && location.y == 9)) * 1;
+						//else crosser.setLocation(location.x, );
 						break;
 					default:
 						break;
 				}
+
+
+				var willCollide = $game.willCollide(crosser, direction, ...obstacles.concat(crossers));
+
+				if (((location.y < 0 || location.y > 9) && location.x < 19) || willCollide) {
+					gameOver();
+				}
+				else {
+					crosser.setLocation(location.x, location.y);
+
+					var willOverlap = $game.willBeOverlappedBy(crosser).length > 0;
+
+					if (willOverlap) gameOver();
+					else {
+						if (location.x == 0) {
+							crossers.push(crosser);
+							GameSound.score(); $game.score();
+							if(crossers.length == 10) Game.levelUp();
+							else addCrosser();		
+						}
+					}	
+				}
+			}
+			function gameOver() {
+				$game.stop();
+				GameSound.explosion();
+				$game.blinkBrickObjects({ brickObjects: [crosser], interval: 400, count: 3, endFunction: $game.gameOver });
 			}
 
 			// KEY FUNCTIONS
 			this.keydownfunctions = {
 				onLeft: function() { moveCrosser("Left"); },
 				onRight: function() { moveCrosser("Right"); },
-				onTop: function() { moveCrosser("Top"); },
-				onBottom: function() { moveCrosser("Bottom"); },
+				onTop: function() { moveCrosser("Up"); },
+				onBottom: function() { moveCrosser("Down"); },
 				onSpace: function() { moveCrosser("Left"); },
 			}
 			this.keyupfunctions = { 
@@ -1908,7 +2178,8 @@
 			}
 
 			// INITIALIZATION
-			loadWalls(); addCrosser();
+			loadWalls(); addCrosser(); loadObstacles();
+			//moveObstacleAnim.start();
 		}
 	},
 	{
@@ -2494,11 +2765,11 @@
 		character: 'M', gameType: "pinball3", mode: 3, score: 0, speedTimeout: [250, 235, 220, 205, 190, 175, 160, 145, 130, 115],
 		load: function($game) { 
 
+			var level = brickGameModel.getLevel(), speedInMillis = brickGameModel.getSpeedInMillis();
 			var pinballCatcher = $game.newBrickObject({ name: "quadrupleTiles", brickLocation: { x: 19, y: 3 } });
 			var pinball = $game.newBrickObject({ name: "singleTile", color: "Green", brickLocation: { x: 18, y: 5 } });
 			var pinballCounterCatcher = $game.newBrickObject({ name: "threeByOne", color: "blue", brickLocation: { x: 8, y: 2 }, rotateDirection: "Up" });
-			var topObstacle = $game.newBrickObject({ name: "pinballTile2Level1", brickLocation: { x: 0, y: 0 } });
-			
+			var topObstacle = $game.newBrickObject({ name: "pinballTile2Level" + level, brickLocation: { x: 0, y: 0 } });
 
 			var moveCounterCatcherAnim = $game.newTimer({
 				func: moveCounterCatcher,
@@ -2524,6 +2795,11 @@
 
 				pinballCounterCatcher.setLocation(loc.x, loc.y);
 			}
+			function isObstacleBumped(x, y) {
+				var bumped = topObstacle.hasTile(x, y);
+				if(bumped) GameSound.move2();
+				return bumped;
+			}
 			function throwPinball() {
 				var pinballLocation = pinball.getLocation();
 				var pinballX = pinballLocation.x, pinballY = pinballLocation.y;
@@ -2539,35 +2815,35 @@
 					do {
 						var oldPinballDirection = pinballDirection;
 						if (pinballDirection == "TopRight") {
-							if (pinballY == 0 || isPinballCaught(pinballX, pinballY - 1)) 
+							if (pinballY == 0 || isPinballCaught(pinballX, pinballY - 1) || isObstacleBumped(pinballX, pinballY - 1)) 
 								pinballDirection = "BottomRight";
-							else if (isPinballCaught(pinballX + 1, pinballY)) 
+							else if (isPinballCaught(pinballX + 1, pinballY) || isObstacleBumped(pinballX + 1, pinballY)) 
 								pinballDirection = "TopLeft";
-							else if (isPinballCaught(pinballX + 1, pinballY - 1)) 
+							else if (isPinballCaught(pinballX + 1, pinballY - 1) || isObstacleBumped(pinballX + 1, pinballY - 1)) 
 								pinballDirection = "BottomLeft"
 						}
 						else if(pinballDirection == "BottomRight") {
-							if ((pinballY == 9 || isPinballCaught(pinballX, pinballY + 1))) 
+							if (pinballY == 9 || isPinballCaught(pinballX, pinballY + 1) || isObstacleBumped(pinballX, pinballY + 1)) 
 								pinballDirection = "TopRight";
-							else if (isPinballCaught(pinballX + 1, pinballY)) 
+							else if (isPinballCaught(pinballX + 1, pinballY) || isObstacleBumped(pinballX + 1, pinballY)) 
 								pinballDirection = "BottomLeft";
-							else if (isPinballCaught(pinballX + 1, pinballY + 1)) 
+							else if (isPinballCaught(pinballX + 1, pinballY + 1) || isObstacleBumped(pinballX + 1, pinballY + 1)) 
 								pinballDirection = "TopLeft";
 						}
 						else if(pinballDirection == "BottomLeft") {
-							if ((pinballY == 9 || isPinballCaught(pinballX, pinballY + 1))) 
+							if (pinballY == 9 || isPinballCaught(pinballX, pinballY + 1) || isObstacleBumped(pinballX, pinballY + 1)) 
 								pinballDirection = "TopLeft";
-							else if (isPinballCaught(pinballX - 1, pinballY)) 
+							else if (isPinballCaught(pinballX - 1, pinballY) || isObstacleBumped(pinballX - 1, pinballY)) 
 								pinballDirection = "BottomRight";
-							else if (isPinballCaught(pinballX - 1, pinballY + 1)) 
+							else if (isPinballCaught(pinballX - 1, pinballY + 1) || isObstacleBumped(pinballX - 1, pinballY + 1)) 
 								pinballDirection = "TopRight";
 						}
 						else if(pinballDirection == "TopLeft") {
-							if (pinballY == 0 || isPinballCaught(pinballX, pinballY - 1)) 
+							if (pinballY == 0 || isPinballCaught(pinballX, pinballY - 1) || isObstacleBumped(pinballX, pinballY - 1)) 
 								pinballDirection = "BottomLeft";
-							else if (isPinballCaught(pinballX - 1, pinballY)) 
+							else if (isPinballCaught(pinballX - 1, pinballY) || isObstacleBumped(pinballX - 1, pinballY)) 
 								pinballDirection = "TopRight";
-							else if (isPinballCaught(pinballX - 1, pinballY - 1)) 
+							else if (isPinballCaught(pinballX - 1, pinballY - 1) || isObstacleBumped(pinballX - 1, pinballY - 1)) 
 								pinballDirection = "BottomRight";
 						}
 						isBumped = oldPinballDirection != pinballDirection;
