@@ -522,6 +522,9 @@
 		},
 		{ name: "threeByOne", tiles: [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }] },
 		{ name: "threeByTwo", tiles: [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }, { x: 2, y: 1 }], },
+		{ name: "fourByTwo", tiles: function() { var tiles = []; for(var i = 0; i < 4; i++) 
+			tiles.push({ x: i, y: 0 }); tiles.push({ x: i, y: 1 }); return tiles; }() 
+		},
 		{ name: "sixByOne", tiles: function() { var tiles = []; for(var i = 0; i < 6; i++) tiles.push({ x: i, y: 0 }); return tiles; }() },
 		{
 			name: "eightByTwo",
@@ -720,20 +723,25 @@
 		this.explosion = function() { play(4); };
 		this.move2 = function() { play(5); };
 		this.fire = function() { play(6); };
-		this.levelUp = function() { play(7); };
+		this.levelUp = function(endFunction) { play(7, undefined, endFunction); };
 		this.score = function() { play(8); };
 		this.carSound1 = function(loop) { play(9, loop) };
 		this.fire2 = function() { play(10); };
 		this.pause = function() { if (audio == undefined) throw new Error("Error: undefined"); };
 		this.stop = function() { if (audio == undefined) throw new Error("Error: undefined"); };
 
-		function play(index, loop) {
+		this.getAudio = function() {
+			return selectedAudio;
+		}
+
+		function play(index, loop, endFunction) {
 			if(soundOn) {
 				if(selectedAudio != undefined && selectedAudio.currentTime > 0 && !selectedAudio.paused && !selectedAudio.ended && selectedAudio.readyState > 2) {
 					selectedAudio.pause(); selectedAudio.currentTime = 0;
 				}
 				selectedAudio = audios[index];
 				if (loop != undefined) selectedAudio.loop = loop;
+				selectedAudio.onended = endFunction;
 				selectedAudio.play();
 			}
 		}
@@ -787,14 +795,15 @@
 			mainContainer.appendChild(tileRow);
 		};
 	}
-	function Marquee(params) {
+	var Marquee = function(params) {
 		var word = params.word == undefined || params.word == null ? "": params.word;
-		var speedInMillis = params.speedInMillis == undefined ? 300: params.speedInMillis;
+		var speedInMillis = params.speedInMillis == undefined ? 50: params.speedInMillis;
 		var onUnload = params.onUnload == undefined ? function() {}: params.onUnload;
 		var chars = word.split("");
 		var brickCharacters = [];
 		var backColor = params.backColor == undefined ? "black": params.backColor;
 		var foreColor = params.foreColor == undefined ? "white": params.foreColor;
+		var isKeyLocked = params.isKeyLocked == undefined ? false: params.isKeyLocked;
 		var t = 20;
 
 		setCanvasColor(backColor);
@@ -820,8 +829,13 @@
 			interval: speedInMillis
 		});
 		marquee.start();
-		_window_.onkeydown = function() { marquee.stop(); setCanvasColor("white"); onUnload(); }
-		_window_.onkeypress = function() { }
+
+		var exitFunction = function() { marquee.stop(); setCanvasColor("white"); onUnload(); };
+
+		this.end = exitFunction;
+		_window_.onkeydown = isKeyLocked ? function() {} : exitFunction;
+		_window_.onkeypress = function() { };
+		_window_.onkeyup = function() { };
 	}
 	
 	// START PAGE
@@ -922,7 +936,6 @@
 			return objs;
 		}
 		this.disappear = function(brickObject) {
-			console.log(selectedGame.brickObjects.indexOf(brickObject));
 			selectedGame.brickObjects.splice(selectedGame.brickObjects.indexOf(brickObject), 1);
 			brickObject.remove();
 		}
@@ -932,10 +945,12 @@
 			var brickGameMarquee = new Marquee({ word: "GAME OVER", onUnload: function() { GameProperties() } });
 		};
 		this.levelUp = function() {
+			$game = this;
 			var level = brickGameModel.getLevel() + 1;
 			brickGameModel.setLevel(level > 10 ? 1: level);
-			GameSound.levelUp();
-			var brickGameMarquee = new Marquee({ word: "LEVEL UP", onUnload: function() { this.load() } });
+			
+			var brickGameMarquee = new Marquee({ word: "LEVEL UP", isKeyLocked: true, onUnload: function() { _load($game) } });
+			GameSound.levelUp(brickGameMarquee.end);
 		};
 		this.blinkBrickObjects = function(params) {
 			var brickObjects = params.brickObjects
@@ -961,8 +976,7 @@
 			if(selectedGame.score < _score) selectedGame.score++;
 		};
 		this.lockKey = function(isKeyLocked) {
-			if (isKeyLocked) _window_.onkeydown = function() {}; 
-			else _window_.onkeydown = gamekeydownfunctions;
+			lockKey(isKeyLocked);
 		};
 
 
@@ -1066,12 +1080,28 @@
 			return overLappedObjects;
 		}
 		this.load = function() {
-			setCanvasColor("white");
-			$game = this;
-		    selectedGame = brickGameModel.getSelectedGame();
-		    selectedGame.brickObjects = [], selectedGame.timers = [];
+			selectedGame = brickGameModel.getSelectedGame();
 			brickGameModel.setScore(0);
 			brickGameModel.setSpeedInMillis(selectedGame.speedTimeout[brickGameModel.getSpeed() - 1]);
+			_load(this);
+		};
+		
+		function lockKey(isKeyLocked) {
+			if (isKeyLocked) {
+				_window_.onkeydown = function() {};
+				_window_.onkeypress = function() {};
+				_window_.onkeyup = function() {};
+			}
+			else {
+				_window_.onkeydown = gamekeydownfunctions;
+				_window_.onkeypress = gamekeypressfunctions;
+				_window_.onkeyup = gamekeyupfunctions;
+			}
+		}
+		function _load($game) {
+			setCanvasColor("white");
+		    
+		    selectedGame.brickObjects = [], selectedGame.timers = [];
 
 			var game = new selectedGame.load($game);
 
@@ -1164,12 +1194,8 @@
 					// 	break; 
 				}
 			}
-			_window_.onkeydown = gamekeydownfunctions;
-			_window_.onkeypress = gamekeypressfunctions;
-			_window_.onkeyup = gamekeyupfunctions;
-		};
-		
-
+			lockKey(false);
+		}
 		function _tryOverlap(brickObject) {
 			var brickObjectTiles = brickObject.getTiles();
 			var overlappedObjects = selectedGame.brickObjects.filter(function(bo){ 
@@ -1235,6 +1261,29 @@
 			var tankTile = $game.newBrickObject({ name: "tankTile", origin: { x: 1, y: 1 }, brickLocation: { x: 10, y: 3 }, brickDirection: "Left" });
 
 			// FUNCTIONS
+			function loadObstacles() {
+				var params = [];
+				switch(level) {
+					case 1:
+						break;
+					case 2:
+						params = params.concat([
+							{ name: "rightTile1", brickLocation: { x: 2, y: 2 }, rotateDirection: "Down" },
+							{ name: "rightTile1", brickLocation: { x: 16, y: 6 }, rotateDirection: "Up" },
+						]);
+						break;
+					case 3:
+						params = params.concat([
+							{ name: "rightTile1", brickLocation: { x: 2, y: 6 }, rotateDirection: "Right" },
+							{ name: "rightTile1", brickLocation: { x: 16, y: 2 }, rotateDirection: "Left" },
+							{ name: "fourByTwo", brickLocation: { x: 8, y: 3 }, rotateDirection: "Up" },
+						]);
+						break;
+				}
+				for (var i = 0; i < params.length; i++) {
+					$game.newBrickObject(params[i]);
+				}
+			}
 			function loadEnemyTanks() {
 				var spawn = Math.round(Math.random() * 100) % 5 == 0;
 				if(spawn && enemyTankTiles.length < 6) {
@@ -1328,13 +1377,19 @@
 				var ammoX = 0, ammoY = 0;
 				var tankDirection = _tankTile.getDirection(), tankLocation = _tankTile.getLocation();
 				var ammoTile = $game.newBrickObject({ name: "singleTile", color: isEnemyTank ? "red": "yellow", brickDirection: tankDirection });
-				function hit(hitObject) {
+				function hit(hitObject, x, y) {
 					var hitObjectName = hitObject.getName();
 					if(!isEnemyTank && hitObjectName == "enemyTankTile") {
 						GameSound.fire();
 						enemyTankTiles.splice(enemyTankTiles.indexOf(hitObject), 1);
 						$game.score();
-						$game.disappear(hitObject);
+						$game.disappear(hitObject); 
+
+						var score = brickGameModel.getScore();
+						if (score % 30 == 0) {
+							$game.stop();
+							$game.levelUp();
+						}
 					}
 					else {
 						if (hitObjectName == "singleTile") $game.disappear(hitObject);
@@ -1342,6 +1397,13 @@
 							$game.stop();
 							GameSound.explosion();
 							$game.blinkBrickObjects({ brickObjects: [tankTile], interval: 400, count: 3, endFunction: $game.gameOver });
+						}
+						else if (hitObjectName == "rightTile1") {
+							hitObject.removeTile(x, y);
+							if(hitObject.tileCount() == 0) {
+								$game.getBrickObjects();
+								$game.disappear(hitObject);
+							}
 						}
 					}
 				}
@@ -1383,16 +1445,21 @@
 										ammoLocation.y++;
 										break;
 								}
-								var collidedObjects = $game.tryOverlap(ammoTile, ammoLocation.x, ammoLocation.y);
-								if (collidedObjects.length == 0 && !ammoTile.isOnSide(tankDirection)) 
-									ammoTile.setLocation(ammoLocation.x, ammoLocation.y);
-								else {
-									if (collidedObjects.length > 0) {
-										var hitObject = collidedObjects.first();
-										hit(hitObject);
-									}
+								if (ammoTile.isOnSide(tankDirection)) {
 									$game.disappear(ammoTile);
 								}
+								else {
+									var collidedObjects = $game.tryOverlap(ammoTile, ammoLocation.x, ammoLocation.y);
+									if (collidedObjects.length == 0 && !ammoTile.isOnSide(tankDirection)) 
+										ammoTile.setLocation(ammoLocation.x, ammoLocation.y);
+									else {
+										if (collidedObjects.length > 0) {
+											var hitObject = collidedObjects.first();
+											hit(hitObject, ammoLocation.x, ammoLocation.y);
+										}
+										$game.disappear(ammoTile);
+									}
+								}	
 							}, 
 							interval: 100
 						}); 
@@ -1402,7 +1469,7 @@
 				}
 				else {
 					var hitObject = collidedObjects.first();
-					hit(hitObject);
+					hit(hitObject, ammoX, ammoY);
 					$game.disappear(ammoTile);
 				}
 			}
@@ -1424,6 +1491,7 @@
 			}
 
 			// INITIALIZATION
+			loadObstacles();
 			spawnTankAnim.start();
 		}
 	},
@@ -2149,7 +2217,10 @@
 						if (location.x == 0) {
 							crossers.push(crosser);
 							GameSound.score(); $game.score();
-							if(crossers.length == 10) Game.levelUp();
+							if(crossers.length == 10) {
+								$game.stop();
+								$game.levelUp();
+							}
 							else addCrosser();		
 						}
 					}	
@@ -2452,6 +2523,11 @@
 						var tailLocation = snakeObject[snakeObject.length - 1].getLocation(); loadFood();
 						snakeObject.push($game.newBrickObject({ name: "singleTile", color: "Black" }));
 						GameSound.score(); $game.score();
+						var score = brickGameModel.getScore();
+						if (score % 30 == 0) {
+							$game.stop();
+							$game.levelUp();
+						}
 					}
 					snakeObject[0].setLocation(x, y);
 					for (var i = 1; i < snakeObject.length; i++) {
@@ -2627,7 +2703,16 @@
 						if(getMatch()) {
 							$game.stop(); GameSound.move2(); $game.score();
 							brickObjects.forEach(function(bo) { bo.hide(); });
-							$game.blinkBrickObjects({ brickObjects: matchBrickObjects, interval: 400, count: 3, endFunction: startMatch });
+							$game.blinkBrickObjects({ brickObjects: matchBrickObjects, interval: 400, count: 3, endFunction: function() {
+								var score = brickGameModel.getScore();
+								if (score % 30 == 0) {
+									$game.stop();
+									$game.levelUp();
+								}
+								else {
+									startMatch();
+								}
+							} });
 						}
 						else brickInvasionAnim.start();
 						setBrickTileLocations(17);
@@ -2866,15 +2951,23 @@
 					}
 					pinball.setLocation(pinballX, pinballY);
 
+					if (pinballY == 0 || pinballY == 9) GameSound.move2();
+
 					if (pinballX == -1) {
 						GameSound.score();
 						$game.score();
-						pinballCatcher.setLocation(19, 3);
-						pinball.setLocation(18, 5);
-						pinballThrowAnim.stop();
-						isPinballThrown = false;
+						var score = brickGameModel.getScore();
+						if (score % 30 == 0) {
+							$game.stop();
+							$game.levelUp();
+						}
+						else {
+							pinballCatcher.setLocation(19, 3);
+							pinball.setLocation(18, 5);
+							pinballThrowAnim.stop();
+							isPinballThrown = false;
+						}
 					}
-					if (pinballY == 0 || pinballY == 9) GameSound.move2();
 				}
 			}
 			function isPinballCaught(x, y) {
@@ -3419,8 +3512,6 @@
 	 			}
 
 				X = x; Y = y; 
-
-				console.log(tiles);
 
 				brickDirection = direction;
 			}

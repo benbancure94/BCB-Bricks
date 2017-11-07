@@ -7,28 +7,122 @@
 
 <script type="text/javascript" src="Scripts/brickGame.js"></script>
 
-<body bgcolor="gray">
-	<div style="display:flex; width: 800px; margin: auto;">
-		<div id="mainContainer">
-		</div>
-		<div id="scoreBoard" style="width:150px; padding: 10px;text-align:center" >
-			<div style="display:flex;">
-				<span id="scoreNumber">0</span>
+<body bgcolor="#cccccc">
+	<div style="width: 820px; margin:auto">
+		<div style="display:inline-flex;">
+			<div id="mainContainer">
 			</div>
-			<div style="background-color:yellow;height:50px"></div>
-
-			<div style="height:80px;display:flex;">
-				<div style="width:50%;">
-					<span style="font-family:comic sans ms">LEVEL</span>
-					<div style="font-family:consolas;font-size:30pt" id="levelNumber">1</div>
+			<div id="scoreBoard" >
+				<div class="scoreContainer">
+					<span id="scoreNumber">0</span>
 				</div>
-				<div style="width:50%;">
-					<span style="font-family:comic sans ms">SPEED</span>
-					<div style="font-family:consolas;font-size:30pt" id="speedNumber">1</div>
+				<div class="lifeBrickContainer">
+					<div style="display: inline-block;">
+						<div style="display: flex;">
+							<div class="outerLifeTile outerBlackColor">
+								<div class="lifeTile blackColor">
+									
+								</div>
+							</div>
+							<div class="outerLifeTile outerBlackColor">
+								<div class="lifeTile blackColor">
+									
+								</div>
+							</div>
+							<div class="outerLifeTile outerBlackColor">
+								<div class="lifeTile blackColor">
+									
+								</div>
+							</div>
+							<div class="outerLifeTile outerBlackColor">
+								<div class="lifeTile blackColor">
+									
+								</div>
+							</div>
+						</div>
+						<div style="display: flex;">
+							<div class="outerLifeTile outerBlackColor">
+								<div class="lifeTile blackColor">
+									
+								</div>
+							</div>
+							<div class="outerLifeTile outerBlackColor">
+								<div class="lifeTile blackColor">
+									
+								</div>
+							</div>
+							<div class="outerLifeTile outerBlackColor">
+								<div class="lifeTile blackColor">
+									
+								</div>
+							</div>
+							<div class="outerLifeTile outerBlackColor">
+								<div class="lifeTile blackColor">
+									
+								</div>
+							</div>
+						</div>
+						<div style="display: flex;">
+							<div class="outerLifeTile outerBlackColor">
+								<div class="lifeTile blackColor">
+									
+								</div>
+							</div>
+							<div class="outerLifeTile outerBlackColor">
+								<div class="lifeTile blackColor">
+									
+								</div>
+							</div>
+							<div class="outerLifeTile outerBlackColor">
+								<div class="lifeTile blackColor">
+									
+								</div>
+							</div>
+							<div class="outerLifeTile outerBlackColor">
+								<div class="lifeTile blackColor">
+									
+								</div>
+							</div>
+						</div>
+						<div style="display: flex;">
+							<div class="outerLifeTile outerBlackColor">
+								<div class="lifeTile blackColor">
+									
+								</div>
+							</div>
+							<div class="outerLifeTile outerBlackColor">
+								<div class="lifeTile blackColor">
+									
+								</div>
+							</div>
+							<div class="outerLifeTile outerBlackColor">
+								<div class="lifeTile blackColor">
+									
+								</div>
+							</div>
+							<div class="outerLifeTile outerBlackColor">
+								<div class="lifeTile blackColor">
+									
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="levelSpeedContainer">
+					<div style="width:50%;">
+						<div class="levelSpeedHeader">LEVEL</div>
+						<div class="levelSpeedNumber" id="levelNumber">1
+						</div>
+					</div>
+					<div style="width:50%;">
+						<div class="levelSpeedHeader">SPEED</div>
+						<div class="levelSpeedNumber" id="speedNumber">1
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
-	<button id="test"></button>
 </body>
 </html>
