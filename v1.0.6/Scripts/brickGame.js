@@ -401,8 +401,33 @@
 		{ name: "doubleTile", tiles: [ { x: 0, y: 0 }, { x: 0, y: 1 } ]},
 		{ name: "tripleTiles", tiles: [ { x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 } ] },
 		{ name: "squareTile1", tiles: [ { x: 0, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 } ] },
-		{ name: "rightTile1", tiles: [{x: 0, y: 0}, {x: 0, y: 1}, {x: 1, y: 1}] },
+		{ name: "rightTile1", tiles: [ {x: 0, y: 0}, {x: 0, y: 1}, {x: 1, y: 1} ] },
 		{ name: "quadrupleTiles", tiles: [{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 } ] },
+		{
+			name: "tTile1",
+			tiles: function() {
+				var tiles = [];
+				for (var i = 0; i < 8; i++) {
+					tiles.push({ x: 0, y: i });
+				}
+				for (var i = 1; i < 6; i++) {
+					tiles.push({ x: i, y: 4 });
+				}
+				return tiles;
+			}()
+		},
+		{
+			name: "tTile2",
+			tiles: function() {
+				var tiles = [];
+				tiles.push({ x: 2, y: 1 });
+				tiles.push({ x: 2, y: 2 });
+				for (var i = 0; i < 5; i++) {
+					tiles.push({ x: i, y: 0 });
+				}
+				return tiles;
+			}()
+		},
 		{
 			name: "carTile",
 			tiles: [ { x: 0, y: 1 }, { x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }, { x: 2, y: 1 }, { x: 3, y: 0 }, { x: 3, y: 2 } ],
@@ -522,8 +547,14 @@
 		},
 		{ name: "threeByOne", tiles: [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }] },
 		{ name: "threeByTwo", tiles: [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }, { x: 2, y: 1 }], },
-		{ name: "fourByTwo", tiles: function() { var tiles = []; for(var i = 0; i < 4; i++) 
-			tiles.push({ x: i, y: 0 }); tiles.push({ x: i, y: 1 }); return tiles; }() 
+		{ name: "fourByTwo", tiles: function() { 
+			var tiles = []; 
+			for(var i = 0; i < 4; i++) {
+				tiles.push({ x: i, y: 0 }); 
+				tiles.push({ x: i, y: 1 }); 
+			}
+			return tiles; 
+		}() 
 		},
 		{ name: "sixByOne", tiles: function() { var tiles = []; for(var i = 0; i < 6; i++) tiles.push({ x: i, y: 0 }); return tiles; }() },
 		{
@@ -1198,6 +1229,8 @@
 		}
 		function _tryOverlap(brickObject) {
 			var brickObjectTiles = brickObject.getTiles();
+			console.log(brickObjectTiles);
+			console.log(selectedGame.brickObjects)
 			var overlappedObjects = selectedGame.brickObjects.filter(function(bo){ 
 				return selectedGame.brickObjects.indexOf(brickObject) != selectedGame.brickObjects.indexOf(bo);
 			}).filter(function(bo) {
@@ -1205,11 +1238,15 @@
 				var boTiles = bo.getTiles();
 				var tileCounter = 0;
 				while(tileCounter < boTiles.length && !isOverlapped) {
-					isOverlapped = brickObjectTiles.filter(function(bt) { 
-						return bt.testScreenX == boTiles[tileCounter].screenX && bt.testScreenY == boTiles[tileCounter].screenY 
+					isOverlapped = brickObjectTiles.filter(function(bt) {
+						
+						var r = bt.testScreenX == boTiles[tileCounter].screenX && bt.testScreenY == boTiles[tileCounter].screenY;
+						if (r) console.log(bt.testScreenX + " = " + boTiles[tileCounter].screenX + " and " + bt.testScreenY + " = " + boTiles[tileCounter].screenY);
+						return r;
 					}).length > 0;
 					tileCounter++;
 				}
+				// console.log(isOverlapped);
 				return isOverlapped;
 			});
 			return overlappedObjects;
@@ -1267,21 +1304,83 @@
 					case 1:
 						break;
 					case 2:
-						params = params.concat([
+						params = [
 							{ name: "rightTile1", brickLocation: { x: 2, y: 2 }, rotateDirection: "Down" },
 							{ name: "rightTile1", brickLocation: { x: 16, y: 6 }, rotateDirection: "Up" },
-						]);
+						];
 						break;
 					case 3:
-						params = params.concat([
+						params = [
 							{ name: "rightTile1", brickLocation: { x: 2, y: 6 }, rotateDirection: "Right" },
 							{ name: "rightTile1", brickLocation: { x: 16, y: 2 }, rotateDirection: "Left" },
-							{ name: "fourByTwo", brickLocation: { x: 8, y: 3 }, rotateDirection: "Up" },
-						]);
+							{ name: "squareTile1", brickLocation: { x: 4, y: 2 }, },
+							{ name: "squareTile1", brickLocation: { x: 14, y: 6 }, },
+						];
+						break;
+					case 4:
+						params = [
+							{ name: "rightTile1", brickLocation: { x: 2, y: 6 }, rotateDirection: "Right" },
+							{ name: "rightTile1", brickLocation: { x: 16, y: 2 }, rotateDirection: "Left" },
+							{ name: "rightTile1", brickLocation: { x: 2, y: 2 }, rotateDirection: "Down" },
+							{ name: "rightTile1", brickLocation: { x: 16, y: 6 }, rotateDirection: "Up" },
+							{ name: "squareTile1", brickLocation: { x: 5, y: 4 }, },
+							{ name: "squareTile1", brickLocation: { x: 13, y: 4 }, },
+						];
+						break;
+					case 5:
+						params = [
+							{ name: "rightTile1", brickLocation: { x: 2, y: 6 }, rotateDirection: "Right" },
+							{ name: "rightTile1", brickLocation: { x: 16, y: 2 }, rotateDirection: "Left" },
+							{ name: "rightTile1", brickLocation: { x: 2, y: 2 }, rotateDirection: "Down" },
+							{ name: "rightTile1", brickLocation: { x: 16, y: 6 }, rotateDirection: "Up" },
+							{ name: "fourByOne", brickLocation: { x: 6, y: 3 }, rotateDirection: "Up" },
+							{ name: "fourByOne", brickLocation: { x: 13, y: 3 }, rotateDirection: "Up" },
+						];
+						break;
+					case 6:
+						params = [
+							{ name: "cTile1", brickLocation: { x: 2, y: 2 }, },
+							{ name: "cTile1", brickLocation: { x: 14, y: 2 }, rotateDirection: "Left" },
+						]
+						break;
+					case 7: 
+						params = [
+							{ name: "tTile1", brickLocation: { x: 14, y: 1 }, },
+							{ name: "tTile1", brickLocation: { x: 0, y: 1 }, rotateDirection: "Left" },
+						]
+						break;
+					case 8:
+						params = [
+							{ name: "squareTile1", brickLocation: { x: 1, y: 4 }, },
+							{ name: "squareTile1", brickLocation: { x: 18, y: 4 }, },
+							{ name: "squareTile1", brickLocation: { x: 4, y: 1 }, },
+							{ name: "squareTile1", brickLocation: { x: 4, y: 7 }, },
+							{ name: "squareTile1", brickLocation: { x: 14, y: 1 }, },
+							{ name: "squareTile1", brickLocation: { x: 14, y: 7 }, },
+							{ name: "squareTile1", brickLocation: { x: 7, y: 4 }, },
+						]
+						break;
+					case 9: 
+						params = [
+							{ name: "tTile2", brickLocation: { x: 1, y: 1 }, rotateDirection: "Left" },
+							{ name: "tTile2", brickLocation: { x: 1, y: 6 }, },
+							{ name: "tTile2", brickLocation: { x: 14, y: 1 }, rotateDirection: "Left" },
+							{ name: "tTile2", brickLocation: { x: 14, y: 6 }, },
+						]
+						break;
+					case 10:
+						params = [
+							{ name: "tTile1", brickLocation: { x: 14, y: 1 }, },
+							{ name: "tTile1", brickLocation: { x: 0, y: 1 }, rotateDirection: "Left" },
+							{ name: "eightByOne", brickLocation: { x: 6, y: 1 }, },
+							{ name: "eightByOne", brickLocation: { x: 6, y: 8 }, },
+						]
+						break;
+					default:
 						break;
 				}
 				for (var i = 0; i < params.length; i++) {
-					$game.newBrickObject(params[i]);
+					console.log($game.newBrickObject(params[i]));
 				}
 			}
 			function loadEnemyTanks() {
@@ -1331,7 +1430,9 @@
 						default:
 							break;
 					}
+					console.log(enemyTankTile);
 					if($game.tryOverlap(enemyTankTile, posX, posY).length == 0) {
+
 						enemyTankTile.setLocation(posX, posY);
 						enemyTankTile.rotate(direction);
 						enemyTankTiles.push(enemyTankTile);
@@ -1398,7 +1499,13 @@
 							GameSound.explosion();
 							$game.blinkBrickObjects({ brickObjects: [tankTile], interval: 400, count: 3, endFunction: $game.gameOver });
 						}
-						else if (hitObjectName == "rightTile1") {
+						else if (hitObjectName == "rightTile1" || 
+								hitObjectName == "squareTile1" || 
+								hitObjectName == "cTile1" ||
+								hitObjectName == "tTile1" ||
+								hitObjectName == "tTile2" ||
+								hitObjectName == "eightByOne" ||
+								hitObjectName == "fourByOne") {
 							hitObject.removeTile(x, y);
 							if(hitObject.tileCount() == 0) {
 								$game.getBrickObjects();
