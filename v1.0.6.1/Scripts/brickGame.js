@@ -733,7 +733,7 @@
 	];
 
 	var GameSound = new function() {
-		var soundOn = false;
+		var soundOn = true;
 
 		var selectedAudio;
 		var audios = [
@@ -847,6 +847,8 @@
 		var foreColor = params.foreColor == undefined ? "white": params.foreColor;
 		var isKeyLocked = params.isKeyLocked == undefined ? false: params.isKeyLocked;
 		var t = 20;
+
+		clearBrickTiles();
 
 		brickObjects = []; timers = [];
 
@@ -973,6 +975,12 @@
 		return brickTiles == undefined || brickTiles.tiles == undefined ? []: brickTiles.tiles;
 	}
 
+	function clearBrickTiles() {
+		while (brickObjects.length > 0) {
+			brickObjects.first().remove();
+		}
+	}
+
 	function getBrickObjectsByScreenTile(x, y) {
 		return brickObjects.filter(function(bo) {
 			return bo.getTiles().filter(function(bt) {
@@ -983,24 +991,16 @@
 
 	var Game = new function() {
 		var $game;
-		// var selectedGame = {};
-		// var timers = [];
 		
 		// REFACTORED
-		this.newBrickObject = function(params) {
-			// params = params == undefined ? {}: params;
-			var brickTiles = brickObjectTiles.filter(function(t) { return t.name == params.name }).first();
-			params.tiles = params.tiles == undefined ? (brickTiles == undefined ? []: brickTiles.tiles): params.tiles;
-			// var newBrickObject = new BrickObject(params);
-			// selectedGame.brickObjects.push(newBrickObject);
-			// return newBrickObject;
-		};
-		this.newTimer = function(params) {
-			var newTimer = new Timer(params);
-			selectedGame.timers.push(newTimer);
-			return newTimer;
-		}
-		this.areEqual = function(bo1, bo2) { return selectedGame.brickObjects.indexOf(bo1) == selectedGame.brickObjects.indexOf(bo2); }
+		// this.newBrickObject = function(params) {
+		// 	// params = params == undefined ? {}: params;
+		// 	var brickTiles = brickObjectTiles.filter(function(t) { return t.name == params.name }).first();
+		// 	params.tiles = params.tiles == undefined ? (brickTiles == undefined ? []: brickTiles.tiles): params.tiles;
+		// 	// var newBrickObject = new BrickObject(params);
+		// 	// selectedGame.brickObjects.push(newBrickObject);
+		// 	// return newBrickObject;
+		// };
 		this.getBrickObjects = function(name) {
 			name = name == undefined ? "": name;
 			var objs = selectedGame.brickObjects;
@@ -1009,17 +1009,11 @@
 			}
 			return objs;
 		}
-		this.disappear = function(brickObject) {
-			selectedGame.brickObjects.splice(selectedGame.brickObjects.indexOf(brickObject), 1);
-			brickObject.remove();
-		}
-		this.stop = function() { selectedGame.timers.forEach(function(t) { t.stop(); }); }
 		this.gameOver = function() {
 			GameSound.gameOver();
 			var brickGameMarquee = new Marquee({ word: "GAME OVER", onUnload: function() { GameProperties() } });
 		};
 		this.levelUp = function() {
-			// $game = this;
 			var level = brickGameModel.getLevel() + 1;
 			brickGameModel.setLevel(level > 10 ? 1: level);
 			
@@ -1056,103 +1050,103 @@
 
 
 		// -----
-		this.willCollide = function(brickObject, direction, ...objectsBeCollided) {
-			var xIncrement = 0, yIncrement = 0;
-			var oppositeDirection = "Left";
-			switch(direction) {
-				case "Left":
-					oppositeDirection = "Right";
-					xIncrement = 1; yIncrement = 0;
-					break;
-				case "Right":
-					oppositeDirection = "Left";
-					xIncrement = -1; yIncrement = 0;
-					break;
-				case "Up":
-					oppositeDirection = "Down";
-					xIncrement = 0; yIncrement = 1;
-					break;
-				case "Down":
-					oppositeDirection = "Up";
-					xIncrement = 0; yIncrement = -1;
-					break;
-			}
-			var brickObjectEdgeTiles = brickObject.getEdgeTiles(direction);
-			var collidedObjects = objectsBeCollided.filter(function(co) {
-				var willCollide = false;
-				var tileCounter = 0;
-				var edgeTiles = co.getEdgeTiles(oppositeDirection);
-				while (tileCounter < brickObjectEdgeTiles.length && !willCollide) {
-					willCollide = edgeTiles.filter(function(et) {
-						return brickObjectEdgeTiles[tileCounter].screenX == et.screenX + xIncrement && brickObjectEdgeTiles[tileCounter].screenY == et.screenY + yIncrement;
-					}).length > 0;
-					tileCounter++;
-				}
-				return willCollide;
-			});
-			return collidedObjects.length > 0;
-		}
-		this.willBeCollidedBy = function(brickObject, direction) {
-			var xIncrement = 0, yIncrement = 0;
-			var oppositeDirection = "Left";
-			switch(direction) {
-				case "Left":
-					oppositeDirection = "Right";
-					xIncrement = 1; yIncrement = 0;
-					break;
-				case "Right":
-					oppositeDirection = "Left";
-					xIncrement = -1; yIncrement = 0;
-					break;
-				case "Up":
-					oppositeDirection = "Down";
-					xIncrement = 0; yIncrement = 1;
-					break;
-				case "Down":
-					oppositeDirection = "Up";
-					xIncrement = 0; yIncrement = -1;
-					break;
-			}
-			var brickObjectEdgeTiles = brickObject.getEdgeTiles(direction);
-			var collidedObjects = selectedGame.brickObjects.filter(function(bo) {
-				return selectedGame.brickObjects.indexOf(brickObject) != selectedGame.brickObjects.indexOf(bo);
-			}).filter(function(bo) {
-				var edgeTiles = bo.getEdgeTiles(oppositeDirection);
-				var willCollide = false;
-				var tileCounter = 0;
-				while (tileCounter < brickObjectEdgeTiles.length && !willCollide) {
-					willCollide = edgeTiles.filter(function(et) {
-						return brickObjectEdgeTiles[tileCounter].screenX == et.screenX + xIncrement && 
-							brickObjectEdgeTiles[tileCounter].screenY == et.screenY + yIncrement;
-					}).length > 0;
-					tileCounter++;
-				}
-				return willCollide;
-			});
+		// this.willCollide = function(brickObject, direction, ...objectsBeCollided) {
+		// 	var xIncrement = 0, yIncrement = 0;
+		// 	var oppositeDirection = "Left";
+		// 	switch(direction) {
+		// 		case "Left":
+		// 			oppositeDirection = "Right";
+		// 			xIncrement = 1; yIncrement = 0;
+		// 			break;
+		// 		case "Right":
+		// 			oppositeDirection = "Left";
+		// 			xIncrement = -1; yIncrement = 0;
+		// 			break;
+		// 		case "Up":
+		// 			oppositeDirection = "Down";
+		// 			xIncrement = 0; yIncrement = 1;
+		// 			break;
+		// 		case "Down":
+		// 			oppositeDirection = "Up";
+		// 			xIncrement = 0; yIncrement = -1;
+		// 			break;
+		// 	}
+		// 	var brickObjectEdgeTiles = brickObject.getEdgeTiles(direction);
+		// 	var collidedObjects = objectsBeCollided.filter(function(co) {
+		// 		var willCollide = false;
+		// 		var tileCounter = 0;
+		// 		var edgeTiles = co.getEdgeTiles(oppositeDirection);
+		// 		while (tileCounter < brickObjectEdgeTiles.length && !willCollide) {
+		// 			willCollide = edgeTiles.filter(function(et) {
+		// 				return brickObjectEdgeTiles[tileCounter].screenX == et.screenX + xIncrement && brickObjectEdgeTiles[tileCounter].screenY == et.screenY + yIncrement;
+		// 			}).length > 0;
+		// 			tileCounter++;
+		// 		}
+		// 		return willCollide;
+		// 	});
+		// 	return collidedObjects.length > 0;
+		// }
+		// this.willBeCollidedBy = function(brickObject, direction) {
+		// 	var xIncrement = 0, yIncrement = 0;
+		// 	var oppositeDirection = "Left";
+		// 	switch(direction) {
+		// 		case "Left":
+		// 			oppositeDirection = "Right";
+		// 			xIncrement = 1; yIncrement = 0;
+		// 			break;
+		// 		case "Right":
+		// 			oppositeDirection = "Left";
+		// 			xIncrement = -1; yIncrement = 0;
+		// 			break;
+		// 		case "Up":
+		// 			oppositeDirection = "Down";
+		// 			xIncrement = 0; yIncrement = 1;
+		// 			break;
+		// 		case "Down":
+		// 			oppositeDirection = "Up";
+		// 			xIncrement = 0; yIncrement = -1;
+		// 			break;
+		// 	}
+		// 	var brickObjectEdgeTiles = brickObject.getEdgeTiles(direction);
+		// 	var collidedObjects = selectedGame.brickObjects.filter(function(bo) {
+		// 		return selectedGame.brickObjects.indexOf(brickObject) != selectedGame.brickObjects.indexOf(bo);
+		// 	}).filter(function(bo) {
+		// 		var edgeTiles = bo.getEdgeTiles(oppositeDirection);
+		// 		var willCollide = false;
+		// 		var tileCounter = 0;
+		// 		while (tileCounter < brickObjectEdgeTiles.length && !willCollide) {
+		// 			willCollide = edgeTiles.filter(function(et) {
+		// 				return brickObjectEdgeTiles[tileCounter].screenX == et.screenX + xIncrement && 
+		// 					brickObjectEdgeTiles[tileCounter].screenY == et.screenY + yIncrement;
+		// 			}).length > 0;
+		// 			tileCounter++;
+		// 		}
+		// 		return willCollide;
+		// 	});
 
-			return collidedObjects;
-		}
-		this.willBeOverlappedBy = function(brickObject) {
-			var brickTiles = brickObject.getTiles();
-			var overLappedObjects = selectedGame.brickObjects.filter(function(bo){ 
-				return selectedGame.brickObjects.indexOf(brickObject) != selectedGame.brickObjects.indexOf(bo);
-			})/* selects brick objects except current brick object */.filter(function(bo) {
+		// 	return collidedObjects;
+		// }
+		// this.willBeOverlappedBy = function(brickObject) {
+		// 	var brickTiles = brickObject.getTiles();
+		// 	var overLappedObjects = selectedGame.brickObjects.filter(function(bo){ 
+		// 		return selectedGame.brickObjects.indexOf(brickObject) != selectedGame.brickObjects.indexOf(bo);
+		// 	})/* selects brick objects except current brick object */.filter(function(bo) {
 
-				var isOverlapped = false;
-				var boTiles = bo.getTiles();
-				var tileCounter = 0;
+		// 		var isOverlapped = false;
+		// 		var boTiles = bo.getTiles();
+		// 		var tileCounter = 0;
 
-				while(tileCounter < boTiles.length && !isOverlapped) {
-					isOverlapped = brickTiles.filter(function(bt) { 
-						return bt.screenX == boTiles[tileCounter].screenX && bt.screenY == boTiles[tileCounter].screenY 
-					}).length > 0;
-					tileCounter++;
-				}
+		// 		while(tileCounter < boTiles.length && !isOverlapped) {
+		// 			isOverlapped = brickTiles.filter(function(bt) { 
+		// 				return bt.screenX == boTiles[tileCounter].screenX && bt.screenY == boTiles[tileCounter].screenY 
+		// 			}).length > 0;
+		// 			tileCounter++;
+		// 		}
 
-				return isOverlapped;
-			});
-			return overLappedObjects;
-		}
+		// 		return isOverlapped;
+		// 	});
+		// 	return overLappedObjects;
+		// }
 		this.load = function() {
 			selectedGame = brickGameModel.getSelectedGame();
 			brickGameModel.setScore(0);
@@ -1273,64 +1267,63 @@
 			}
 			lockKey(false);
 		}
-		function _tryOverlap(brickObject) {
-			var brickObjectTiles = brickObject.getTiles();
-			console.log(brickObjectTiles);
-			console.log(selectedGame.brickObjects)
-			var overlappedObjects = selectedGame.brickObjects.filter(function(bo){ 
-				return selectedGame.brickObjects.indexOf(brickObject) != selectedGame.brickObjects.indexOf(bo);
-			}).filter(function(bo) {
-				var isOverlapped = false;
-				var boTiles = bo.getTiles();
-				var tileCounter = 0;
-				while(tileCounter < boTiles.length && !isOverlapped) {
-					isOverlapped = brickObjectTiles.filter(function(bt) {
+		// function _tryOverlap(brickObject) {
+		// 	var brickObjectTiles = brickObject.getTiles();
+		// 	console.log(brickObjectTiles);
+		// 	console.log(selectedGame.brickObjects)
+		// 	var overlappedObjects = selectedGame.brickObjects.filter(function(bo){ 
+		// 		return selectedGame.brickObjects.indexOf(brickObject) != selectedGame.brickObjects.indexOf(bo);
+		// 	}).filter(function(bo) {
+		// 		var isOverlapped = false;
+		// 		var boTiles = bo.getTiles();
+		// 		var tileCounter = 0;
+		// 		while(tileCounter < boTiles.length && !isOverlapped) {
+		// 			isOverlapped = brickObjectTiles.filter(function(bt) {
 						
-						var r = bt.testScreenX == boTiles[tileCounter].screenX && bt.testScreenY == boTiles[tileCounter].screenY;
-						if (r) console.log(bt.testScreenX + " = " + boTiles[tileCounter].screenX + " and " + bt.testScreenY + " = " + boTiles[tileCounter].screenY);
-						return r;
-					}).length > 0;
-					tileCounter++;
-				}
-				// console.log(isOverlapped);
-				return isOverlapped;
-			});
-			return overlappedObjects;
-		}
+		// 				var r = bt.testScreenX == boTiles[tileCounter].screenX && bt.testScreenY == boTiles[tileCounter].screenY;
+		// 				if (r) console.log(bt.testScreenX + " = " + boTiles[tileCounter].screenX + " and " + bt.testScreenY + " = " + boTiles[tileCounter].screenY);
+		// 				return r;
+		// 			}).length > 0;
+		// 			tileCounter++;
+		// 		}
+		// 		return isOverlapped;
+		// 	});
+		// 	return overlappedObjects;
+		// }
 
-		this.tryOverlap = function(brickObject, x, y) {
-			brickObject.tryLocation(x, y);
-			return _tryOverlap(brickObject);
-		}
-		this.rotate = function(brickObject, direction) {
-			brickObject.tryRotate(direction);
-			var overLappedObjects = _tryOverlap(brickObject);
-			if (overLappedObjects.length == 0 && !brickObject.willGetOutOfScreen(direction)) { brickObject.rotate(direction); }
-			else {
-				var brickLocation = brickObject.getLocation();
-				switch (direction) {
-					case "Left":
-						brickLocation.x--;
-						break;
-					case "Right":
-						brickLocation.x++;
-						break;
-					case "Up":
-						brickLocation.y--;
-						break;
-					case "Down":
-						brickLocation.y++;
-						break;
-					default:
-						break;
-				}
-				brickObject.tryLocation(brickLocation.x, brickLocation.y);
-				overLappedObjects = _tryOverlap(brickObject);
-				if (overLappedObjects.length == 0 && !brickObject.willGetOutOfScreen(direction)) {
-					brickObject.setLocation(brickLocation.x, brickLocation.y); brickObject.rotate(direction);
-				}
-			}
-		}
+		// this.tryOverlap = function(brickObject, x, y) {
+		// 	brickObject.tryLocation(x, y);
+		// 	return _tryOverlap(brickObject);
+		// }
+		// this.rotate = function(brickObject, direction) {
+		// 	brickObject.tryRotate(direction);
+		// 	var overLappedObjects = _tryOverlap(brickObject);
+		// 	if (overLappedObjects.length == 0 && !brickObject.willGetOutOfScreen(direction)) { brickObject.rotate(direction); }
+		// 	else {
+		// 		var brickLocation = brickObject.getLocation();
+		// 		switch (direction) {
+		// 			case "Left":
+		// 				brickLocation.x--;
+		// 				break;
+		// 			case "Right":
+		// 				brickLocation.x++;
+		// 				break;
+		// 			case "Up":
+		// 				brickLocation.y--;
+		// 				break;
+		// 			case "Down":
+		// 				brickLocation.y++;
+		// 				break;
+		// 			default:
+		// 				break;
+		// 		}
+		// 		brickObject.tryLocation(brickLocation.x, brickLocation.y);
+		// 		overLappedObjects = _tryOverlap(brickObject);
+		// 		if (overLappedObjects.length == 0 && !brickObject.willGetOutOfScreen(direction)) {
+		// 			brickObject.setLocation(brickLocation.x, brickLocation.y); brickObject.rotate(direction);
+		// 		}
+		// 	}
+		// }
 	}
 
 	// GAMES
@@ -1341,7 +1334,7 @@
 			var level = brickGameModel.getLevel(), speedInMillis = brickGameModel.getSpeedInMillis();
 			var enemyTankTiles = [];
 			var spawnTankAnim = new Timer({ func: loadEnemyTanks, interval: 200 });
-			var tankTile = new BrickObject({ tiles: getBrickTiles("tankTile"), origin: { x: 1, y: 1 }, brickLocation: { x: 10, y: 3 }, brickDirection: "Left" });
+			var tankTile = new BrickObject({ tiles: getBrickTiles("tankTile"), name: "tankTile", origin: { x: 1, y: 1 }, brickLocation: { x: 10, y: 3 }, rotateDirection: "Left" });
 
 			// FUNCTIONS
 			function loadObstacles() {
@@ -1351,82 +1344,82 @@
 						break;
 					case 2:
 						params = [
-							{ name: "rightTile1", brickLocation: { x: 2, y: 2 }, rotateDirection: "Down" },
-							{ name: "rightTile1", brickLocation: { x: 16, y: 6 }, rotateDirection: "Up" },
+							{ name: "rightTile1", tiles: getBrickTiles("rightTile1"), brickLocation: { x: 2, y: 2 }, rotateDirection: "Down" },
+							{ name: "rightTile1", tiles: getBrickTiles("rightTile1"), brickLocation: { x: 16, y: 6 }, rotateDirection: "Up" },
 						];
 						break;
 					case 3:
 						params = [
-							{ name: "rightTile1", brickLocation: { x: 2, y: 6 }, rotateDirection: "Right" },
-							{ name: "rightTile1", brickLocation: { x: 16, y: 2 }, rotateDirection: "Left" },
-							{ name: "squareTile1", brickLocation: { x: 4, y: 2 }, },
-							{ name: "squareTile1", brickLocation: { x: 14, y: 6 }, },
+							{ name: "rightTile1", tiles: getBrickTiles("rightTile1"), brickLocation: { x: 2, y: 6 }, rotateDirection: "Right" },
+							{ name: "rightTile1", tiles: getBrickTiles("rightTile1"), brickLocation: { x: 16, y: 2 }, rotateDirection: "Left" },
+							{ name: "squareTile1", tiles: getBrickTiles("squareTile1"), brickLocation: { x: 4, y: 2 }, },
+							{ name: "squareTile1", tiles: getBrickTiles("squareTile1"), brickLocation: { x: 14, y: 6 }, },
 						];
 						break;
 					case 4:
 						params = [
-							{ name: "rightTile1", brickLocation: { x: 2, y: 6 }, rotateDirection: "Right" },
-							{ name: "rightTile1", brickLocation: { x: 16, y: 2 }, rotateDirection: "Left" },
-							{ name: "rightTile1", brickLocation: { x: 2, y: 2 }, rotateDirection: "Down" },
-							{ name: "rightTile1", brickLocation: { x: 16, y: 6 }, rotateDirection: "Up" },
-							{ name: "squareTile1", brickLocation: { x: 5, y: 4 }, },
-							{ name: "squareTile1", brickLocation: { x: 13, y: 4 }, },
+							{ name: "rightTile1", tiles: getBrickTiles("rightTile1"), brickLocation: { x: 2, y: 6 }, rotateDirection: "Right" },
+							{ name: "rightTile1", tiles: getBrickTiles("rightTile1"), brickLocation: { x: 16, y: 2 }, rotateDirection: "Left" },
+							{ name: "rightTile1", tiles: getBrickTiles("rightTile1"), brickLocation: { x: 2, y: 2 }, rotateDirection: "Down" },
+							{ name: "rightTile1", tiles: getBrickTiles("rightTile1"), brickLocation: { x: 16, y: 6 }, rotateDirection: "Up" },
+							{ name: "squareTile1", tiles: getBrickTiles("squareTile1"), brickLocation: { x: 5, y: 4 }, },
+							{ name: "squareTile1", tiles: getBrickTiles("squareTile1"), brickLocation: { x: 13, y: 4 }, },
 						];
 						break;
 					case 5:
 						params = [
-							{ name: "rightTile1", brickLocation: { x: 2, y: 6 }, rotateDirection: "Right" },
-							{ name: "rightTile1", brickLocation: { x: 16, y: 2 }, rotateDirection: "Left" },
-							{ name: "rightTile1", brickLocation: { x: 2, y: 2 }, rotateDirection: "Down" },
-							{ name: "rightTile1", brickLocation: { x: 16, y: 6 }, rotateDirection: "Up" },
-							{ name: "fourByOne", brickLocation: { x: 6, y: 3 }, rotateDirection: "Up" },
-							{ name: "fourByOne", brickLocation: { x: 13, y: 3 }, rotateDirection: "Up" },
+							{ name: "rightTile1", tiles: getBrickTiles("rightTile1"), brickLocation: { x: 2, y: 6 }, rotateDirection: "Right" },
+							{ name: "rightTile1", tiles: getBrickTiles("rightTile1"), brickLocation: { x: 16, y: 2 }, rotateDirection: "Left" },
+							{ name: "rightTile1", tiles: getBrickTiles("rightTile1"), brickLocation: { x: 2, y: 2 }, rotateDirection: "Down" },
+							{ name: "rightTile1", tiles: getBrickTiles("rightTile1"), brickLocation: { x: 16, y: 6 }, rotateDirection: "Up" },
+							{ name: "fourByOne", tiles: getBrickTiles("fourByOne"), brickLocation: { x: 6, y: 3 }, rotateDirection: "Up" },
+							{ name: "fourByOne", tiles: getBrickTiles("fourByOne"), brickLocation: { x: 13, y: 3 }, rotateDirection: "Up" },
 						];
 						break;
 					case 6:
 						params = [
-							{ name: "cTile1", brickLocation: { x: 2, y: 2 }, },
-							{ name: "cTile1", brickLocation: { x: 14, y: 2 }, rotateDirection: "Left" },
+							{ name: "cTile1", tiles: getBrickTiles("cTile1"), brickLocation: { x: 2, y: 2 }, },
+							{ name: "cTile1", tiles: getBrickTiles("cTile1"), brickLocation: { x: 14, y: 2 }, rotateDirection: "Left" },
 						]
 						break;
 					case 7: 
 						params = [
-							{ name: "tTile1", brickLocation: { x: 14, y: 1 }, },
-							{ name: "tTile1", brickLocation: { x: 0, y: 1 }, rotateDirection: "Left" },
+							{ name: "tTile1", tiles: getBrickTiles("tTile1"), brickLocation: { x: 14, y: 1 }, },
+							{ name: "tTile1", tiles: getBrickTiles("tTile1"), brickLocation: { x: 0, y: 1 }, rotateDirection: "Left" },
 						]
 						break;
 					case 8:
 						params = [
-							{ name: "squareTile1", brickLocation: { x: 1, y: 4 }, },
-							{ name: "squareTile1", brickLocation: { x: 18, y: 4 }, },
-							{ name: "squareTile1", brickLocation: { x: 4, y: 1 }, },
-							{ name: "squareTile1", brickLocation: { x: 4, y: 7 }, },
-							{ name: "squareTile1", brickLocation: { x: 14, y: 1 }, },
-							{ name: "squareTile1", brickLocation: { x: 14, y: 7 }, },
-							{ name: "squareTile1", brickLocation: { x: 7, y: 4 }, },
+							{ name: "squareTile1", tiles: getBrickTiles("squareTile1"), brickLocation: { x: 1, y: 4 }, },
+							{ name: "squareTile1", tiles: getBrickTiles("squareTile1"), brickLocation: { x: 18, y: 4 }, },
+							{ name: "squareTile1", tiles: getBrickTiles("squareTile1"), brickLocation: { x: 4, y: 1 }, },
+							{ name: "squareTile1", tiles: getBrickTiles("squareTile1"), brickLocation: { x: 4, y: 7 }, },
+							{ name: "squareTile1", tiles: getBrickTiles("squareTile1"), brickLocation: { x: 14, y: 1 }, },
+							{ name: "squareTile1", tiles: getBrickTiles("squareTile1"), brickLocation: { x: 14, y: 7 }, },
+							{ name: "squareTile1", tiles: getBrickTiles("squareTile1"), brickLocation: { x: 7, y: 4 }, },
 						]
 						break;
 					case 9: 
 						params = [
-							{ name: "tTile2", brickLocation: { x: 1, y: 1 }, rotateDirection: "Left" },
-							{ name: "tTile2", brickLocation: { x: 1, y: 6 }, },
-							{ name: "tTile2", brickLocation: { x: 14, y: 1 }, rotateDirection: "Left" },
-							{ name: "tTile2", brickLocation: { x: 14, y: 6 }, },
+							{ name: "tTile2", tiles: getBrickTiles("tTile2"), brickLocation: { x: 1, y: 1 }, rotateDirection: "Left" },
+							{ name: "tTile2", tiles: getBrickTiles("tTile2"), brickLocation: { x: 1, y: 6 }, },
+							{ name: "tTile2", tiles: getBrickTiles("tTile2"), brickLocation: { x: 14, y: 1 }, rotateDirection: "Left" },
+							{ name: "tTile2", tiles: getBrickTiles("tTile2"), brickLocation: { x: 14, y: 6 }, },
 						]
 						break;
 					case 10:
 						params = [
-							{ name: "tTile1", brickLocation: { x: 14, y: 1 }, },
-							{ name: "tTile1", brickLocation: { x: 0, y: 1 }, rotateDirection: "Left" },
-							{ name: "eightByOne", brickLocation: { x: 6, y: 1 }, },
-							{ name: "eightByOne", brickLocation: { x: 6, y: 8 }, },
+							{ name: "tTile1", tiles: getBrickTiles("tTile1"), brickLocation: { x: 14, y: 1 }, },
+							{ name: "tTile1", tiles: getBrickTiles("tTile1"), brickLocation: { x: 0, y: 1 }, rotateDirection: "Left" },
+							{ name: "eightByOne", tiles: getBrickTiles("eightByOne"), brickLocation: { x: 6, y: 1 }, },
+							{ name: "eightByOne", tiles: getBrickTiles("eightByOne"), brickLocation: { x: 6, y: 8 }, },
 						]
 						break;
 					default:
 						break;
 				}
 				for (var i = 0; i < params.length; i++) {
-					console.log($game.newBrickObject(params[i]));
+					console.log(new BrickObject(params[i]));
 				}
 			}
 			function loadEnemyTanks() {
@@ -1434,9 +1427,6 @@
 				if(spawn && enemyTankTiles.length < 6) {
 					var posX = Math.round(Math.random() * 100) % 3, posY = Math.round(Math.random() * 100) % 2;
 					var direction = Math.round(Math.random() * 100) % 4;
-					var enemyTankTile = new BrickObject({
-						tiles: getBrickTiles("enemyTankTile"), brickDirection: "Left", origin: { x: 1, y: 1 },
-					});
 					switch(posX) {
 						case 0:
 							posX = 0;
@@ -1476,27 +1466,26 @@
 						default:
 							break;
 					}
-					//console.log(enemyTankTile);
-					// if($game.tryOverlap(enemyTankTile, posX, posY).length == 0) {
 
-					// 	enemyTankTile.setLocation(posX, posY);
-					// 	enemyTankTile.rotate(direction);
-					// 	enemyTankTiles.push(enemyTankTile);
-					// 	var moveEnemyTankAnim = $game.newTimer({
-					// 		func: function() { 
-					// 			var direction = enemyTankTile.getDirection();
-					// 			var moveOrRotate = Math.floor(Math.random() * 100) % 3 == 0;
-					// 			if (moveOrRotate) direction = ["Left", "Right", "Up", "Down"][Math.floor(Math.random() * 100) % 4];
-					// 			moveTank(enemyTankTile, direction);
-					// 			if(Math.floor(Math.random() * 100) % 2 == 0) fireTank(enemyTankTile, true);
-					// 		}, 
-					// 		interval: speedInMillis
-					// 	});
-					// 	enemyTankTile.onRemove(function() { moveEnemyTankAnim.stop() });
-					// 	moveEnemyTankAnim.start();
-					// }
+					var enemyTankTile = new BrickObject({
+						tiles: getBrickTiles("enemyTankTile"), name: "enemyTankTile", rotateDirection: direction, origin: { x: 1, y: 1 },
+					});
 
-					enemyTankTile.tryLocation(posX, posY);
+					if(!enemyTankTile.tryLocation(posX, posY)) {
+						enemyTankTiles.push(enemyTankTile);
+						var moveEnemyTankAnim = new Timer({
+							func: function() { 
+								var direction = enemyTankTile.getDirection();
+								var moveOrRotate = Math.floor(Math.random() * 100) % 3 == 0;
+								if (moveOrRotate) direction = ["Left", "Right", "Up", "Down"][Math.floor(Math.random() * 100) % 4];
+								moveTank(enemyTankTile, direction);
+								if(Math.floor(Math.random() * 100) % 2 == 0) fireTank(enemyTankTile, true);
+							}, 
+							interval: speedInMillis
+						});
+						enemyTankTile.onRemove(function() { moveEnemyTankAnim.stop() });
+						moveEnemyTankAnim.start();
+					}
 				}
 			}
 			function moveTank(_tankTile, direction) {
@@ -1516,54 +1505,37 @@
 							tankLocation.y++;
 							break;
 					}
-					// if($game.tryOverlap(_tankTile, tankLocation.x, tankLocation.y).length == 0 && !_tankTile.isOnSide(direction))
-					// 	_tankTile.setLocation(tankLocation.x, tankLocation.y);
 					if(!_tankTile.isOnSide(direction))
-						_tankTile.tryLocation(tankLocation.x, tankLocation.y);
+						_tankTile.tryRotateLocation(tankLocation.x, tankLocation.y, direction);
 				}
-				//else $game.rotate(_tankTile, direction);
+				else {
+					if(!_tankTile.isOnSide(direction)) {
+						if(_tankTile.tryRotateLocation(tankLocation.x, tankLocation.y, direction).length > 0) {
+							switch(direction) {
+								case "Left":
+									tankLocation.x--;
+									break;
+								case "Right":
+									tankLocation.x++;
+									break;
+								case "Up":
+									tankLocation.y--;
+									break;
+								case "Down":
+									tankLocation.y++;
+									break;
+							}
+							_tankTile.tryRotateLocation(tankLocation.x, tankLocation.y, direction);
+						}
+					}
+				}
 			}
 			function fireTank(_tankTile, _isEnemyTank) {
 				var isEnemyTank = _isEnemyTank == undefined ? false: _isEnemyTank;
 				var ammoX = 0, ammoY = 0;
 				var tankDirection = _tankTile.getDirection(), tankLocation = _tankTile.getLocation();
-				var ammoTile = $game.newBrickObject({ name: "singleTile", color: isEnemyTank ? "red": "yellow", brickDirection: tankDirection });
-				function hit(hitObject, x, y) {
-					var hitObjectName = hitObject.getName();
-					if(!isEnemyTank && hitObjectName == "enemyTankTile") {
-						GameSound.fire();
-						enemyTankTiles.splice(enemyTankTiles.indexOf(hitObject), 1);
-						$game.score();
-						$game.disappear(hitObject); 
-
-						var score = brickGameModel.getScore();
-						if (score % 30 == 0) {
-							$game.stop();
-							$game.levelUp();
-						}
-					}
-					else {
-						if (hitObjectName == "singleTile") $game.disappear(hitObject);
-						else if (hitObjectName == "tankTile") {
-							$game.stop();
-							GameSound.explosion();
-							$game.blinkBrickObjects({ brickObjects: [tankTile], interval: 400, count: 3, endFunction: $game.gameOver });
-						}
-						else if (hitObjectName == "rightTile1" || 
-								hitObjectName == "squareTile1" || 
-								hitObjectName == "cTile1" ||
-								hitObjectName == "tTile1" ||
-								hitObjectName == "tTile2" ||
-								hitObjectName == "eightByOne" ||
-								hitObjectName == "fourByOne") {
-							hitObject.removeTile(x, y);
-							if(hitObject.tileCount() == 0) {
-								$game.getBrickObjects();
-								$game.disappear(hitObject);
-							}
-						}
-					}
-				}
+				var ammoTile = new BrickObject({ tiles: getBrickTiles("singleTile"), name: "singleTile", color: isEnemyTank ? "red": "yellow", brickDirection: tankDirection });
+				
 				switch(tankDirection) {
 					case "Right":
 						ammoX = tankLocation.x + 3; ammoY = tankLocation.y + 1;
@@ -1580,12 +1552,18 @@
 					default:
 						break;
 				}
-				var collidedObjects = $game.tryOverlap(ammoTile, ammoX, ammoY);
-				if(collidedObjects.length == 0) {
-					if(_tankTile.isOnSide(tankDirection)) $game.disappear(ammoTile);
-					else {
-						ammoTile.setLocation(ammoX, ammoY);
-						var fireTankAnim = $game.newTimer({
+
+				
+				var collidedObjects = ammoTile.tryRotateLocation(ammoX, ammoY);
+				if (collidedObjects.length > 0) {
+					var hitObject = collidedObjects.first();
+					hit(hitObject, ammoX, ammoY);
+					ammoTile.remove();
+				}
+				else {
+					if(_tankTile.isOnSide(tankDirection)) ammoTile.remove();
+					else { 
+						var fireTankAnim = new Timer({
 							func: function() {
 								var ammoLocation = ammoTile.getLocation();
 								switch(tankDirection) {
@@ -1603,31 +1581,69 @@
 										break;
 								}
 								if (ammoTile.isOnSide(tankDirection)) {
-									$game.disappear(ammoTile);
+									ammoTile.remove();
 								}
 								else {
-									var collidedObjects = $game.tryOverlap(ammoTile, ammoLocation.x, ammoLocation.y);
-									if (collidedObjects.length == 0 && !ammoTile.isOnSide(tankDirection)) 
-										ammoTile.setLocation(ammoLocation.x, ammoLocation.y);
-									else {
-										if (collidedObjects.length > 0) {
-											var hitObject = collidedObjects.first();
-											hit(hitObject, ammoLocation.x, ammoLocation.y);
+									if (!ammoTile.isOnSide(tankDirection)) {
+										var collidedObjects = ammoTile.tryRotateLocation(ammoLocation.x, ammoLocation.y);
+										if (collidedObjects.length == 0) { }
+										else {
+											if (collidedObjects.length > 0) {
+												var hitObject = collidedObjects.first();
+												hit(hitObject, ammoLocation.x, ammoLocation.y);
+											}
+											ammoTile.remove();
 										}
-										$game.disappear(ammoTile);
+									}
+									else {
+										ammoTile.remove();
 									}
 								}	
 							}, 
 							interval: 100
 						}); 
+
 						ammoTile.onRemove(function() { fireTankAnim.stop() });
-						fireTankAnim.start();
+				 		fireTankAnim.start();
 					}
 				}
-				else {
-					var hitObject = collidedObjects.first();
-					hit(hitObject, ammoX, ammoY);
-					$game.disappear(ammoTile);
+
+
+
+				function hit(hitObject, x, y) {
+					var hitObjectName = hitObject.getName();
+					if(!isEnemyTank && hitObjectName == "enemyTankTile") {
+						GameSound.fire();
+						enemyTankTiles.splice(enemyTankTiles.indexOf(hitObject), 1);
+						Game.score();
+						hitObject.remove(); 
+
+						var score = brickGameModel.getScore();
+						if (score % 30 == 0) {
+							stop();
+							Game.levelUp();
+						}
+					}
+					else {
+						if (hitObjectName == "singleTile") hitObject.remove();
+						else if (hitObjectName == "tankTile") {
+							stop();
+							GameSound.explosion();
+							Game.blinkBrickObjects({ brickObjects: [tankTile], interval: 400, count: 3, endFunction: Game.gameOver });
+						}
+						else if (hitObjectName == "rightTile1" || 
+								hitObjectName == "squareTile1" || 
+								hitObjectName == "cTile1" ||
+								hitObjectName == "tTile1" ||
+								hitObjectName == "tTile2" ||
+								hitObjectName == "eightByOne" ||
+								hitObjectName == "fourByOne") {
+							hitObject.removeTile(x, y);
+							if(hitObject.tileCount() == 0) {
+								hitObject.remove();
+							}
+						}
+					}
 				}
 			}
 			
@@ -1648,7 +1664,7 @@
 			}
 
 			// INITIALIZATION
-			// loadObstacles();
+			loadObstacles();
 			spawnTankAnim.start();
 		}
 	},
@@ -3209,7 +3225,7 @@
 		var tiles = params.tiles;
 		var color = params.color == undefined ? "black": params.color;
 		var brickDirection = params.brickDirection == undefined ? "Right": params.brickDirection;
-		var rotateDirection = params.rotateDirection == undefined ? "Right": params.rotateDirection;
+		var rotateDirection = params.rotateDirection == undefined ? brickDirection: params.rotateDirection;
 		var flipDirection = params.flipDirection == undefined ? "None": params.flipDirection;
 		var origin = params.origin == undefined ? 0: params.origin;
 		var brickLocation = params.brickLocation;
@@ -3492,30 +3508,6 @@
 			}
 			return isOverlapped;
 		}
-
-		
-
-		this.removeSideTile = function(side, position) {
-			var lastPosition = 0;
-			if (side == "Right") {
-				var tilesRow = tiles.filter(function(tile) { return tile.screenY == position });
-				if (tilesRow != undefined && tilesRow.length > 0) 
-					lastPosition = tilesRow.sort(function(t1, t2) {
-						return t1.screenX - t2.screenX;
-					}).last().screenX;
-			}
-			return _removeTile(lastPosition, position);
-		}
-		this.removeTileByDirection = function(side, start) {
-			switch(side) {
-				case "Left":
-					switch(start) {
-						case "Large":
-							break;
-					}
-					break;
-			}
-		}
 		this.getDirection = function() {
 			return brickDirection;
 		}
@@ -3614,14 +3606,21 @@
 						tiles[t].y = _th;
 					}
 	 			}
+
+	 			
 	 		}
+
+	 		brickDirection = rotateDirection;
 		}
 
-		this.rotate = function(direction) {
+		this.tryRotateLocation = function(x, y, direction) {
 
+			// if no overlap occurred set location and rotation
 			var rotation = undefined;
 
-			var tileX = 0, tileY = 0, _tw = 0, _th = 0, x = 0, y = 0;
+			var isOverlapped = false;
+
+			var tileX = 0, tileY = 0, _tw = 0, _th = 0;
 
 			var brickSize = _getSize();
 
@@ -3649,95 +3648,237 @@
 			) {
 				rotation = "counterclockwise";
 			}
+			else {
+				rotation = undefined;
+			}
 
-			console.log(tiles);
+			var tempTiles = JSON.parse(JSON.stringify(tiles));
 
 			if (rotation != undefined) {
-				if (X != undefined && Y != undefined) {
-					for(var t = 0; t < tiles.length; t++) {
-						tileX = X + tiles[t].x;
-						tileY = Y + tiles[t].y;
-						if(tileX >= 0 && tileX < 20 && tileY >= 0 && tileY < 10) {
-							var colorClass = getTileObject(tileX, tileY).classList[1];
-							if(visible) changeTileColor(tileX, tileY, tiles[t].backColor);
-						}
-						else {
-							tiles[t].backColor = undefined;
-						}
-					}
-				}
 
 				if (rotation == "rotate180") {
-					x = (X + originX) - (brickSize.width - 1 - originX);
-					y = (Y + originY) - (brickSize.height - 1 - originY);
+					// x = (X + originX) - (brickSize.width - 1 - originX);
+					// y = (Y + originY) - (brickSize.height - 1 - originY);
 					_tw = brickSize.width - 1;
 					_th = brickSize.height - 1;
-					originX = _tw - originX;
-					originY = _tw - originY;
+					// originX = _tw - originX;
+					// originY = _tw - originY;
 				}
 				else if (rotation == "clockwise") {
-					x = (X + originX) - (brickSize.height - 1 - originY);
-					y = (Y + originY) - originX;
+					// x = (X + originX) - (brickSize.height - 1 - originY);
+					// y = (Y + originY) - originX;
 					_th = originX;
 					_tw = brickSize.height - 1 - originY;
-					originY = _th;
-					originX = _tw;
+					// originY = _th;
+					// originX = _tw;
 				}
 				else if (rotation == "counterclockwise") {
-					x = (X + originX) - originY;
-					y = (Y + originY) - (brickSize.width - 1 - originX);
+					// x = (X + originX) - originY;
+					// y = (Y + originY) - (brickSize.width - 1 - originX);
 					_th = brickSize.width - 1 - originX;
 					_tw = originY;
-					originY = _th;
-					originX = _tw;
+					// originY = _th;
+					// originX = _tw;
+				}
+			}
+
+			for(var t = 0; t < tempTiles.length; t++) {
+
+				// var tlsX = 0, tlsY = 0;
+				if (rotation == "rotate180") {
+					tempTiles[t].x = _tw - tempTiles[t].x;
+					tempTiles[t].y = _th - tempTiles[t].y;	
+				}
+				else if (rotation == "clockwise") {
+					_tw = brickSize.height - 1 - tempTiles[t].y;
+					_th = tempTiles[t].x;
+					tempTiles[t].x = _tw;
+					tempTiles[t].y = _th;
+				}
+				else if (rotation == "counterclockwise") {
+					_tw = tempTiles[t].y;
+					_th = brickSize.width - 1 - tempTiles[t].x;
+					tempTiles[t].x = _tw;
+					tempTiles[t].y = _th;
 				}
 
-				for(var t = 0; t < tiles.length; t++) {
+				tileX = x + tempTiles[t].x;
+				tileY = y + tempTiles[t].y;
+ 			}
 
-					if (rotation == "rotate180") {
-						tiles[t].x = _tw - tiles[t].x;
-						tiles[t].y = _th - tiles[t].y;	
-					}
-					else if (rotation == "clockwise") {
-						_tw = brickSize.height - 1 - tiles[t].y;
-						_th = tiles[t].x;
-						tiles[t].x = _tw;
-						tiles[t].y = _th;
-					}
-					else if (rotation == "counterclockwise") {
-						_tw = tiles[t].y;
-						_th = brickSize.width - 1 - tiles[t].x;
-						tiles[t].x = _tw;
-						tiles[t].y = _th;
-					}
+			// var tileCounter = 0;
+			// while (tileCounter < tempTiles.length && !isOverlapped) {
+			// 	tileX = x + tempTiles[tileCounter].x; tileY = y + tempTiles[tileCounter].y;
+			// 	isOverlapped = screenTiles.filter(function(st) {
+			// 		return st.x == tileX && st.y == tileY && st.color != "canvas" && !isBrickTile(tileX, tileY);
+			// 	}).length > 0;
+			// 	tileCounter++;
+			// }
 
-					tileX = x + tiles[t].x;
-					tileY = y + tiles[t].y;
-					if(color == undefined) { 
-						color = tiles[t].foreColor; 
-					}
-					else {
-						tiles[t].foreColor = color;
-					}
-					if(tileX >= 0 && tileX < 20 && tileY >= 0 && tileY < 10) {
-						var colorClass = getTileObject(tileX, tileY).classList[1];
-						tiles[t].backColor = canvas;
-						if(visible) changeTileColor(tileX, tileY, color);
-					}
-					else {
-						tiles[t].backColor = undefined;
-					}
+			// function isBrickTile(x, y) {
+			// 	return tiles.filter(function(t) {
+			// 		return t.screenX == x && t.screenY == y;
+			// 	}).length > 0;
+			// }
 
-					tiles[t].screenX = tileX;
-					tiles[t].screenY = tileY;
-					tiles[t].testScreenX = tileX;
-					tiles[t].testScreenY = tileY;
-	 			}
+			// if (!isOverlapped) {
+			// 	tiles = tempTiles;
+			// 	_setLocation(x, y);
+			// 	brickDirection = direction;
+			// }
 
-				X = x; Y = y; 
+			var overlap = screenTiles.filter(function(screenTile) {
+				return tempTiles.filter(function(tempTile) { 
+					tileX = x + tempTile.x; tileY = y + tempTile.y;
+					return screenTile.x == tileX && screenTile.y == tileY && screenTile.color != "canvas";
+				}).length > 0;
+			});	
 
+			overlap = brickObjects.filter(function(brickObject) {
+				return brickObjects.indexOf(brickObject) != brickObjects.indexOf(thisObject);
+			}).filter(function(brickObject) {
+				return brickObject.getTiles().filter(function(brickTile) {
+					return overlap.filter(function(col) {
+						return col.x == brickTile.screenX && col.y == brickTile.screenY;
+					}).length > 0;
+				}).length > 0;
+			});
+
+			if (overlap.length == 0) {
+				tiles = tempTiles;
+				_setLocation(x, y);
 				brickDirection = direction;
 			}
+
+			return overlap;
+		}
+
+		this.rotate = function(direction) {
+
+			rotateDirection = direction;
+			_rotate();
+			_setLocation(X, Y);
+			brickDirection = direction;
+
+			// var rotation = undefined;
+
+			// var tileX = 0, tileY = 0, _tw = 0, _th = 0, x = 0, y = 0;
+
+			// var brickSize = _getSize();
+
+			// if (
+			// 	(direction == "Right" && brickDirection == "Left") ||
+			// 	(direction == "Left" && brickDirection == "Right") ||
+			// 	(direction == "Up" && brickDirection == "Down") ||
+			// 	(direction == "Down" && brickDirection == "Up")
+			// ) {
+			// 	rotation = "rotate180";
+			// }
+			// else if (
+			// 	(direction == "Right" && brickDirection == "Up") ||
+			// 	(direction == "Up" && brickDirection == "Left") ||
+			// 	(direction == "Left" && brickDirection == "Down") ||
+			// 	(direction == "Down" && brickDirection == "Right") 
+			// ) {
+			// 	rotation = "clockwise";
+			// }
+			// else if (
+			// 	(direction == "Right" && brickDirection == "Down") ||
+			// 	(direction == "Down" && brickDirection == "Left") ||
+			// 	(direction == "Left" && brickDirection == "Up") ||
+			// 	(direction == "Up" && brickDirection == "Right")
+			// ) {
+			// 	rotation = "counterclockwise";
+			// }
+
+			// console.log(tiles);
+
+			// if (rotation != undefined) {
+			// 	if (X != undefined && Y != undefined) {
+			// 		for(var t = 0; t < tiles.length; t++) {
+			// 			tileX = X + tiles[t].x;
+			// 			tileY = Y + tiles[t].y;
+			// 			if(tileX >= 0 && tileX < 20 && tileY >= 0 && tileY < 10) {
+			// 				var colorClass = getTileObject(tileX, tileY).classList[1];
+			// 				if(visible) changeTileColor(tileX, tileY, tiles[t].backColor);
+			// 			}
+			// 			else {
+			// 				tiles[t].backColor = undefined;
+			// 			}
+			// 		}
+			// 	}
+
+			// 	if (rotation == "rotate180") {
+			// 		x = (X + originX) - (brickSize.width - 1 - originX);
+			// 		y = (Y + originY) - (brickSize.height - 1 - originY);
+			// 		_tw = brickSize.width - 1;
+			// 		_th = brickSize.height - 1;
+			// 		originX = _tw - originX;
+			// 		originY = _tw - originY;
+			// 	}
+			// 	else if (rotation == "clockwise") {
+			// 		x = (X + originX) - (brickSize.height - 1 - originY);
+			// 		y = (Y + originY) - originX;
+			// 		_th = originX;
+			// 		_tw = brickSize.height - 1 - originY;
+			// 		originY = _th;
+			// 		originX = _tw;
+			// 	}
+			// 	else if (rotation == "counterclockwise") {
+			// 		x = (X + originX) - originY;
+			// 		y = (Y + originY) - (brickSize.width - 1 - originX);
+			// 		_th = brickSize.width - 1 - originX;
+			// 		_tw = originY;
+			// 		originY = _th;
+			// 		originX = _tw;
+			// 	}
+
+			// 	for(var t = 0; t < tiles.length; t++) {
+
+			// 		if (rotation == "rotate180") {
+			// 			tiles[t].x = _tw - tiles[t].x;
+			// 			tiles[t].y = _th - tiles[t].y;	
+			// 		}
+			// 		else if (rotation == "clockwise") {
+			// 			_tw = brickSize.height - 1 - tiles[t].y;
+			// 			_th = tiles[t].x;
+			// 			tiles[t].x = _tw;
+			// 			tiles[t].y = _th;
+			// 		}
+			// 		else if (rotation == "counterclockwise") {
+			// 			_tw = tiles[t].y;
+			// 			_th = brickSize.width - 1 - tiles[t].x;
+			// 			tiles[t].x = _tw;
+			// 			tiles[t].y = _th;
+			// 		}
+
+			// 		tileX = x + tiles[t].x;
+			// 		tileY = y + tiles[t].y;
+			// 		if(color == undefined) { 
+			// 			color = tiles[t].foreColor; 
+			// 		}
+			// 		else {
+			// 			tiles[t].foreColor = color;
+			// 		}
+			// 		if(tileX >= 0 && tileX < 20 && tileY >= 0 && tileY < 10) {
+			// 			var colorClass = getTileObject(tileX, tileY).classList[1];
+			// 			tiles[t].backColor = canvas;
+			// 			if(visible) changeTileColor(tileX, tileY, color);
+			// 		}
+			// 		else {
+			// 			tiles[t].backColor = undefined;
+			// 		}
+
+			// 		tiles[t].screenX = tileX;
+			// 		tiles[t].screenY = tileY;
+			// 		tiles[t].testScreenX = tileX;
+			// 		tiles[t].testScreenY = tileY;
+	 	// 		}
+
+			// 	X = x; Y = y; 
+
+				//brickDirection = direction;
+			//}
 		}
 
 		this.tryRotate = function(direction) {
@@ -4000,14 +4141,18 @@
 			return isOverlapped;
 		}
 
-		function _tryLocation1() {
-			var tileX = 0, tileY = 0;
-			for(var t = 0; t < tiles.length; t++) {
-				tileX = x + tiles[t].x; tileY = y + tiles[t].y;
-				tiles[t].testScreenX = tileX; tiles[t].testScreenY = tileY;
- 			}
-			testX = x; testY = y;
+		this.removeSideTile = function(side, position) {
+			var lastPosition = 0;
+			if (side == "Right") {
+				var tilesRow = tiles.filter(function(tile) { return tile.screenY == position });
+				if (tilesRow != undefined && tilesRow.length > 0) 
+					lastPosition = tilesRow.sort(function(t1, t2) {
+						return t1.screenX - t2.screenX;
+					}).last().screenX;
+			}
+			return _removeTile(lastPosition, position);
 		}
+		
 
 		this.willGetOutOfScreen = function(_direction) {
 
