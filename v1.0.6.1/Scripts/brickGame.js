@@ -764,10 +764,7 @@
 		this.fire2 = function() { play(10); };
 		this.pause = function() { if (audio == undefined) throw new Error("Error: undefined"); };
 		this.stop = function() { if (audio == undefined) throw new Error("Error: undefined"); };
-
-		this.getAudio = function() {
-			return selectedAudio;
-		}
+		this.getAudio = function() { return selectedAudio; }
 
 		function play(index, loop, endFunction) {
 			if(selectedAudio != undefined && selectedAudio.currentTime > 0 && !selectedAudio.paused && !selectedAudio.ended && selectedAudio.readyState > 2) {
@@ -802,9 +799,7 @@
 	/**** PRIVATE FUNCTIONS ****/
 	function setCanvasColor(color){
 		canvas = color;
-		for (var i = 0; i < screenTiles.length; i++) {
-			screenTiles[i].color = "canvas";
-		}
+		for (var i = 0; i < screenTiles.length; i++) screenTiles[i].color = "canvas";
 		paint();
 	}
 	function changeTileColor(x, y, color) {
@@ -814,8 +809,24 @@
 		tile.className = "outerTileCells outer" + color + "Color";
 		tile.children[0].className = "tileCells " + color + "Color";
 	}
-	function getScreenTile(x, y) {
-		return screenTiles.filter(function(tile) { return tile.x == x && tile.y == y; }).first();
+	function getScreenTile(x, y) { return screenTiles.filter(function(tile) { return tile.x == x && tile.y == y; }).first(); }
+	function stop() { timers.forEach(function(t) { t.stop(); }); }
+	function areEqual(bo1, bo2) { return brickObjects.indexOf(bo1) == brickObjects.indexOf(bo2); }
+	function paint() {
+		for (var index = 0; index < screenTiles.length; index++) {
+			var color = screenTiles[index].color == undefined || screenTiles[index].color == "canvas" ? canvas : screenTiles[index].color;
+			changeTileColor(screenTiles[index].x, screenTiles[index].y, color); 
+		}
+	}
+	function getBrickTiles(name) {
+		var brickTiles = brickObjectTiles.filter(function(t) { return t.name == name }).first();
+		return brickTiles == undefined || brickTiles.tiles == undefined ? []: brickTiles.tiles;
+	}
+	function clearBrickTiles() { while (brickObjects.length > 0) brickObjects.first().remove(); }
+	function getBrickObjectsByScreenTile(x, y) {
+		return brickObjects.filter(function(bo) {
+			return bo.getTiles().filter(function(bt) { return bt.screenX == x && bt.screenY == y; }).length > 0;
+		});
 	}
 
 	// LOAD TILES IN A SCREEN
@@ -897,19 +908,6 @@
 		var brickGameMarquee = new Marquee({ word: "BRICK GAME", onUnload: function() { GameProperties() } });
 	}
 
-	function stop() {
-		timers.forEach(function(t) { t.stop(); });
-	}
-
-	function areEqual(bo1, bo2) { return brickObjects.indexOf(bo1) == brickObjects.indexOf(bo2); }
-
-	function paint() {
-		for (var index = 0; index < screenTiles.length; index++) {
-			var color = screenTiles[index].color == undefined || screenTiles[index].color == "canvas" ? canvas : screenTiles[index].color;
-			changeTileColor(screenTiles[index].x, screenTiles[index].y, color); 
-		}
-	}
-
 	var GameProperties = function() {
 		var selectedGame;
 		var selectedCharacterObject = new BrickObject({ brickLocation: { x: 1, y: 2 } });
@@ -970,37 +968,10 @@
 		selectGame(brickGameModel.getGameNumber());
 	};
 
-	function getBrickTiles(name) {
-		var brickTiles = brickObjectTiles.filter(function(t) { return t.name == name }).first();
-		return brickTiles == undefined || brickTiles.tiles == undefined ? []: brickTiles.tiles;
-	}
-
-	function clearBrickTiles() {
-		while (brickObjects.length > 0) {
-			brickObjects.first().remove();
-		}
-	}
-
-	function getBrickObjectsByScreenTile(x, y) {
-		return brickObjects.filter(function(bo) {
-			return bo.getTiles().filter(function(bt) {
-				return bt.screenX == x && bt.screenY == y;
-			}).length > 0;
-		});
-	}
-
 	var Game = new function() {
 		var $game;
 		
 		// REFACTORED
-		// this.newBrickObject = function(params) {
-		// 	// params = params == undefined ? {}: params;
-		// 	var brickTiles = brickObjectTiles.filter(function(t) { return t.name == params.name }).first();
-		// 	params.tiles = params.tiles == undefined ? (brickTiles == undefined ? []: brickTiles.tiles): params.tiles;
-		// 	// var newBrickObject = new BrickObject(params);
-		// 	// selectedGame.brickObjects.push(newBrickObject);
-		// 	// return newBrickObject;
-		// };
 		this.getBrickObjects = function(name) {
 			name = name == undefined ? "": name;
 			var objs = selectedGame.brickObjects;
@@ -1043,110 +1014,7 @@
 			brickGameModel.setScore(_score);
 			if(selectedGame.score < _score) selectedGame.score++;
 		};
-		this.lockKey = function(isKeyLocked) {
-			lockKey(isKeyLocked);
-		};
-
-
-
-		// -----
-		// this.willCollide = function(brickObject, direction, ...objectsBeCollided) {
-		// 	var xIncrement = 0, yIncrement = 0;
-		// 	var oppositeDirection = "Left";
-		// 	switch(direction) {
-		// 		case "Left":
-		// 			oppositeDirection = "Right";
-		// 			xIncrement = 1; yIncrement = 0;
-		// 			break;
-		// 		case "Right":
-		// 			oppositeDirection = "Left";
-		// 			xIncrement = -1; yIncrement = 0;
-		// 			break;
-		// 		case "Up":
-		// 			oppositeDirection = "Down";
-		// 			xIncrement = 0; yIncrement = 1;
-		// 			break;
-		// 		case "Down":
-		// 			oppositeDirection = "Up";
-		// 			xIncrement = 0; yIncrement = -1;
-		// 			break;
-		// 	}
-		// 	var brickObjectEdgeTiles = brickObject.getEdgeTiles(direction);
-		// 	var collidedObjects = objectsBeCollided.filter(function(co) {
-		// 		var willCollide = false;
-		// 		var tileCounter = 0;
-		// 		var edgeTiles = co.getEdgeTiles(oppositeDirection);
-		// 		while (tileCounter < brickObjectEdgeTiles.length && !willCollide) {
-		// 			willCollide = edgeTiles.filter(function(et) {
-		// 				return brickObjectEdgeTiles[tileCounter].screenX == et.screenX + xIncrement && brickObjectEdgeTiles[tileCounter].screenY == et.screenY + yIncrement;
-		// 			}).length > 0;
-		// 			tileCounter++;
-		// 		}
-		// 		return willCollide;
-		// 	});
-		// 	return collidedObjects.length > 0;
-		// }
-		// this.willBeCollidedBy = function(brickObject, direction) {
-		// 	var xIncrement = 0, yIncrement = 0;
-		// 	var oppositeDirection = "Left";
-		// 	switch(direction) {
-		// 		case "Left":
-		// 			oppositeDirection = "Right";
-		// 			xIncrement = 1; yIncrement = 0;
-		// 			break;
-		// 		case "Right":
-		// 			oppositeDirection = "Left";
-		// 			xIncrement = -1; yIncrement = 0;
-		// 			break;
-		// 		case "Up":
-		// 			oppositeDirection = "Down";
-		// 			xIncrement = 0; yIncrement = 1;
-		// 			break;
-		// 		case "Down":
-		// 			oppositeDirection = "Up";
-		// 			xIncrement = 0; yIncrement = -1;
-		// 			break;
-		// 	}
-		// 	var brickObjectEdgeTiles = brickObject.getEdgeTiles(direction);
-		// 	var collidedObjects = selectedGame.brickObjects.filter(function(bo) {
-		// 		return selectedGame.brickObjects.indexOf(brickObject) != selectedGame.brickObjects.indexOf(bo);
-		// 	}).filter(function(bo) {
-		// 		var edgeTiles = bo.getEdgeTiles(oppositeDirection);
-		// 		var willCollide = false;
-		// 		var tileCounter = 0;
-		// 		while (tileCounter < brickObjectEdgeTiles.length && !willCollide) {
-		// 			willCollide = edgeTiles.filter(function(et) {
-		// 				return brickObjectEdgeTiles[tileCounter].screenX == et.screenX + xIncrement && 
-		// 					brickObjectEdgeTiles[tileCounter].screenY == et.screenY + yIncrement;
-		// 			}).length > 0;
-		// 			tileCounter++;
-		// 		}
-		// 		return willCollide;
-		// 	});
-
-		// 	return collidedObjects;
-		// }
-		// this.willBeOverlappedBy = function(brickObject) {
-		// 	var brickTiles = brickObject.getTiles();
-		// 	var overLappedObjects = selectedGame.brickObjects.filter(function(bo){ 
-		// 		return selectedGame.brickObjects.indexOf(brickObject) != selectedGame.brickObjects.indexOf(bo);
-		// 	})/* selects brick objects except current brick object */.filter(function(bo) {
-
-		// 		var isOverlapped = false;
-		// 		var boTiles = bo.getTiles();
-		// 		var tileCounter = 0;
-
-		// 		while(tileCounter < boTiles.length && !isOverlapped) {
-		// 			isOverlapped = brickTiles.filter(function(bt) { 
-		// 				return bt.screenX == boTiles[tileCounter].screenX && bt.screenY == boTiles[tileCounter].screenY 
-		// 			}).length > 0;
-		// 			tileCounter++;
-		// 		}
-
-		// 		return isOverlapped;
-		// 	});
-		// 	return overLappedObjects;
-		// }
+		this.lockKey = function(isKeyLocked) { lockKey(isKeyLocked); };
 		this.load = function() {
 			selectedGame = brickGameModel.getSelectedGame();
 			brickGameModel.setScore(0);
@@ -1167,13 +1035,9 @@
 			}
 		}
 		function _load($game) {
-			brickObjects = [];
-			timers = [];
-
+			clearBrickTiles();
+			brickObjects = []; timers = [];
 			setCanvasColor("white");
-		    
-		    // selectedGame.brickObjects = [], selectedGame.timers = [];
-
 			var game = new selectedGame.load();
 
 			gamekeydownfunctions = function() {
@@ -1267,63 +1131,6 @@
 			}
 			lockKey(false);
 		}
-		// function _tryOverlap(brickObject) {
-		// 	var brickObjectTiles = brickObject.getTiles();
-		// 	console.log(brickObjectTiles);
-		// 	console.log(selectedGame.brickObjects)
-		// 	var overlappedObjects = selectedGame.brickObjects.filter(function(bo){ 
-		// 		return selectedGame.brickObjects.indexOf(brickObject) != selectedGame.brickObjects.indexOf(bo);
-		// 	}).filter(function(bo) {
-		// 		var isOverlapped = false;
-		// 		var boTiles = bo.getTiles();
-		// 		var tileCounter = 0;
-		// 		while(tileCounter < boTiles.length && !isOverlapped) {
-		// 			isOverlapped = brickObjectTiles.filter(function(bt) {
-						
-		// 				var r = bt.testScreenX == boTiles[tileCounter].screenX && bt.testScreenY == boTiles[tileCounter].screenY;
-		// 				if (r) console.log(bt.testScreenX + " = " + boTiles[tileCounter].screenX + " and " + bt.testScreenY + " = " + boTiles[tileCounter].screenY);
-		// 				return r;
-		// 			}).length > 0;
-		// 			tileCounter++;
-		// 		}
-		// 		return isOverlapped;
-		// 	});
-		// 	return overlappedObjects;
-		// }
-
-		// this.tryOverlap = function(brickObject, x, y) {
-		// 	brickObject.tryLocation(x, y);
-		// 	return _tryOverlap(brickObject);
-		// }
-		// this.rotate = function(brickObject, direction) {
-		// 	brickObject.tryRotate(direction);
-		// 	var overLappedObjects = _tryOverlap(brickObject);
-		// 	if (overLappedObjects.length == 0 && !brickObject.willGetOutOfScreen(direction)) { brickObject.rotate(direction); }
-		// 	else {
-		// 		var brickLocation = brickObject.getLocation();
-		// 		switch (direction) {
-		// 			case "Left":
-		// 				brickLocation.x--;
-		// 				break;
-		// 			case "Right":
-		// 				brickLocation.x++;
-		// 				break;
-		// 			case "Up":
-		// 				brickLocation.y--;
-		// 				break;
-		// 			case "Down":
-		// 				brickLocation.y++;
-		// 				break;
-		// 			default:
-		// 				break;
-		// 		}
-		// 		brickObject.tryLocation(brickLocation.x, brickLocation.y);
-		// 		overLappedObjects = _tryOverlap(brickObject);
-		// 		if (overLappedObjects.length == 0 && !brickObject.willGetOutOfScreen(direction)) {
-		// 			brickObject.setLocation(brickLocation.x, brickLocation.y); brickObject.rotate(direction);
-		// 		}
-		// 	}
-		// }
 	}
 
 	// GAMES
@@ -1418,9 +1225,7 @@
 					default:
 						break;
 				}
-				for (var i = 0; i < params.length; i++) {
-					console.log(new BrickObject(params[i]));
-				}
+				for (var i = 0; i < params.length; i++) new BrickObject(params[i]);
 			}
 			function loadEnemyTanks() {
 				var spawn = Math.round(Math.random() * 100) % 5 == 0;
@@ -1471,7 +1276,7 @@
 						tiles: getBrickTiles("enemyTankTile"), name: "enemyTankTile", rotateDirection: direction, origin: { x: 1, y: 1 },
 					});
 
-					if(!enemyTankTile.tryLocation(posX, posY)) {
+					if(enemyTankTile.tryLocation(posX, posY).length == 0) {
 						enemyTankTiles.push(enemyTankTile);
 						var moveEnemyTankAnim = new Timer({
 							func: function() { 
@@ -1553,7 +1358,6 @@
 						break;
 				}
 
-				
 				var collidedObjects = ammoTile.tryRotateLocation(ammoX, ammoY);
 				if (collidedObjects.length > 0) {
 					var hitObject = collidedObjects.first();
@@ -1580,35 +1384,22 @@
 										ammoLocation.y++;
 										break;
 								}
-								if (ammoTile.isOnSide(tankDirection)) {
-									ammoTile.remove();
-								}
+								if (ammoTile.isOnSide(tankDirection)) ammoTile.remove();
 								else {
-									if (!ammoTile.isOnSide(tankDirection)) {
-										var collidedObjects = ammoTile.tryRotateLocation(ammoLocation.x, ammoLocation.y);
-										if (collidedObjects.length == 0) { }
-										else {
-											if (collidedObjects.length > 0) {
-												var hitObject = collidedObjects.first();
-												hit(hitObject, ammoLocation.x, ammoLocation.y);
-											}
-											ammoTile.remove();
-										}
-									}
-									else {
+									var collidedObjects = ammoTile.tryRotateLocation(ammoLocation.x, ammoLocation.y);
+									if (collidedObjects.length > 0) {
+										var hitObject = collidedObjects.first();
+										hit(hitObject, ammoLocation.x, ammoLocation.y);
 										ammoTile.remove();
 									}
 								}	
 							}, 
 							interval: 100
 						}); 
-
 						ammoTile.onRemove(function() { fireTankAnim.stop() });
 				 		fireTankAnim.start();
 					}
 				}
-
-
 
 				function hit(hitObject, x, y) {
 					var hitObjectName = hitObject.getName();
@@ -1617,12 +1408,8 @@
 						enemyTankTiles.splice(enemyTankTiles.indexOf(hitObject), 1);
 						Game.score();
 						hitObject.remove(); 
-
 						var score = brickGameModel.getScore();
-						if (score % 30 == 0) {
-							stop();
-							Game.levelUp();
-						}
+						if (score % 30 == 0) { stop(); Game.levelUp(); }
 					}
 					else {
 						if (hitObjectName == "singleTile") hitObject.remove();
@@ -2375,13 +2162,7 @@
 					default:
 						break;
 				}
-
-
-				// var willCollide = crosser.getCollidedObjects(direction);
-				// switch(direction) {
-				// 	case ""
-				// }
-				// willCollide = willCollide.left.length > 0 || willCollide.right.length > 0 || willCollide.up.length > 0 || willCollide.down.length > 0;
+				
 
 				if (((location.y < 0 || location.y > 9) && location.x < 19)) {
 					gameOver();
@@ -2411,6 +2192,22 @@
 				Game.blinkBrickObjects({ brickObjects: [crosser], interval: 400, count: 3, endFunction: Game.gameOver });
 			}
 
+			function loadWays() {
+				var ways = [];
+				for (var i = 0; i < 8; i++) {
+					var way = Math.floor(Math.random() * 100);
+					if (i == 0) {
+						way = way % 10;
+					}
+					else {
+						way = (way % 9) + (4 - ways.last());
+					}
+					ways.push(way);
+				}
+				console.log(ways);
+				return ways;
+			}
+
 			// KEY FUNCTIONS
 			this.keydownfunctions = {
 				onLeft: function() { moveCrosser("Left"); },
@@ -2428,6 +2225,7 @@
 			}
 
 			// INITIALIZATION
+			loadWays();
 			loadWalls(); addCrosser(); loadObstacles();
 			//moveObstacleAnim.start();
 		}
@@ -2669,7 +2467,7 @@
 				do { 
 					foodX = Math.round(Math.random() * 100) % 20; 
 					foodY = Math.round(Math.random() * 100) % 10; 
-					foodNotLoaded = foodObject.tryLocation(foodX, foodY);
+					foodNotLoaded = foodObject.tryLocation(foodX, foodY).length > 0;
 					console.log(foodNotLoaded);
 				}
 				while(foodNotLoaded)
@@ -2785,9 +2583,7 @@
 			function moveRoad() {
 				var willCollide = myCar.getCollidedObjects("Left").left.length > 0;
 				var willOverlap = myCar.isOverlapped();
-				if (willCollide || willOverlap) {
-					gameOver();
-				}
+				if (willCollide || willOverlap) gameOver();
 				else {
 					var lastTopObstacle = _obstacle1.last(), lastBottomObstacle = _obstacle2.last();
 					if (firstObstacle == 6) {
@@ -2825,7 +2621,6 @@
 					}
 				}
 			}
-
 			function gameOver() {
 				GameSound.explosion(); stop();
 				Game.blinkBrickObjects({ brickObjects: [myCar], interval: 400, count: 3, endFunction: Game.gameOver });
@@ -2835,14 +2630,8 @@
 			this.keydownfunctions = {
 				onLeft: function() { },
 				onRight: function() { },
-				onTop: function() { 
-					var y = myCar.getLocation().y; 
-					myCar.setLocation(16, y - 1);
-				},
-				onBottom: function() { 
-					var y = myCar.getLocation().y; 
-					myCar.setLocation(16, y + 1);
-				},
+				onTop: function() { myCar.setLocation(16, myCar.getLocation().y - 1); },
+				onBottom: function() { myCar.setLocation(16, myCar.getLocation().y + 1); },
 				onSpace: { action: function() { moveRoadAnim.setTimerInterval(50); }, allowRepeat: false }
 			}
 			this.keyupfunctions = { 
@@ -2902,13 +2691,8 @@
 							brickObjects.forEach(function(bo) { bo.hide(); });
 							Game.blinkBrickObjects({ brickObjects: matchBrickObjects, interval: 400, count: 3, endFunction: function() {
 								var score = brickGameModel.getScore();
-								if (score % 30 == 0) {
-									stop();
-									Game.levelUp();
-								}
-								else {
-									startMatch();
-								}
+								if (score % 30 == 0) { stop(); Game.levelUp(); }
+								else startMatch();
 							} });
 						}
 						else brickInvasionAnim.start();
@@ -3056,19 +2840,11 @@
 			var pinball = new BrickObject({ tiles: getBrickTiles("singleTile"), color: "Green", brickLocation: { x: 18, y: 5 } });
 			var pinballCounterCatcher = new BrickObject({ tiles: getBrickTiles("threeByOne"), color: "blue", brickLocation: { x: 8, y: 2 }, rotateDirection: "Up" });
 			var topObstacle = new BrickObject({ tiles: getBrickTiles("pinballTile2Level" + level), brickLocation: { x: 0, y: 0 } });
-
-			var moveCounterCatcherAnim = new Timer({
-				func: moveCounterCatcher,
-				interval: 333
-			});
-
+			var moveCounterCatcherAnim = new Timer({ func: moveCounterCatcher, interval: 333 });
 			var isPinballThrown = false;
 			var level = brickGameModel.getLevel(), speedInMillis = brickGameModel.getSpeedInMillis();
-
 			var pinballDirection = "BottomLeft";
-
 			var pinballThrowAnim = new Timer({ func: throwPinball, interval: speedInMillis });
-
 			var alt = true;
 
 			function moveCounterCatcher() {
@@ -3227,7 +3003,7 @@
 		var brickDirection = params.brickDirection == undefined ? "Right": params.brickDirection;
 		var rotateDirection = params.rotateDirection == undefined ? brickDirection: params.rotateDirection;
 		var flipDirection = params.flipDirection == undefined ? "None": params.flipDirection;
-		var origin = params.origin == undefined ? 0: params.origin;
+		var origin = params.origin == undefined ? {}: params.origin;
 		var brickLocation = params.brickLocation;
 		var brickTileName = params.name;
 		var visible = params.visible == undefined ? true: params.visible;
@@ -3249,29 +3025,136 @@
 
 		this.bt = tiles;
 		this.overlapIndex = 0;
+		
+		// this.rotate = function(direction) {
+		// 	rotateDirection = direction;
+		// 	_rotate();
+		// 	_setLocation(X, Y);
+		// 	brickDirection = direction;
+		// }
+		// this.tryRotate = function(direction) {
 
-		// refactored
-		function getTileObject(x, y) { return document.getElementById("tileCell" + brickObjectTiles[x].name + brickObjectTiles[y].name); }
-		function showHideTiles(_visible) {
+		// 	var rotation = undefined;
+
+		// 	var tileX = 0, tileY = 0, _tw = 0, _th = 0, x = 0, y = 0;
+
+		// 	var brickSize = _getSize();
+
+		// 	if (
+		// 		(direction == "Right" && brickDirection == "Left") ||
+		// 		(direction == "Left" && brickDirection == "Right") ||
+		// 		(direction == "Up" && brickDirection == "Down") ||
+		// 		(direction == "Down" && brickDirection == "Up")
+		// 	) {
+		// 		rotation = "rotate180";
+		// 	}
+		// 	else if (
+		// 		(direction == "Right" && brickDirection == "Up") ||
+		// 		(direction == "Up" && brickDirection == "Left") ||
+		// 		(direction == "Left" && brickDirection == "Down") ||
+		// 		(direction == "Down" && brickDirection == "Right") 
+		// 	) {
+		// 		rotation = "clockwise";
+		// 	}
+		// 	else if (
+		// 		(direction == "Right" && brickDirection == "Down") ||
+		// 		(direction == "Down" && brickDirection == "Left") ||
+		// 		(direction == "Left" && brickDirection == "Up") ||
+		// 		(direction == "Up" && brickDirection == "Right")
+		// 	) {
+		// 		rotation = "counterclockwise";
+		// 	}
+		// 	else {
+		// 		rotation = undefined;
+		// 	}
+
+		// 	console.log(tiles);
+
+		// 	if (rotation != undefined) {
+				
+
+		// 		if (rotation == "rotate180") {
+		// 			x = (X + originX) - (brickSize.width - 1 - originX);
+		// 			y = (Y + originY) - (brickSize.height - 1 - originY);
+		// 			_tw = brickSize.width - 1;
+		// 			_th = brickSize.height - 1;
+		// 			// originX = _tw - originX;
+		// 			// originY = _tw - originY;
+		// 		}
+		// 		else if (rotation == "clockwise") {
+		// 			x = (X + originX) - (brickSize.height - 1 - originY);
+		// 			y = (Y + originY) - originX;
+		// 			_th = originX;
+		// 			_tw = brickSize.height - 1 - originY;
+		// 			// originY = _th;
+		// 			// originX = _tw;
+		// 		}
+		// 		else if (rotation == "counterclockwise") {
+		// 			x = (X + originX) - originY;
+		// 			y = (Y + originY) - (brickSize.width - 1 - originX);
+		// 			_th = brickSize.width - 1 - originX;
+		// 			_tw = originY;
+		// 			// originY = _th;
+		// 			// originX = _tw;
+		// 		}
+
+		// 		for(var t = 0; t < tiles.length; t++) {
+
+		// 			var tlsX = 0, tlsY = 0;
+
+		// 			if (rotation == "rotate180") {
+		// 				tlsX = _tw - tiles[t].x;
+		// 				tlsY = _th - tiles[t].y;	
+		// 			}
+		// 			else if (rotation == "clockwise") {
+		// 				_tw = brickSize.height - 1 - tiles[t].y;
+		// 				_th = tiles[t].x;
+		// 				tlsX = _tw;
+		// 				tlsY = _th;
+		// 			}
+		// 			else if (rotation == "counterclockwise") {
+		// 				_tw = tiles[t].y;
+		// 				_th = brickSize.width - 1 - tiles[t].x;
+		// 				tlsX = _tw;
+		// 				tlsY = _th;
+		// 			}
+
+		// 			tileX = x + tlsX;
+		// 			tileY = y + tlsY;
+
+		// 			tiles[t].testScreenX = tileX;
+		// 			tiles[t].testScreenY = tileY;
+	 // 			}
+
+		// 		console.log(tiles);
+
+		// 		testX = x; testY = y;
+		// 	}
+		// }
+
+		// ----------------------------------------------------------
+		function _getOverlappedObjects(x, y, tiles) {
+			// true if an object overlaps another
 			var tileX = 0, tileY = 0;
-			if(_visible != undefined) visible = _visible;
-			if(X != undefined && Y != undefined) {
-				for(var t = 0; t < tiles.length; t++) {
-					tileX = tiles[t].screenX; tileY = tiles[t].screenY;
-					if(tileX >= 0 && tileX < 20 && tileY >= 0 && tileY < 10) {
-						var screenTile = getScreenTile(tileX, tileY);
-						if (!(screenTile == null || screenTile == undefined)) {
-							screenTile.color = visible ? color: "canvas";
-						}
-					}
-				}
-				paint();
-			}
-		}
-		function _getSize() {
-			var width = tiles.sort(function(t1, t2) { return t2.x - t1.x }).first().x + 1;
-			var height = tiles.sort(function(t1, t2) { return t2.y - t1.y }).first().y + 1;
-			return { width: width, height: height };
+
+			var overlap = screenTiles.filter(function(screenTile) {
+				return tiles.filter(function(tempTile) { 
+					tileX = x + tempTile.x; tileY = y + tempTile.y;
+					return screenTile.x == tileX && screenTile.y == tileY && screenTile.color != "canvas";
+				}).length > 0;
+			});	
+
+			overlap = brickObjects.filter(function(brickObject) {
+				return brickObjects.indexOf(brickObject) != brickObjects.indexOf(thisObject);
+			}).filter(function(brickObject) {
+				return brickObject.getTiles().filter(function(brickTile) {
+					return overlap.filter(function(col) {
+						return col.x == brickTile.screenX && col.y == brickTile.screenY;
+					}).length > 0;
+				}).length > 0;
+			});
+
+			return overlap;
 		}
 		function _setLocation(x, y, _tiles) {
 			var tileX, tileY;
@@ -3308,6 +3191,37 @@
  			}
 			X = x; Y = y;
 			paint();
+		}
+		function _tryLocation(x, y, tempTiles) {
+			var overlap = _getOverlappedObjects(x, y, tempTiles);
+			if (overlap.length == 0) {
+				tiles = tempTiles;
+				_setLocation(x, y);
+			}
+
+			return overlap;
+		}
+		function getTileObject(x, y) { return document.getElementById("tileCell" + brickObjectTiles[x].name + brickObjectTiles[y].name); }
+		function showHideTiles(_visible) {
+			var tileX = 0, tileY = 0;
+			if(_visible != undefined) visible = _visible;
+			if(X != undefined && Y != undefined) {
+				for(var t = 0; t < tiles.length; t++) {
+					tileX = tiles[t].screenX; tileY = tiles[t].screenY;
+					if(tileX >= 0 && tileX < 20 && tileY >= 0 && tileY < 10) {
+						var screenTile = getScreenTile(tileX, tileY);
+						if (!(screenTile == null || screenTile == undefined)) {
+							screenTile.color = visible ? color: "canvas";
+						}
+					}
+				}
+				paint();
+			}
+		}
+		function _getSize() {
+			var width = tiles.sort(function(t1, t2) { return t2.x - t1.x }).first().x + 1;
+			var height = tiles.sort(function(t1, t2) { return t2.y - t1.y }).first().y + 1;
+			return { width: width, height: height };
 		}
 		function _getEdgeTiles(direction) {
 			var edgeTiles = [], brickSize = _getSize();
@@ -3353,272 +3267,12 @@
 			}
 			return isTileRemoved;
 		}
-
-		this.isOverlapped = function() {
-			var overlap = screenTiles.filter(function(screenTile) {
-				return tiles.filter(function(tile) { 
-					return screenTile.x == tile.screenX && screenTile.y == tile.screenY && screenTile.color != "canvas";
-				}).length > 0;
-			});	
-
-			overlap = brickObjects.filter(function(brickObject) {
-				return brickObjects.indexOf(brickObject) != brickObjects.indexOf(thisObject);
-			}).filter(function(brickObject) {
-				return brickObject.getTiles().filter(function(brickTile) {
-					return overlap.filter(function(col) {
-						return col.x == brickTile.screenX && col.y == brickTile.screenY;
-					}).length > 0;
-				}).length > 0;
-			});
-
-			return overlap.length > 0;
-		}
-
-		this.toggleAppear = function() { visible = !visible; showHideTiles(visible); }
-		this.show = function() { visible = true; showHideTiles(visible); }
-		this.hide = function() { visible = false; showHideTiles(visible); }
-		this.getName = function() { return brickTileName; }
-		this.getTiles = function() { return tiles; }
-		this.getSize = function() { return _getSize(); }
-		this.tileCount = function() { return tiles.length; }
-		this.setLocation = function(x, y, _tiles) { _setLocation(x, y, _tiles); }
-		this.addTile = function(left, top) {
-			var tile = { x: left - X, y: top - Y, screenX: left, screenY: top };
-			if(left >= 0 && left < 20 && top >= 0 && top < 10) {
-
-				var screenTile = getScreenTile(left, top);
-				if (!(screenTile == null || screenTile == undefined)) {
-					screenTile.color = color;
-				} 
-				tiles.push(tile);
-				paint();
-			}
-		}
-		this.removeTile = function(left, top) { return _removeTile(left, top); }
-		this.hasTile = function(x, y) {
-			var tileX, tileY, hasTile = false;
-			if(X != undefined && Y != undefined) hasTile = tiles.filter(function(t) { return t.screenX == x && t.screenY == y }).length > 0;
-			return hasTile;
-		}
-		this.getSideTiles = function(direction) {
-			var edgeTiles = [];
-			switch(direction) {
-				case "Right":
-					edgeTiles = tiles.sort(function(t1, t2) { return t1.x - t2.x; });
-					edgeTiles = edgeTiles.filter(function(t) { return t.x == edgeTiles.last().x; });
-					break;
-			}
-			return edgeTiles;
-		}
-		this.isGottenOutOfScreen = function() {
-			var brickSize = _getSize();
-			return X >= 20 || Y >= 10 || X <= -brickSize.width || Y <= -brickSize.height;
-		}
-		this.isOnSide = function(_direction) {
-			var directions;
-			var brickSize = _getSize();
-			var isOnLeft = X == 0, isOnRight = X + brickSize.width == 20, isOnTop = Y == 0, isOnBottom = Y + brickSize.height == 10;
-
-			if(_direction == undefined) {
-				directions = [];
-				
-				if (isOnLeft) directions.push("Left");
-				if (isOnRight) directions.push("Right");
-				if (isOnTop) directions.push("Up");
-				if (isOnBottom) directions.push("Down");
-			}
-			else {
-				directions = false;
-				switch(_direction) {
-					case "Left":
-						directions = isOnLeft;
-						break;
-					case "Right":
-						directions = isOnRight;
-						break;
-					case "Up":
-						directions = isOnTop;
-						break;
-					case "Down":
-						directions = isOnBottom;
-						break;
-				}
-				
-			}
-			return directions;
-		}
-		this.remove = function() {
-			var tileX, tileY;
-			if(X != undefined && Y != undefined) {
-				for(var t = 0; t < tiles.length; t++) {
-					tileX = X + tiles[t].x; tileY = Y + tiles[t].y;
-					if(tileX >= 0 && tileX < 20 && tileY >= 0 && tileY < 10) {
-						var screenTile = getScreenTile(tileX, tileY);
-						if (!(screenTile == null || screenTile == undefined)) {
-							screenTile.color = "canvas";
-						}
-					}
-				}
-				paint();
-			}
-			
-			brickObjects.splice(brickObjects.indexOf(this), 1);
-			onRemove();
-		}
-
-		// future functions
-		this.getTrimLocation = function(direction) {
-			switch(direction) {
-				case "TopLeft":
-					break;
-			}
-		}
-		this.onRemove = function(_func) { onRemove = _func == undefined ? function() {}: _func; }
-		this.getEdgePosition = function(side) {
-			switch(side) {
-				case "Right":
-					break;
-				default:
-					break;
-			}
-		}
-
-		// ------------------------------
-		this.getLocation = function(corner) {
-			var a = 0, b = 0;
-			corner = ifUndefined(corner, "TopLeft");
-			switch (corner) {
-				case "TopLeft":
-					a = X; b = Y;
-					break;
-				case "TopRight":
-					//a = X; b = 
-					break;
-			}
-			return { x: a, y: b };
-		}
-		this.getTestLocation = function() {
-			return { x: testX, y: testY };
-		}
-		this.tryLocation = function(x, y, _tiles) {
-			// true if an object overlaps another
-			var isOverlapped = _tryLocation(x, y, _tiles);
-			if(!isOverlapped) {
-				_setLocation(x, y, _tiles);
-			}
-			return isOverlapped;
-		}
-		this.getDirection = function() {
-			return brickDirection;
-		}
-		
-		this.blink = function(interval, count, endFunction) {
-			var c = 0; count = (count * 2);
-			var blinkTimeout = setInterval(function() {
-				showHideTiles();
-				c++;
-				if(count != undefined && count == c) {
-					clearInterval(blinkTimeout);
-					if(endFunction != undefined) {
-						endFunction();
-					}
-				}
-			}, interval);
-		}
-
 		function _rotate() {
-			var rotation = undefined;
-
-			var tileX = 0, tileY = 0, _tw = 0, _th = 0, x = 0, y = 0;
-
-			var brickSize = _getSize();
-
-			if (
-				(rotateDirection == "Right" && brickDirection == "Left") ||
-				(rotateDirection == "Left" && brickDirection == "Right") ||
-				(rotateDirection == "Up" && brickDirection == "Down") ||
-				(rotateDirection == "Down" && brickDirection == "Up")
-			) {
-				rotation = "rotate180";
-			}
-			else if (
-				(rotateDirection == "Right" && brickDirection == "Up") ||
-				(rotateDirection == "Up" && brickDirection == "Left") ||
-				(rotateDirection == "Left" && brickDirection == "Down") ||
-				(rotateDirection == "Down" && brickDirection == "Right") 
-			) {
-				rotation = "clockwise";
-			}
-			else if (
-				(rotateDirection == "Right" && brickDirection == "Down") ||
-				(rotateDirection == "Down" && brickDirection == "Left") ||
-				(rotateDirection == "Left" && brickDirection == "Up") ||
-				(rotateDirection == "Up" && brickDirection == "Right")
-			) {
-				rotation = "counterclockwise";
-			}
-
-
-
-			if (rotation != undefined) {
-				
-				if (rotation == "rotate180") {
-					// x = (X + originX) - (brickSize.width - 1 - originX);
-					// y = (Y + originY) - (brickSize.height - 1 - originY);
-					_tw = brickSize.width - 1;
-					_th = brickSize.height - 1;
-					// originX = _tw - originX;
-					// originY = _tw - originY;
-				}
-				else if (rotation == "clockwise") {
-					// x = (X + originX) - (brickSize.height - 1 - originY);
-					// y = (Y + originY) - originX;
-					_th = originX;
-					_tw = brickSize.height - 1 - originY;
-					// originY = _th;
-					// originX = _tw;
-				}
-				else if (rotation == "counterclockwise") {
-					// x = (X + originX) - originY;
-					// y = (Y + originY) - (brickSize.width - 1 - originX);
-					_th = brickSize.width - 1 - originX;
-					_tw = originY;
-					// originY = _th;
-					// originX = _tw;
-				}
-
-				for(var t = 0; t < tiles.length; t++) {
-
-					if (rotation == "rotate180") {
-						tiles[t].x = _tw - tiles[t].x;
-						tiles[t].y = _th - tiles[t].y;	
-					}
-					else if (rotation == "clockwise") {
-						_tw = brickSize.height - 1 - tiles[t].y;
-						_th = tiles[t].x;
-						tiles[t].x = _tw;
-						tiles[t].y = _th;
-					}
-					else if (rotation == "counterclockwise") {
-						_tw = tiles[t].y;
-						_th = brickSize.width - 1 - tiles[t].x;
-						tiles[t].x = _tw;
-						tiles[t].y = _th;
-					}
-	 			}
-
-	 			
-	 		}
-
+	 		tiles = _tryRotate(rotateDirection);
 	 		brickDirection = rotateDirection;
 		}
-
-		this.tryRotateLocation = function(x, y, direction) {
-
-			// if no overlap occurred set location and rotation
+		function _tryRotate(direction) {
 			var rotation = undefined;
-
-			var isOverlapped = false;
 
 			var tileX = 0, tileY = 0, _tw = 0, _th = 0;
 
@@ -3701,461 +3355,184 @@
 					tempTiles[t].x = _tw;
 					tempTiles[t].y = _th;
 				}
-
-				tileX = x + tempTiles[t].x;
-				tileY = y + tempTiles[t].y;
  			}
 
-			// var tileCounter = 0;
-			// while (tileCounter < tempTiles.length && !isOverlapped) {
-			// 	tileX = x + tempTiles[tileCounter].x; tileY = y + tempTiles[tileCounter].y;
-			// 	isOverlapped = screenTiles.filter(function(st) {
-			// 		return st.x == tileX && st.y == tileY && st.color != "canvas" && !isBrickTile(tileX, tileY);
-			// 	}).length > 0;
-			// 	tileCounter++;
-			// }
+ 			return tempTiles;
+		}
+		
+		this.toggleAppear = function() { visible = !visible; showHideTiles(visible); }
+		this.show = function() { visible = true; showHideTiles(visible); }
+		this.hide = function() { visible = false; showHideTiles(visible); }
+		this.getName = function() { return brickTileName; }
+		this.getTiles = function() { return tiles; }
+		this.getSize = function() { return _getSize(); }
+		this.tileCount = function() { return tiles.length; }
+		this.addTile = function(left, top) {
+			var tile = { x: left - X, y: top - Y, screenX: left, screenY: top };
+			if(left >= 0 && left < 20 && top >= 0 && top < 10) {
 
-			// function isBrickTile(x, y) {
-			// 	return tiles.filter(function(t) {
-			// 		return t.screenX == x && t.screenY == y;
-			// 	}).length > 0;
-			// }
-
-			// if (!isOverlapped) {
-			// 	tiles = tempTiles;
-			// 	_setLocation(x, y);
-			// 	brickDirection = direction;
-			// }
-
-			var overlap = screenTiles.filter(function(screenTile) {
-				return tempTiles.filter(function(tempTile) { 
-					tileX = x + tempTile.x; tileY = y + tempTile.y;
-					return screenTile.x == tileX && screenTile.y == tileY && screenTile.color != "canvas";
-				}).length > 0;
-			});	
-
-			overlap = brickObjects.filter(function(brickObject) {
-				return brickObjects.indexOf(brickObject) != brickObjects.indexOf(thisObject);
-			}).filter(function(brickObject) {
-				return brickObject.getTiles().filter(function(brickTile) {
-					return overlap.filter(function(col) {
-						return col.x == brickTile.screenX && col.y == brickTile.screenY;
-					}).length > 0;
-				}).length > 0;
-			});
-
-			if (overlap.length == 0) {
-				tiles = tempTiles;
-				_setLocation(x, y);
-				brickDirection = direction;
+				var screenTile = getScreenTile(left, top);
+				if (!(screenTile == null || screenTile == undefined)) {
+					screenTile.color = color;
+				} 
+				tiles.push(tile);
+				paint();
 			}
-
-			return overlap;
 		}
-
-		this.rotate = function(direction) {
-
-			rotateDirection = direction;
-			_rotate();
-			_setLocation(X, Y);
-			brickDirection = direction;
-
-			// var rotation = undefined;
-
-			// var tileX = 0, tileY = 0, _tw = 0, _th = 0, x = 0, y = 0;
-
-			// var brickSize = _getSize();
-
-			// if (
-			// 	(direction == "Right" && brickDirection == "Left") ||
-			// 	(direction == "Left" && brickDirection == "Right") ||
-			// 	(direction == "Up" && brickDirection == "Down") ||
-			// 	(direction == "Down" && brickDirection == "Up")
-			// ) {
-			// 	rotation = "rotate180";
-			// }
-			// else if (
-			// 	(direction == "Right" && brickDirection == "Up") ||
-			// 	(direction == "Up" && brickDirection == "Left") ||
-			// 	(direction == "Left" && brickDirection == "Down") ||
-			// 	(direction == "Down" && brickDirection == "Right") 
-			// ) {
-			// 	rotation = "clockwise";
-			// }
-			// else if (
-			// 	(direction == "Right" && brickDirection == "Down") ||
-			// 	(direction == "Down" && brickDirection == "Left") ||
-			// 	(direction == "Left" && brickDirection == "Up") ||
-			// 	(direction == "Up" && brickDirection == "Right")
-			// ) {
-			// 	rotation = "counterclockwise";
-			// }
-
-			// console.log(tiles);
-
-			// if (rotation != undefined) {
-			// 	if (X != undefined && Y != undefined) {
-			// 		for(var t = 0; t < tiles.length; t++) {
-			// 			tileX = X + tiles[t].x;
-			// 			tileY = Y + tiles[t].y;
-			// 			if(tileX >= 0 && tileX < 20 && tileY >= 0 && tileY < 10) {
-			// 				var colorClass = getTileObject(tileX, tileY).classList[1];
-			// 				if(visible) changeTileColor(tileX, tileY, tiles[t].backColor);
-			// 			}
-			// 			else {
-			// 				tiles[t].backColor = undefined;
-			// 			}
-			// 		}
-			// 	}
-
-			// 	if (rotation == "rotate180") {
-			// 		x = (X + originX) - (brickSize.width - 1 - originX);
-			// 		y = (Y + originY) - (brickSize.height - 1 - originY);
-			// 		_tw = brickSize.width - 1;
-			// 		_th = brickSize.height - 1;
-			// 		originX = _tw - originX;
-			// 		originY = _tw - originY;
-			// 	}
-			// 	else if (rotation == "clockwise") {
-			// 		x = (X + originX) - (brickSize.height - 1 - originY);
-			// 		y = (Y + originY) - originX;
-			// 		_th = originX;
-			// 		_tw = brickSize.height - 1 - originY;
-			// 		originY = _th;
-			// 		originX = _tw;
-			// 	}
-			// 	else if (rotation == "counterclockwise") {
-			// 		x = (X + originX) - originY;
-			// 		y = (Y + originY) - (brickSize.width - 1 - originX);
-			// 		_th = brickSize.width - 1 - originX;
-			// 		_tw = originY;
-			// 		originY = _th;
-			// 		originX = _tw;
-			// 	}
-
-			// 	for(var t = 0; t < tiles.length; t++) {
-
-			// 		if (rotation == "rotate180") {
-			// 			tiles[t].x = _tw - tiles[t].x;
-			// 			tiles[t].y = _th - tiles[t].y;	
-			// 		}
-			// 		else if (rotation == "clockwise") {
-			// 			_tw = brickSize.height - 1 - tiles[t].y;
-			// 			_th = tiles[t].x;
-			// 			tiles[t].x = _tw;
-			// 			tiles[t].y = _th;
-			// 		}
-			// 		else if (rotation == "counterclockwise") {
-			// 			_tw = tiles[t].y;
-			// 			_th = brickSize.width - 1 - tiles[t].x;
-			// 			tiles[t].x = _tw;
-			// 			tiles[t].y = _th;
-			// 		}
-
-			// 		tileX = x + tiles[t].x;
-			// 		tileY = y + tiles[t].y;
-			// 		if(color == undefined) { 
-			// 			color = tiles[t].foreColor; 
-			// 		}
-			// 		else {
-			// 			tiles[t].foreColor = color;
-			// 		}
-			// 		if(tileX >= 0 && tileX < 20 && tileY >= 0 && tileY < 10) {
-			// 			var colorClass = getTileObject(tileX, tileY).classList[1];
-			// 			tiles[t].backColor = canvas;
-			// 			if(visible) changeTileColor(tileX, tileY, color);
-			// 		}
-			// 		else {
-			// 			tiles[t].backColor = undefined;
-			// 		}
-
-			// 		tiles[t].screenX = tileX;
-			// 		tiles[t].screenY = tileY;
-			// 		tiles[t].testScreenX = tileX;
-			// 		tiles[t].testScreenY = tileY;
-	 	// 		}
-
-			// 	X = x; Y = y; 
-
-				//brickDirection = direction;
-			//}
+		this.removeTile = function(left, top) { return _removeTile(left, top); }
+		this.hasTile = function(x, y) {
+			var tileX, tileY, hasTile = false;
+			if(X != undefined && Y != undefined) hasTile = tiles.filter(function(t) { return t.screenX == x && t.screenY == y }).length > 0;
+			return hasTile;
 		}
-
-		this.tryRotate = function(direction) {
-
-			var rotation = undefined;
-
-			var tileX = 0, tileY = 0, _tw = 0, _th = 0, x = 0, y = 0;
-
+		this.isGottenOutOfScreen = function() {
 			var brickSize = _getSize();
+			return X >= 20 || Y >= 10 || X <= -brickSize.width || Y <= -brickSize.height;
+		}
+		this.isOnSide = function(_direction) {
+			var directions;
+			var brickSize = _getSize();
+			var isOnLeft = X == 0, isOnRight = X + brickSize.width == 20, isOnTop = Y == 0, isOnBottom = Y + brickSize.height == 10;
 
-			if (
-				(direction == "Right" && brickDirection == "Left") ||
-				(direction == "Left" && brickDirection == "Right") ||
-				(direction == "Up" && brickDirection == "Down") ||
-				(direction == "Down" && brickDirection == "Up")
-			) {
-				rotation = "rotate180";
-			}
-			else if (
-				(direction == "Right" && brickDirection == "Up") ||
-				(direction == "Up" && brickDirection == "Left") ||
-				(direction == "Left" && brickDirection == "Down") ||
-				(direction == "Down" && brickDirection == "Right") 
-			) {
-				rotation = "clockwise";
-			}
-			else if (
-				(direction == "Right" && brickDirection == "Down") ||
-				(direction == "Down" && brickDirection == "Left") ||
-				(direction == "Left" && brickDirection == "Up") ||
-				(direction == "Up" && brickDirection == "Right")
-			) {
-				rotation = "counterclockwise";
+			if(_direction == undefined) {
+				directions = [];
+				
+				if (isOnLeft) directions.push("Left");
+				if (isOnRight) directions.push("Right");
+				if (isOnTop) directions.push("Up");
+				if (isOnBottom) directions.push("Down");
 			}
 			else {
-				rotation = undefined;
-			}
-
-			console.log(tiles);
-
-			if (rotation != undefined) {
+				directions = false;
+				switch(_direction) {
+					case "Left":
+						directions = isOnLeft;
+						break;
+					case "Right":
+						directions = isOnRight;
+						break;
+					case "Up":
+						directions = isOnTop;
+						break;
+					case "Down":
+						directions = isOnBottom;
+						break;
+				}
 				
-
-				if (rotation == "rotate180") {
-					x = (X + originX) - (brickSize.width - 1 - originX);
-					y = (Y + originY) - (brickSize.height - 1 - originY);
-					_tw = brickSize.width - 1;
-					_th = brickSize.height - 1;
-					// originX = _tw - originX;
-					// originY = _tw - originY;
-				}
-				else if (rotation == "clockwise") {
-					x = (X + originX) - (brickSize.height - 1 - originY);
-					y = (Y + originY) - originX;
-					_th = originX;
-					_tw = brickSize.height - 1 - originY;
-					// originY = _th;
-					// originX = _tw;
-				}
-				else if (rotation == "counterclockwise") {
-					x = (X + originX) - originY;
-					y = (Y + originY) - (brickSize.width - 1 - originX);
-					_th = brickSize.width - 1 - originX;
-					_tw = originY;
-					// originY = _th;
-					// originX = _tw;
-				}
-
+			}
+			return directions;
+		}
+		this.remove = function() {
+			var tileX, tileY;
+			if(X != undefined && Y != undefined) {
 				for(var t = 0; t < tiles.length; t++) {
-
-					var tlsX = 0, tlsY = 0;
-
-					if (rotation == "rotate180") {
-						tlsX = _tw - tiles[t].x;
-						tlsY = _th - tiles[t].y;	
+					tileX = X + tiles[t].x; tileY = Y + tiles[t].y;
+					if(tileX >= 0 && tileX < 20 && tileY >= 0 && tileY < 10) {
+						var screenTile = getScreenTile(tileX, tileY);
+						if (!(screenTile == null || screenTile == undefined)) {
+							screenTile.color = "canvas";
+						}
 					}
-					else if (rotation == "clockwise") {
-						_tw = brickSize.height - 1 - tiles[t].y;
-						_th = tiles[t].x;
-						tlsX = _tw;
-						tlsY = _th;
-					}
-					else if (rotation == "counterclockwise") {
-						_tw = tiles[t].y;
-						_th = brickSize.width - 1 - tiles[t].x;
-						tlsX = _tw;
-						tlsY = _th;
-					}
-
-					tileX = x + tlsX;
-					tileY = y + tlsY;
-
-					tiles[t].testScreenX = tileX;
-					tiles[t].testScreenY = tileY;
-	 			}
-
-				console.log(tiles);
-
-				testX = x; testY = y;
+				}
+				paint();
 			}
+			
+			brickObjects.splice(brickObjects.indexOf(this), 1);
+			onRemove();
 		}
-
-		this.getEdgeTiles = function(direction) {
-			return _getEdgeTiles(direction);
-		}
-
-		this.moveOrigin = function(direction) {
-			switch(direction) {
-				case "Left":
-					originX--;
+		this.onRemove = function(_func) { onRemove = _func == undefined ? function() {}: _func; }
+		this.getLocation = function(corner) {
+			var a = 0, b = 0;
+			corner = ifUndefined(corner, "TopLeft");
+			switch (corner) {
+				case "TopLeft":
+					a = X; b = Y;
 					break;
-				case "Right":
-					originX++;
-					break;
-				case "Up":
-					originY--;
-					break;
-				case "Down":
-					originY++;
-					break;
-				default:
+				case "TopRight":
+					//a = X; b = 
 					break;
 			}
+			return { x: a, y: b };
 		}
-
-		this.setOriginalOrigin = function() {
-			originX = originalOrigin.x; originY = originalOrigin.y;
+		this.getDirection = function() { return brickDirection; }
+		this.blink = function(interval, count, endFunction) {
+			var c = 0; count = (count * 2);
+			var blinkTimeout = setInterval(function() {
+				showHideTiles();
+				c++;
+				if(count != undefined && count == c) {
+					clearInterval(blinkTimeout);
+					if(endFunction != undefined) endFunction();
+				}
+			}, interval);
 		}
-		this.getOverlappedObjects = function() {
-			var overlap = screenTiles.filter(function(screenTile) {
-				return tiles.filter(function(tile) { 
-					return screenTile.x == tile.screenX && screenTile.y == tile.screenY && screenTile.color != "canvas";
-				}).length > 0;
-			});	
-
-			overlap = brickObjects.filter(function(brickObject) {
-				return brickObjects.indexOf(brickObject) != brickObjects.indexOf(thisObject);
-			}).filter(function(brickObject) {
-				return brickObject.getTiles().filter(function(brickTile) {
-					return overlap.filter(function(col) {
-						return col.x == brickTile.screenX && col.y == brickTile.screenY;
-					}).length > 0;
-				}).length > 0;
-			});
-
+		this.removeSideTile = function(side, position) {
+			var lastPosition = 0;
+			if (side == "Right") {
+				var tilesRow = tiles.filter(function(tile) { return tile.screenY == position });
+				if (tilesRow != undefined && tilesRow.length > 0) 
+					lastPosition = tilesRow.sort(function(t1, t2) { return t1.screenX - t2.screenX; }).last().screenX;
+			}
+			return _removeTile(lastPosition, position);
+		}
+		this.setLocation = function(x, y, _tiles) { _setLocation(x, y, _tiles); }
+		this.tryLocation = function(x, y) { return _tryLocation(x, y, tiles); }
+		this.tryRotateLocation = function(x, y, direction) {
+			// if no overlap occurred set location and rotation
+ 			var tempTiles = _tryRotate(direction);
+			var overlap = _tryLocation(x, y, tempTiles);
+			if (overlap.length == 0) { brickDirection = direction; }
 			return overlap;
 		}
 		this.getCollidedObjects = function(...directions) {
 			var collidedObjects = {};
+			var xIncrement = 0, yIncrement = 0;
 
 			directions = directions.length == 0 ? ["Left", "Right", "Up", "Down"]: directions;
 
 			for (var i = 0; i < directions.length; i++) {
 				switch(directions[i]) {
 					case "Left":
-						var leftCollision = screenTiles.filter(function(screenTile) {
-							return _getEdgeTiles("Left").filter(function(tile) { 
-								return screenTile.x == tile.screenX - 1 && screenTile.y == tile.screenY && screenTile.color != "canvas";
-							}).length > 0;
-						});	
-
-						leftCollision = brickObjects.filter(function(brickObject) {
-							return brickObjects.indexOf(brickObject) != brickObjects.indexOf(thisObject);
-						}).filter(function(brickObject) {
-							return brickObject.getTiles().filter(function(brickTile) {
-								return leftCollision.filter(function(col) {
-									return col.x == brickTile.screenX && col.y == brickTile.screenY;
-								}).length > 0;
-							}).length > 0;
-						});
-
-						collidedObjects.left = leftCollision;
+						xIncrement = -1; yIncrement = 0;
 						break;
 					case "Right":
-						var rightCollision = screenTiles.filter(function(screenTile) {
-							return _getEdgeTiles("Right").filter(function(tile) { 
-								return screenTile.x == tile.screenX + 1 && screenTile.y == tile.screenY && screenTile.color != "canvas";
-							}).length > 0;
-						});	
-
-						rightCollision = brickObjects.filter(function(brickObject) {
-							return brickObjects.indexOf(brickObject) != brickObjects.indexOf(thisObject);
-						}).filter(function(brickObject) {
-							return brickObject.getTiles().filter(function(brickTile) {
-								return rightCollision.filter(function(col) {
-									return col.x == brickTile.screenX && col.y == brickTile.screenY;
-								}).length > 0;
-							}).length > 0;
-						});
-
-						collidedObjects.right = rightCollision;
+						xIncrement = 1; yIncrement = 0;
 						break;
 					case "Up":
-						var topCollision = screenTiles.filter(function(screenTile) {
-							return _getEdgeTiles("Up").filter(function(tile) { 
-								return screenTile.x == tile.screenX && screenTile.y == tile.screenY - 1 && screenTile.color != "canvas";
-							}).length > 0;
-						});	
-
-						topCollision = brickObjects.filter(function(brickObject) {
-							return brickObjects.indexOf(brickObject) != brickObjects.indexOf(thisObject);
-						}).filter(function(brickObject) {
-							return brickObject.getTiles().filter(function(brickTile) {
-								return topCollision.filter(function(col) {
-									return col.x == brickTile.screenX && col.y == brickTile.screenY;
-								}).length > 0;
-							}).length > 0;
-						});
-
-						collidedObjects.up = topCollision;
+						xIncrement = 0; yIncrement = -1;
 						break;
 					case "Down":
-						var bottomCollision = screenTiles.filter(function(screenTile) {
-							return _getEdgeTiles("Down").filter(function(tile) { 
-								return screenTile.x == tile.screenX && screenTile.y == tile.screenY + 1 && screenTile.color != "canvas";
-							}).length > 0;
-						});	
-
-						bottomCollision = brickObjects.filter(function(brickObject) {
-							return brickObjects.indexOf(brickObject) != brickObjects.indexOf(thisObject);
-						}).filter(function(brickObject) {
-							return brickObject.getTiles().filter(function(brickTile) {
-								return bottomCollision.filter(function(col) {
-									return col.x == brickTile.screenX && col.y == brickTile.screenY;
-								}).length > 0;
-							}).length > 0;
-						});
-
-						collidedObjects.down = bottomCollision;
+						xIncrement = 0; yIncrement = 1;
 						break;
 					default:
 						break;
 				}
-			}			
+
+				var collision = screenTiles.filter(function(screenTile) {
+					return _getEdgeTiles(directions[i]).filter(function(tile) { 
+						return screenTile.x == tile.screenX + xIncrement && screenTile.y == tile.screenY + yIncrement && screenTile.color != "canvas";
+					}).length > 0;
+				});	
+				collision = brickObjects.filter(function(brickObject) {
+					return brickObjects.indexOf(brickObject) != brickObjects.indexOf(thisObject);
+				}).filter(function(brickObject) {
+					return brickObject.getTiles().filter(function(brickTile) {
+						return collision.filter(function(col) {
+							return col.x == brickTile.screenX && col.y == brickTile.screenY;
+						}).length > 0;
+					}).length > 0;
+				});
+				collidedObjects[directions[i].toLowerCase()] = collision;
+			}
 
 			return collidedObjects;
 		}
+		this.getOverlappedObjects = function() { return _getOverlappedObjects(X, Y, tiles); }
+		this.isOverlapped = function() { return _getOverlappedObjects(X, Y, tiles).length > 0; }
 
-		function _tryLocation(x, y, _tiles) {
-			var tileX = 0, tileY = 0;
-			var isOverlapped = false;
-
-			_tiles = _tiles == undefined ? tiles: _tiles;
-
-			var tileCounter = 0;
-			while (tileCounter < _tiles.length && !isOverlapped) {
-				tileX = x + tiles[tileCounter].x; tileY = y + tiles[tileCounter].y;
-				isOverlapped = screenTiles.filter(function(st) {
-					return st.x == tileX && st.y == tileY && st.color != "canvas" && !isBrickTile(tileX, tileY);
-				}).length > 0;
-				tileCounter++;
-			}
-
-			function isBrickTile(x, y) {
-				return tiles.filter(function(t) {
-					return t.screenX == x && t.screenY == y;
-				}).length > 0;
-			}
-
-			return isOverlapped;
-		}
-
-		this.removeSideTile = function(side, position) {
-			var lastPosition = 0;
-			if (side == "Right") {
-				var tilesRow = tiles.filter(function(tile) { return tile.screenY == position });
-				if (tilesRow != undefined && tilesRow.length > 0) 
-					lastPosition = tilesRow.sort(function(t1, t2) {
-						return t1.screenX - t2.screenX;
-					}).last().screenX;
-			}
-			return _removeTile(lastPosition, position);
-		}
-		
-
+		// NOT YET USED FUNCTIONS
+		this.setOriginalOrigin = function() { originX = originalOrigin.x; originY = originalOrigin.y; }
 		this.willGetOutOfScreen = function(_direction) {
-
 			var directions;
 			var brickSize = _getSize();
 			var isOnLeft = testX < 0 && testX + brickSize.width > 0;
@@ -4191,6 +3568,37 @@
 			}
 			return directions;
 		}
+		this.moveOrigin = function(direction) {
+			switch(direction) {
+				case "Left":
+					originX--;
+					break;
+				case "Right":
+					originX++;
+					break;
+				case "Up":
+					originY--;
+					break;
+				case "Down":
+					originY++;
+					break;
+				default:
+					break;
+			}
+		}
+		this.getSideTiles = function(direction) {
+			var edgeTiles = [];
+			switch(direction) {
+				case "Right":
+					edgeTiles = tiles.sort(function(t1, t2) { return t1.x - t2.x; });
+					edgeTiles = edgeTiles.filter(function(t) { return t.x == edgeTiles.last().x; });
+					break;
+			}
+			return edgeTiles;
+		}
+
+		// FUTURE FUNCTIONS
+		this.getEdgeTiles = function(direction) { return _getEdgeTiles(direction); }
 
 		brickObjects.push(thisObject);
 	}
