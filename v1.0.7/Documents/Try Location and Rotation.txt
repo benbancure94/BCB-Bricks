@@ -1,0 +1,11 @@
+Try Location and Rotation
+Objective:
+	- shows if a brick object does not overlap another when rotated or set its location. Otherwise, it doesn't.
+
+Work flow (disregarding rotation origin, default 1,1, and brick size)
+1. Get test location and rotation direction.
+2. Get rotation type from test rotation direction (rotate 90 deg clockwise/counterclockwise, rotate 180 deg).
+3. Replicate brick tiles of current BrickObject instance to store to temporary brick tiles variable.
+4. Update x's and y's of temp tiles according to rotation type. This is the start of testing if rotating this object overlaps another.
+5. Set its temporary location to check if overlaps another
+6. If any of the conditions are false, then replace the current brick tiles to temp tiles.
