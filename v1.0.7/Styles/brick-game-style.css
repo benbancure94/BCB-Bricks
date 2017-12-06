@@ -74,7 +74,7 @@
 }
 .levelSpeedContainer {
 	display: flex;
-	height: 100px;
+	height: 70px;
 	padding: 10px;
 	border: 1px solid grey;
 }
@@ -93,7 +93,21 @@
 	border: 1px solid grey;
 	background-color: #eeeeee;
 }
-
+.iconsContainer {
+	border: 1px solid grey;
+	height: 50px;
+	display: flex;
+}
+.iconsContainer div {
+	width: 50%;
+	padding: 10px;
+}
+.deact {
+	color: #eeeeee;
+}
+.act {
+	color: black;
+}
 /* DEC: 51; HEX: 33; */
 
 .outerRedColor{background-color: #ff3333}

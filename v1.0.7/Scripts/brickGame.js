@@ -733,7 +733,7 @@
 	];
 
 	var GameSound = new function() {
-		var soundOn = true;
+		var currentVolume = 0;
 
 		var selectedAudio;
 		var audios = [
@@ -767,13 +767,18 @@
 		this.stop = function() { if (audio == undefined) throw new Error("Error: undefined"); };
 		this.select = function() { play(11); };
 		this.getAudio = function() { return selectedAudio; }
+		this.getVolume = function() { return currentVolume };
+		this.setVolume = function(_volume) {
+			currentVolume = _volume;
+			if (selectedAudio != undefined) selectedAudio.volume = _volume;
+		}
 
 		function play(index, loop, endFunction) {
 			if(selectedAudio != undefined && selectedAudio.currentTime > 0 && !selectedAudio.paused && !selectedAudio.ended && selectedAudio.readyState > 2) {
 				selectedAudio.pause(); selectedAudio.currentTime = 0;
 			}
 			selectedAudio = audios[index];
-			selectedAudio.volume = +soundOn;
+			selectedAudio.volume = currentVolume;
 			if (loop != undefined) selectedAudio.loop = loop;
 			selectedAudio.onended = endFunction;
 			selectedAudio.play();
@@ -796,6 +801,23 @@
 		this.setSpeedInMillis = function(_speedInMillis) { speedInMillis = _speedInMillis }
 		this.getSelectedGame = function() { return selectedGame; }
 		this.setSelectedGame = function(_selectedGame) { selectedGame = _selectedGame; }
+		this.changeSoundVolume = function() {
+			var volume = GameSound.getVolume();
+			volume = volume == 0 ? 1: volume - 0.25;
+			if(volume == 1 || volume == 0.75) {
+				sound.classList.remove("fa-volume-off", "fa-volume-down");
+				sound.classList.add("fa-volume-up");
+			}
+			else if(volume == 0.5 || volume == 0.25) {
+				sound.classList.remove("fa-volume-off", "fa-volume-up");
+				sound.classList.add("fa-volume-down");
+			}
+			else {
+				sound.classList.remove("fa-volume-up", "fa-volume-down");
+				sound.classList.add("fa-volume-off");
+			}
+			GameSound.setVolume(volume);
+		} 
 	}
 
 	/**** PRIVATE FUNCTIONS ****/
@@ -819,7 +841,9 @@
 		tile.children[0].className = "lifeTile " + color + "Color";
 	}
 	function getScreenTile(x, y) { return screenTiles.filter(function(tile) { return tile.x == x && tile.y == y; }).first(); }
+	function pause() { timers.forEach(function(t) { t.pause(); }); }
 	function stop() { timers.forEach(function(t) { t.stop(); }); }
+	function resume() { timers.forEach(function(t) { t.start(); }); }
 	function areEqual(bo1, bo2) { return brickObjects.indexOf(bo1) == brickObjects.indexOf(bo2); }
 	function paint() {
 		for (var index = 0; index < screenTiles.length; index++) {
@@ -1012,6 +1036,10 @@
 				case "Enter":
 					GameSound.startGame(); Game.load();
 					break;
+				case "s":
+					brickGameModel.changeSoundVolume();
+					GameSound.select();
+					break;
 			}
 		};
 		_window_.onkeypress = function() {};
@@ -1022,6 +1050,151 @@
 	var Game = new function() {
 		var $game;
 		var life = 4;
+		var isGameStarted = true;
+
+		function transition(again) {
+			lockKey(true);
+
+			var type = 0, increment = -1;
+			var transitionInterval = 0;
+			var transitionFunction = function() {};
+			var type = Math.floor(Math.random() * 100) % 5;
+			var isOpen = false;
+
+			switch(type) {
+				case 0:
+					var x = 19, 
+
+					transitionFunction = function() {
+						if (x > 19 && isOpen) {
+							clearInterval(transitionInterval);
+							lockKey(false);
+							setTimeout(again, 30);
+							return;
+						}
+						for (var y = 0; y < 10; y++) {
+							changeTileColor(x, y, isOpen ? "white": "black");
+						}
+						
+						if (x == 0 && !isOpen) {
+							isOpen = true; increment = -increment;
+						}
+						else {
+							x = x + increment;
+						}
+					}
+					transitionInterval = setInterval(transitionFunction, 10);
+
+					break;
+				case 1:
+					var tempTiles = JSON.parse(JSON.stringify(screenTiles));
+					var counter = 0;
+					var newTiles = [];
+
+					transitionFunction = function() {
+						for (var i = 0; i < 10; i++) {
+							var index = Math.floor(Math.random() * 100) % tempTiles.length;
+							changeTileColor(tempTiles[index].x, tempTiles[index].y, isOpen ? "white": "black");
+							newTiles.push(tempTiles[index]);
+							tempTiles.splice(index, 1);
+						}
+
+						if (tempTiles.length == 0) {
+							if (isOpen) {
+								clearInterval(transitionInterval);
+								lockKey(false);
+								setTimeout(again, 30);
+							}
+							else {
+								isOpen = true;
+								tempTiles = newTiles;
+								newTiles = [];
+							}
+						}
+					}
+					transitionInterval = setInterval(transitionFunction, 10);
+					
+					break;
+				case 2:
+
+					var y = 0;
+					transitionFunction = function() {
+						for (var x = 0; x < 20; x++) {
+							changeTileColor(x, x % 2 == 0 ? y: 9 - y, isOpen ? "white": "black");
+						}
+						
+						y++;
+
+						if (y > 9) {
+							if (isOpen) {
+								clearInterval(transitionInterval);
+								lockKey(false);
+								setTimeout(again, 30);
+							}
+							else {
+								isOpen = true;
+								y = 0;
+							}
+						}
+					}
+					transitionInterval = setInterval(transitionFunction, 20);
+					break;
+				case 3:
+
+					var x = 0;
+					transitionFunction = function() {
+						for (var y = 0; y < 10; y++) {
+							changeTileColor(x, y, isOpen ? "white": "black");
+							changeTileColor(19 - x, y, isOpen ? "white": "black");
+						}
+
+						if (x == 0 && isOpen) {
+							clearInterval(transitionInterval);
+							lockKey(false);
+							setTimeout(again, 30);
+						}
+						else if (x == 9 && !isOpen) {
+							isOpen = true; increment = -increment;
+						}
+						else {
+							x = x - increment;
+						}
+
+					}
+					transitionInterval = setInterval(transitionFunction, 20);
+
+					break;
+
+				case 4:
+
+					var counter = 0;
+					transitionFunction = function() {
+						for (var x = counter; x < 20 - counter; x++) {
+							changeTileColor(x, counter, isOpen ? "white": "black");
+							changeTileColor(x, 9 - counter, isOpen ? "white": "black");
+						}
+						for (var y = counter + 1; y < 9 - counter; y++) {
+							changeTileColor(counter, y, isOpen ? "white": "black");
+							changeTileColor(19 - counter, y, isOpen ? "white": "black");
+						}
+
+						if (counter == 0 && isOpen) {
+							clearInterval(transitionInterval);
+							lockKey(false);
+							setTimeout(again, 30);
+						}
+						else if (counter == 5 && !isOpen) {
+							isOpen = true; increment = -increment;
+						}
+						else {
+							counter = counter - increment;
+						}
+					}
+					transitionInterval = setInterval(transitionFunction, 40);
+					break;
+			}
+				
+		}
 		
 		// REFACTORED
 		this.getBrickObjects = function(name) {
@@ -1081,8 +1254,16 @@
 				gameOver();
 			}
 			else {
-				again();
+				transition(again);
 			}
+		}
+		this.pause = function() {
+			lockKey(true);
+			pause();
+		}
+		this.resume = function() {
+			lockKey(true);
+			resume();
 		}
 		
 		function gameOver() {
@@ -1092,7 +1273,19 @@
 		}
 		function lockKey(isKeyLocked) {
 			if (isKeyLocked) {
-				_window_.onkeydown = function() {};
+				_window_.onkeydown = function() {
+					switch(event.key) { 
+						case "Enter":
+							lockKey(isGameStarted);
+							if(isGameStarted) pause(); else resume();
+							isGameStarted = !isGameStarted;
+							break;
+						case "s";
+							brickGameModel.changeSoundVolume();
+							GameSound.select();
+							break;
+					}
+				};
 				_window_.onkeypress = function() {};
 				_window_.onkeyup = function() {};
 			}
@@ -1149,8 +1342,14 @@
 						if(onSpace.allowRepeat || !event.repeat) onSpace.action();
 						break;
 					case "Enter":
-						//pause();
-						break; 
+						lockKey(isGameStarted);
+						if(isGameStarted) pause(); else resume();
+						isGameStarted = !isGameStarted;
+						break;
+					case "s":
+						brickGameModel.changeSoundVolume();
+						GameSound.select();
+						break;
 				}
 			}
 			gamekeypressfunctions = function() {
