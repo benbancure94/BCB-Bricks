@@ -1,0 +1,27 @@
+Brick Objects
+
+Refactored:
+	Classes
+	- Marquee
+	- Timer
+
+	Static Classes
+	- GameKeys
+	- GameSound
+	- BrickGameModel
+	- LifeBrickObject
+	- Game
+
+	Class-like Functions
+	- GameProperties
+
+	Native Functions
+	- Listed on JS underneath the commented line "Private Functions"
+
+- Improved clearing of brick objects and timers
+
+Bugs:
+When levelled up, pause functionality does not work - fixed
+
+Changes:
+Removed ifUndefined() function
