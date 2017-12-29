@@ -1,0 +1,36 @@
+WindowKeys: Set key properties by shorthand - future release
+Transition:
+A: 
+B: 
+C: 
+D: 
+E: 
+F: 
+G: Improper obstacle generation, among others - future release
+H: 
+I: 
+	Can spawn food on snake's body - future release
+J: 
+K: 
+L: 
+M: 
+
+Series of Introductions and Fixes
+
+Introductions:
+1. Pause Functionality
+2. GameKeys (unrefactored)
+
+Fixed:
+Transition: Keys are enabled
+A: When a life is lost, the last direction of the tank retains, instead of its default
+B: When paused while space bar is on key down, the car continues to move
+D: When paused while space bar is on key down, the pin ball continues to roll
+E: Should not generate enemy rows of ten enemy tiles
+F: When paused while space bar is on key down, the pin ball continues to roll
+I: When paused while space bar is on key down, the snake continues to crawl
+J: When paused while space bar is on key down, the car continues to move
+L: When paused while space bar is on key down, the car continues to move
+M: When paused while space bar is on key down, the pin ball continues to roll
+
+Games B, D, F, I, J, L, and M are fixed by fixing Timer setTimeoutInterval() method

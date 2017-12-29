@@ -1,0 +1,23 @@
+{
+  "name": "v1.0.7.1",
+  "version": "1.0.0",
+  "description": "any",
+  "main": "index.js",
+  "scripts": {
+    "test": "any"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benbancure94/BCB-Bricks.git"
+  },
+  "keywords": [
+    "brick",
+    "game"
+  ],
+  "author": "B. C. B.",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/benbancure94/BCB-Bricks/issues"
+  },
+  "homepage": "https://github.com/benbancure94/BCB-Bricks#readme"
+}

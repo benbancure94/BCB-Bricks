@@ -1,0 +1,47 @@
+<html>
+<head>
+	<title>Brick Game</title>
+</head>
+
+
+<link rel="stylesheet" type="text/css" href="Styles/brick-game-style.css">
+<link rel="stylesheet" type="text/css" href="Styles/Font-Awesome/font-awesome.min.css">
+
+<script type="text/javascript" src="Scripts/brickGame.js"></script>
+
+<body bgcolor="#cccccc">
+	<div style="width: 820px; margin:auto">
+		<div style="display:inline-flex;">
+			<div id="mainContainer">
+			</div>
+			<div id="scoreBoard" >
+				<div class="scoreContainer">
+					<span id="scoreNumber">0</span>
+				</div>
+				<div id="lifeBrickContainer">
+					<div style="display: inline-block;">
+					</div>
+				</div>
+
+				<div class="levelSpeedContainer">
+					<div style="width:50%;">
+						<div class="levelSpeedHeader">LEVEL</div>
+						<div class="levelSpeedNumber" id="levelNumber">1
+						</div>
+					</div>
+					<div style="width:50%;">
+						<div class="levelSpeedHeader">SPEED</div>
+						<div class="levelSpeedNumber" id="speedNumber">1
+						</div>
+					</div>
+				</div>
+
+				<div class="iconsContainer">
+					<div class="musicContainer fa fa-volume-up fa-2x" id="soundIcon"></div>
+					<div class="pauseContainer fa fa-pause fa-2x deact" id="pauseIcon"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
