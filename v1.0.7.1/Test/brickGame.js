@@ -869,7 +869,7 @@
 		};
 		this.getObject = function() { console.log(keyfunctions); };
 	};
-	var GameSound = new function() {
+	var GameSound1 = new function() {
 		// DECLARATIONS
 		var currentVolume = 1;
 		var selectedAudio;
@@ -922,6 +922,119 @@
 			if (selectedAudio != undefined) selectedAudio.volume = _volume;
 		}
 	};
+
+	var GameSound = new function() {
+		// DECLARATIONS
+		var currentVolume = 1;
+
+		var music = {
+			current: 0,
+			audios: [
+				new Audio("Sounds/opening.wav"),
+				new Audio("Sounds/startgame.wav"),
+				new Audio("Sounds/gameover.wav"),
+				new Audio("Sounds/levelUp.wav"),
+			]
+		};
+		var sound = {
+			current: 0,
+			audios: [
+				new Audio("Sounds/move.wav"),
+				new Audio("Sounds/hit.wav"),
+				new Audio("Sounds/move2.wav"),
+				new Audio("Sounds/fire.wav"),
+				new Audio("Sounds/score.wav"),
+				new Audio("Sounds/carsound1.wav"),
+				new Audio("Sounds/fire2.wav"),
+				new Audio("Sounds/select.wav")
+			]
+		}
+
+		this.music = {
+			opening: function() { play("music", 0) },
+			startGame: function() { play("music", 1) },
+			gameOver: function() { play("music", 2) },
+			levelUp: function(onend) { play("music", 3, false, onend) }
+		};
+		this.sound = {
+			move: function() { play("sound", 0) },
+			explosion: function() { play("sound", 1) },
+			move2: function() { play("sound", 2) },
+			fire: function() { play("sound", 3) },
+			score: function() { play("sound", 4) },
+			carSound1: function() { play("sound", 5, true) },
+			fire2: function() { play("sound", 6) },
+			select: function() { play("sound", 7) }
+		};
+
+		function play(type, index, loop, endFunction) {
+			var audioType = type == "music" ? music: sound;
+			var currentAudio = audioType.audios[audioType.current];
+			if(currentAudio.currentTime > 0 && !currentAudio.paused && currentAudio.readyState > 2) {
+				currentAudio.pause(); 
+			}
+			currentAudio.currentTime = 0;
+			audioType.current = index;
+			currentAudio = audioType.audios[audioType.current];
+			currentAudio.volume = currentVolume;
+			if (loop != undefined) currentAudio.loop = loop;
+			currentAudio.onended = endFunction;
+			currentAudio.play();
+		}
+
+		// PRIVATE FUNCTIONS
+		// function play(index, loop, endFunction) {
+		// 	if(selectedAudio != undefined && selectedAudio.currentTime > 0 && !selectedAudio.paused && !selectedAudio.ended && selectedAudio.readyState > 2) {
+		// 		selectedAudio.pause(); selectedAudio.currentTime = 0;
+		// 	}
+		// 	selectedAudio = audios[index];
+		// 	selectedAudio.volume = currentVolume;
+		// 	if (loop != undefined) selectedAudio.loop = loop;
+		// 	selectedAudio.onended = endFunction;
+		// 	selectedAudio.play();
+		// }
+
+		// METHODS
+		// this.opening = function() { play(0) };
+		// this.startGame = function() { play(1); };
+		// this.move = function() { play(2); };
+		// this.gameOver = function() { play(3); };
+		// this.explosion = function() { play(4); };
+		// this.move2 = function() { play(5); };
+		// this.fire = function() { play(6); };
+		//this.levelUp = function(endFunction) { play(7, undefined, endFunction); };
+		// this.score = function() { play(8); };
+		// this.carSound1 = function(loop) { play(9, loop) };
+		// this.fire2 = function() { play(10); };
+		this.pause = function() {
+			music.audios[music.current].pause();
+			sound.audios[sound.current].pause();
+		};
+		this.resume = function() {
+			if (!music.audios[music.current].ended && music.audios[music.current].currentTime > 0) music.audios[music.current].play();
+			if (!sound.audios[sound.current].ended && sound.audios[sound.current].currentTime > 0) sound.audios[sound.current].play();
+		};
+		this.stop = function() {
+			music.audios[music.current].pause(); music.audios[music.current].currentTime = 0;
+			sound.audios[sound.current].pause(); sound.audios[sound.current].currentTime = 0;
+		};
+		//this.stop = function() { if (audio == undefined) throw new Error("Error: undefined"); };
+		//this.select = function() { play(11); };
+		// this.getAudio = function() { return selectedAudio; }
+
+
+		this.getVolume = function() { return currentVolume };
+		this.setVolume = function(_volume) {
+			currentVolume = _volume;
+			music.audios[music.current].volume = _volume;
+			sound.audios[sound.current].volume = _volume;
+		}
+
+		this.getObject = function() {
+			console.log(music, sound);
+		}
+	};
+
 	var BrickGameModel = new function() {
 		// DECLARATIONS
 		var level = 1, speed = 1, mode = 1, score = 0, gameNumber = 0, lives = 0, speedInMillis = 1000;
@@ -941,9 +1054,7 @@
 		this.setSpeedInMillis = function(_speedInMillis) { speedInMillis = _speedInMillis }
 		this.getSelectedGame = function() { return selectedGame; }
 		this.setSelectedGame = function(_selectedGame) { selectedGame = _selectedGame; }
-		this.changeSoundVolume = function() {
-			var volume = GameSound.getVolume();
-			volume = volume == 0 ? 1: volume - 0.25;
+		this.changeSoundVolume = function(volume) {
 			if(volume == 1 || volume == 0.75) {
 				soundIcon.classList.remove("fa-volume-off", "fa-volume-down");
 				soundIcon.classList.add("fa-volume-up");
@@ -956,7 +1067,6 @@
 				soundIcon.classList.remove("fa-volume-up", "fa-volume-down");
 				soundIcon.classList.add("fa-volume-off");
 			}
-			GameSound.setVolume(volume);
 		}
 		this.togglePause = function() { isPaused = !isPaused; if (isPaused) pauseIcon.classList.remove("deact"); else pauseIcon.classList.add("deact"); }
 	};
@@ -1014,12 +1124,16 @@
 		var defaultkeyup = GameKeys.default.onkeyup;
 
 		// PRIVATE FUNCTIONS (REFACTORED)
-		function _load($game) {
+		function _load() {
+			 
 			clearBrickObjects(); clearTimers();
 			setCanvasColor("white");
 			
-			var game = new selectedGame.load();
-			var keydownfunctions = game.keydownfunctions;
+			$game = new selectedGame.load();
+			$game.initializeGame = function() { GameSound.music.startGame(); $game.initialize(); };
+			$game.initializeGame();
+
+			var keydownfunctions = $game.keydownfunctions;
 
 			isDead = false;
 
@@ -1050,17 +1164,17 @@
 				if (!isDead) {
 					console.log("Game started: " + isGameStarted)
 					lockKey(isGameStarted);
-					if(isGameStarted) pause(); else resume();
+					if(isGameStarted) { pause(); GameSound.pause(); } else { resume(); GameSound.resume(); }
 					isGameStarted = !isGameStarted;
 				}
 			});
 			enterkeydown.allowRepeat(false);
 			defaultkeydown.clear();
-			spacekeyup.func(game.keyupfunctions.onSpace);
-			upkeyup.func(game.keyupfunctions.onTop);
-			downkeyup.func(game.keyupfunctions.onBottom);
-			leftkeyup.func(game.keyupfunctions.onLeft);
-			rightkeyup.func(game.keyupfunctions.onRight);
+			spacekeyup.func($game.keyupfunctions.onSpace);
+			upkeyup.func($game.keyupfunctions.onTop);
+			downkeyup.func($game.keyupfunctions.onBottom);
+			leftkeyup.func($game.keyupfunctions.onLeft);
+			rightkeyup.func($game.keyupfunctions.onRight);
 			lockKey(false);
 		}
 		function lockKey(locked) {
@@ -1068,7 +1182,7 @@
 			rightkeydown.setEnabled(!locked); spacekeydown.setEnabled(!locked);
 		}
 		function gameOver() {
-			LifeBrickObject.blink(); GameSound.gameOver();
+			LifeBrickObject.blink(); GameSound.music.gameOver();
 			new Marquee({ word: "GAME OVER", onUnload: function() { GameProperties() } });
 		}
 		function transition(again) {
@@ -1165,10 +1279,10 @@
 			selectedGame = BrickGameModel.getSelectedGame();
 			BrickGameModel.setScore(0);
 			BrickGameModel.setSpeedInMillis(selectedGame.speedTimeout[BrickGameModel.getSpeed() - 1]);
-			_load(this);
+			_load();
 		};
-		this.pause = function() { lockKey(true); pause(); };
-		this.resume = function() { lockKey(false); resume(); };
+		this.pause = function() { lockKey(true); pause(); GameSound.pause(); };
+		this.resume = function() { lockKey(false); resume(); GameSound.resume(); };
 		this.lockKey = function(isKeyLocked) { lockKey(isKeyLocked); };
 		this.score = function() {
 			var _score = BrickGameModel.getScore() + 1;
@@ -1179,7 +1293,7 @@
 			var level = BrickGameModel.getLevel() + 1;
 			var brickGameMarquee = new Marquee({ word: "LEVEL UP", isKeyLocked: true, onUnload: function() { _load() } });
 			BrickGameModel.setLevel(level > 10 ? 1: level);
-			GameSound.levelUp(brickGameMarquee.end);
+			GameSound.music.levelUp(brickGameMarquee.end);
 		};
 		this.blinkBrickObjects = function(params) {
 			var brickObjects = params.brickObjects
@@ -1194,7 +1308,8 @@
 			lockKey(isKeyLocked);
 		};	
 		this.gameOver = function() { gameOver(); };
-		this.lifeLost = function(again) {
+		this.lifeLost = function() {
+			var again = $game.initializeGame;
 			LifeBrickObject.removeTile(0, 4 - life); life--;
 			if (life == 0) gameOver();
 			else { transition(again); isDead = false; }
@@ -1211,7 +1326,12 @@
 		// PRIVATE FUNCTIONS
 		function exitFunction() { 
 			marquee.stop(); clearBrickObjects(); clearTimers(); setCanvasColor("white");
-			if (params.onUnload != undefined) { GameKeys.all.onkeydown.setEnabled(true); params.onUnload(); }
+			if (params.onUnload != undefined) { 
+				initializeSoundKey();
+				GameKeys.default.onkeydown.clear();
+				GameKeys.all.onkeydown.setEnabled(true); 
+				params.onUnload(); 
+			}
 		};
 
 		// METHODS
@@ -1912,20 +2032,20 @@
 		// PRIVATE FUNCTIONS
 		function setLevel(increment) { 
 			var level;
-			GameSound.select();
+			GameSound.sound.select();
 			increment = increment == undefined ? true: increment; 
 			if(increment == true) { level = BrickGameModel.getLevel() + 1; BrickGameModel.setLevel(level > 10 ? 1: level); }
 			else { level = BrickGameModel.getLevel() - 1; BrickGameModel.setLevel(level < 1 ? 10: level); }
 		}
 		function setSpeed(increment) {
 			var speed; 
-			GameSound.select();
+			GameSound.sound.select();
 			increment = increment == undefined ? true: increment; 
 			if(increment == true) { speed = BrickGameModel.getSpeed() + 1; BrickGameModel.setSpeed(speed > 10 ? 1: speed); }
 			else { speed = BrickGameModel.getSpeed() - 1; BrickGameModel.setSpeed(speed < 1 ? 10: speed); }
 		}
 		function selectGame(number) { 
-			GameSound.select();
+			GameSound.sound.select();
 			BrickGameModel.setGameNumber(number == _games.length ? 0: number);
 			selectedGame = _games[BrickGameModel.getGameNumber()];
 			BrickGameModel.setScore(selectedGame.score);
@@ -1942,7 +2062,6 @@
 		}
 
 		// INITIALIZATIONS
-		initializeSoundKey();
 		upkeydown.func(function() { setLevel(true); });
 		upkeydown.allowRepeat(true);
 		upkeydown.setEnabled(true);
@@ -1958,7 +2077,7 @@
 		spacekeydown.func(function() { selectGame(BrickGameModel.getGameNumber() + 1); });
 		spacekeydown.allowRepeat(true);
 		spacekeydown.setEnabled(true);
-		enterkeydown.func(function() { GameSound.startGame(); Game.load(); });
+		enterkeydown.func(function() { Game.load(); });
 		enterkeydown.allowRepeat(true);
 		enterkeydown.setEnabled(true);
 		selectGame(BrickGameModel.getGameNumber());
@@ -2040,7 +2159,13 @@
 		});
 	}
 	function initializeSoundKey() {
-		GameKeys.s.onkeydown.func(function() { BrickGameModel.changeSoundVolume(); GameSound.select(); });
+		GameKeys.s.onkeydown.func(function() { 
+			var currentVolume = GameSound.getVolume();
+			currentVolume = currentVolume == 0 ? 1: currentVolume - 0.25;
+			GameSound.setVolume(currentVolume);
+			BrickGameModel.changeSoundVolume(currentVolume); 
+			GameSound.sound.select(); 
+		});
 		GameKeys.s.onkeydown.allowRepeat(true); GameKeys.s.onkeydown.setEnabled(true);
 	}
 	function clearBrickObjects() { while (brickObjects.length > 0) brickObjects.first().remove(); brickObjects = []; }
@@ -2062,14 +2187,6 @@
 				var tankTile = new BrickObject({ tiles: getBrickTiles("tankTile"), name: "tankTile", origin: { x: 1, y: 1 } });;
 
 				// FUNCTIONS
-				function initialize() {
-					enemyTankTiles = [];
-					removeBrickObjectsBut(obstacles, [tankTile]);
-					tankTile.tryRotateLocation(10, 3, "Left");
-					console.log(brickObjects.length);
-					spawnTankAnim.start();
-				}
-
 				function loadObstacles() {
 					var params = [];
 					switch(level) {
@@ -2336,7 +2453,7 @@
 					function hit(hitObject, x, y) {
 						var hitObjectName = hitObject.getName();
 						if(!isEnemyTank && hitObjectName == "enemyTankTile") {
-							GameSound.fire();
+							GameSound.sound.fire();
 							enemyTankTiles.splice(enemyTankTiles.indexOf(hitObject), 1);
 							Game.score();
 							hitObject.remove(); 
@@ -2347,8 +2464,9 @@
 							if (hitObjectName == "singleTile") hitObject.remove();
 							else if (hitObjectName == "tankTile") {
 								stop();
-								GameSound.explosion();
-								Game.blinkBrickObjects({ brickObjects: [tankTile], interval: 400, count: 3, endFunction: function() { Game.lifeLost(initialize); } });
+								GameSound.stop();
+								GameSound.sound.explosion();
+								Game.blinkBrickObjects({ brickObjects: [tankTile], interval: 400, count: 3, endFunction: function() { Game.lifeLost(); } });
 							}
 							else if (hitObjectName == "rightTile1" || 
 									hitObjectName == "squareTile1" || 
@@ -2372,7 +2490,7 @@
 					onRight: function() { moveTank(tankTile, "Right"); },
 					onTop: function() { moveTank(tankTile, "Up"); },
 					onBottom: function() { moveTank(tankTile, "Down"); },
-					onSpace: function() { GameSound.move(); fireTank(tankTile); }
+					onSpace: function() { GameSound.sound.move(); fireTank(tankTile); }
 				}
 				this.keyupfunctions = { 
 					onLeft: function() {  },
@@ -2383,8 +2501,16 @@
 				}
 
 				// INITIALIZATION
+				this.initialize = function() {
+					enemyTankTiles = [];
+					removeBrickObjectsBut(obstacles, [tankTile]);
+					tankTile.tryRotateLocation(10, 3, "Left");
+					console.log(brickObjects.length);
+					spawnTankAnim.start();
+				}
+
 				loadObstacles();
-				initialize();
+				//initialize();
 			}
 		},
 		{
@@ -2397,16 +2523,6 @@
 				var moveRoadAnim = new Timer({ func: moveRoad });
 
 				// FUNCTIONS
-				function initialize() {
-					_road1 = []; _road2 = [], cars = [];
-					if(myCar == undefined) myCar = newCar(16, 5); else myCar.setLocation(16, 5);
-					removeBrickObjectsBut(myCar);
-					GameSound.carSound1(true);
-					loadRoadAndCars(); moveRoad();
-					moveRoadAnim.setTimerInterval(speedInMillis);
-					moveRoadAnim.start();
-				}
-
 				function newCar(x, y) { return new BrickObject({ tiles: getBrickTiles("carTile"), brickLocation: { x: x, y: y }, }); }
 				function addCar() { return newCar(-4, ((Math.floor(Math.random() * 100) % 2) * 3) + 2); }
 				function loadRoadAndCars() {
@@ -2420,8 +2536,8 @@
 					var willCollide = myCar.getCollidedObjects("Left").left.length > 0;
 					var willOverlap = myCar.isOverlapped();
 					if (willCollide || willOverlap) {
-						GameSound.explosion(); stop();
-						Game.blinkBrickObjects({ brickObjects: [cars.last(), myCar], interval: 400, count: 3, endFunction: function() { Game.lifeLost(initialize) } });
+						stop(); GameSound.stop(); GameSound.sound.explosion(); 
+						Game.blinkBrickObjects({ brickObjects: [cars.last(), myCar], interval: 400, count: 3, endFunction: function() { Game.lifeLost() } });
 					}
 					else {
 						var _firstRoad1 = _road1.first(), _lastRoad1 = _road1.last(), _lastRoad2 = _road2.last();
@@ -2469,7 +2585,15 @@
 				}
 
 				// INITIALIZATION
-				initialize();
+				this.initialize = function() {
+					_road1 = []; _road2 = [], cars = [];
+					if(myCar == undefined) myCar = newCar(16, 5); else myCar.setLocation(16, 5);
+					removeBrickObjectsBut(myCar);
+					GameSound.sound.carSound1(true);
+					loadRoadAndCars(); moveRoad();
+					moveRoadAnim.setTimerInterval(speedInMillis);
+					moveRoadAnim.start();
+				}
 			}
 		},
 		{
@@ -2482,13 +2606,6 @@
 				var enemyInvasionAnim = new Timer({ func: invadeEnemies, interval: speedInMillis });
 
 				// FUNCTIONS
-				function initialize() {
-					removeBrickObjectsBut(soldierObject);
-					soldierObject.setLocation(18, 4);
-					enemyRows = loadEnemyTileLevel();
-					enemyInvasionAnim.start();
-				}
-
 				function newEnemyRow(i) {
 					var enemies = [];
 					var enemyRowCount = 0;
@@ -2515,13 +2632,13 @@
 						default:
 							break;
 					}
-					if (position + 1 > 0 && position + 1 < 9) GameSound.move();
+					if (position + 1 > 0 && position + 1 < 9) GameSound.sound.move();
 					soldierObject.setLocation(18, position);
 				}
 				function invadeEnemies() {
 					if(enemyRows.length == 18) {
-						stop(); GameSound.explosion();
-						Game.blinkBrickObjects({ brickObjects: [soldierObject], interval: 400, count: 3, endFunction: function() { Game.lifeLost(initialize) } });
+						stop(); GameSound.stop(); GameSound.sound.explosion();
+						Game.blinkBrickObjects({ brickObjects: [soldierObject], interval: 400, count: 3, endFunction: function() { Game.lifeLost() } });
 					}
 					else {
 						var enemyRow = newEnemyRow(0);
@@ -2530,7 +2647,7 @@
 					}
 				}
 				function fire() {
-					GameSound.fire(); 
+					GameSound.sound.fire(); 
 					if(enemyRows.length > 0) {
 						var e = enemyRows.length - 1;
 						var soldierPosition = soldierObject.getLocation().y + 1;
@@ -2562,7 +2679,12 @@
 				}
 				
 				// INITIALIZATION
-				initialize();
+				this.initialize = function() {
+					removeBrickObjectsBut(soldierObject);
+					soldierObject.setLocation(18, 4);
+					enemyRows = loadEnemyTileLevel();
+					enemyInvasionAnim.start();
+				}
 			},
 		},
 		{
@@ -2594,25 +2716,18 @@
 				var pinballThrowAnim = new Timer({ func: throwPinball, interval: speedInMillis });
 
 				// FUNCTIONS
-				function initialize() {
-					isPinballThrown = false;
-					pinball.setLocation(18, 5);
-					pinballCatcher.setLocation(19, 3);
-					pinballDirection = "BottomLeft";
-				}
-
 				function hasPinballTile(x, y) {
 					var hasTile = pinballTile.hasTile(x, y);
 					if (hasTile) {
-						pinballTile.removeTile(x, y); GameSound.fire(); Game.score();
+						pinballTile.removeTile(x, y); GameSound.sound.fire(); Game.score();
 						if (pinballTile.tileCount() == 0) { stop(); Game.levelUp(); }
 					}
 					return hasTile;
 				}
 				function isPinballCaught(x, y) {
-					var catched = pinballCatcher.hasTile(x, y);
-					if (catched) GameSound.move();
-					return catched;
+					var caught = pinballCatcher.hasTile(x, y);
+					if (caught) GameSound.sound.move();
+					return caught;
 				}
 				function moveCatcher(direction) {
 					var cy = pinballCatcher.getLocation().y;
@@ -2633,10 +2748,10 @@
 					var pinballLocation = pinball.getLocation();
 					var pinballX = pinballLocation.x, pinballY = pinballLocation.y;
 					if(pinballX == 19) {
-						stop(); GameSound.explosion();
+						stop(); GameSound.stop(); GameSound.sound.explosion();
 						Game.blinkBrickObjects({ 
 							brickObjects: [pinballCatcher, pinball], interval: 400,
-							count: 3, endFunction: function() { Game.lifeLost(initialize); }
+							count: 3, endFunction: function() { Game.lifeLost(); }
 						});
 					}
 					else {
@@ -2695,7 +2810,7 @@
 									break;
 							}
 							pinball.setLocation(pinballX, pinballY);
-							if (pinballX == 0 || pinballY == 0 || pinballY == 9) GameSound.move2();
+							if (pinballX == 0 || pinballY == 0 || pinballY == 9) GameSound.sound.move2();
 						}
 					}
 				}
@@ -2722,7 +2837,12 @@
 					onSpace: function() { pinballThrowAnim.setTimerInterval(speedInMillis); }, 
 				}
 
-				initialize();
+				this.initialize = function() {
+					isPinballThrown = false;
+					pinball.setLocation(18, 5);
+					pinballCatcher.setLocation(19, 3);
+					pinballDirection = "BottomLeft";
+				}
 			}
 		},
 		{
@@ -2736,13 +2856,6 @@
 				var rowRemoveAnim = new Timer({ interval: 50 });
 
 				// FUNCTIONS
-				function initialize() {
-					removeBrickObjectsBut(soldierObject);
-					soldierObject.setLocation(18, 4);
-					enemyRows = loadEnemyTileLevel();
-					enemyInvasionAnim.start();
-				}
-
 				function isSpace(x, y) { return !enemyRows[x].hasTile(x, y); }
 				function newEnemyRow(i) {
 					var enemies = [];
@@ -2770,13 +2883,13 @@
 						default:
 							break;
 					}
-					if (position + 1 > 0 && position + 1 < 9) GameSound.move();
+					if (position + 1 > 0 && position + 1 < 9) GameSound.sound.move();
 					soldierObject.setLocation(18, position);
 				}
 				function invadeEnemies() {
 					if(enemyRows.length == 18) {
-						stop(); GameSound.explosion();
-						Game.blinkBrickObjects({ brickObjects: [soldierObject], interval: 400, count: 3, endFunction: function() { Game.lifeLost(initialize) } });
+						stop(); GameSound.stop(); GameSound.sound.explosion();
+						Game.blinkBrickObjects({ brickObjects: [soldierObject], interval: 400, count: 3, endFunction: function() { Game.lifeLost() } });
 					}
 					else {
 						var enemyRow = newEnemyRow(0);
@@ -2788,7 +2901,7 @@
 					var soldierPosition = soldierObject.getLocation().y + 1;
 					var e = enemyRows.length - 1;
 					if(!(enemyRows.length == 18 && !isSpace(e, soldierPosition))) {
-						GameSound.fire2();
+						GameSound.sound.fire2();
 						while(e >= 0 && isSpace(e, soldierPosition)) e--; e++;
 						if(enemyRows[e] == undefined) {
 							enemyRows.push(new BrickObject({ tiles: [{ x: 0, y: soldierPosition }], brickLocation: { x: e, y: 0 } }));
@@ -2803,7 +2916,7 @@
 									enemyRows[e].removeTile(e, r); enemyRows[e].removeTile(e, 9 - r);
 									if(r == 0) {
 										rowRemoveAnim.stop();
-										GameSound.score();
+										GameSound.sound.score();
 										Game.score();
 										enemyRows[e].remove();
 										enemyRows.splice(e, 1);
@@ -2836,12 +2949,17 @@
 				}
 
 				// INITIALIZATION
-				initialize();
+				this.initialize = function() {
+					removeBrickObjectsBut(soldierObject);
+					soldierObject.setLocation(18, 4);
+					enemyRows = loadEnemyTileLevel();
+					enemyInvasionAnim.start();
+				}
 			},
 		},
 		{
 			character: 'F', gameType: "doublepinball", mode: 5, score: 0, speedTimeout: [250, 235, 220, 205, 190, 175, 160, 145, 130, 115],
-			load: function($game) {
+			load: function() {
 				// DECLARATIONS
 				var level = BrickGameModel.getLevel(), speedInMillis = BrickGameModel.getSpeedInMillis();
 				var pinballCatcher1 = new BrickObject({ tiles: getBrickTiles("quadrupleTiles") });
@@ -2869,23 +2987,17 @@
 				var pinballThrowAnim = new Timer({ func: throwPinball, interval: speedInMillis });
 
 				// FUNCTIONS
-				function initialize() {
-					isPinballThrown = false; pinballDirection = "BottomLeft";
-					pinball.setLocation(18, 5);
-					pinballCatcher1.setLocation(0, 3); pinballCatcher2.setLocation(19, 3);
-				}
-
 				function hasPinballTile(x, y) {
 					var hasTile = pinballTile.hasTile(x, y);
 					if (hasTile) {
-						pinballTile.removeTile(x, y); GameSound.fire(); Game.score();
+						pinballTile.removeTile(x, y); GameSound.sound.fire(); Game.score();
 						if (pinballTile.tileCount() == 0) { pinballTile.remove(); stop(); Game.levelUp(); }
 					}
 					return hasTile;
 				}
 				function isPinballCaught(x, y) {
 					var catched = pinballCatcher1.hasTile(x, y) || pinballCatcher2.hasTile(x, y);
-					if (catched) GameSound.move();
+					if (catched) GameSound.sound.move();
 					return catched;
 				}
 				function moveCatcher(direction) {
@@ -2909,10 +3021,10 @@
 					var pinballLocation = pinball.getLocation();
 					var pinballX = pinballLocation.x, pinballY = pinballLocation.y;
 					if(pinballX == 0 || pinballX == 19) {
-						stop(); GameSound.explosion();
+						stop(); GameSound.stop(); GameSound.sound.explosion();
 						Game.blinkBrickObjects({ 
 							brickObjects: [pinballX == 0 ? pinballCatcher1: pinballCatcher2, pinball],
-							interval: 400, count: 3, endFunction: function() { Game.lifeLost(initialize); }
+							interval: 400, count: 3, endFunction: function() { Game.lifeLost(); }
 						});
 					}
 					else {
@@ -2971,7 +3083,7 @@
 									break;
 							}
 							pinball.setLocation(pinballX, pinballY);
-							if (pinballY == 0 || pinballY == 9) GameSound.move2();
+							if (pinballY == 0 || pinballY == 9) GameSound.sound.move2();
 						}
 					}
 				}
@@ -2998,7 +3110,11 @@
 					onSpace: function() { pinballThrowAnim.setTimerInterval(speedInMillis); },
 				}
 
-				initialize();
+				this.initialize = function() {
+					isPinballThrown = false; pinballDirection = "BottomLeft";
+					pinball.setLocation(18, 5);
+					pinballCatcher1.setLocation(0, 3); pinballCatcher2.setLocation(19, 3);
+				}
 			}
 		},
 		{
@@ -3012,13 +3128,6 @@
 				var crosser = new BrickObject({ tiles: getBrickTiles("singleTile"), color: "Green" });
 				
 				// FUNCTIONS
-				function initialize() {
-					crossers = [];
-					crosser.setLocation(19, 4);
-					loadWays();
-					loadWalls(); 
-				}
-
 				function loadWalls() {
 					for (var i = 2; i < 19; i += 2) new BrickObject({ tiles: getBrickTiles("verticalLine"), brickLocation: { x: i, y: 0 } });
 				}
@@ -3107,7 +3216,7 @@
 				}
 				function moveCrosser(direction) {
 					var location = crosser.getLocation();
-					GameSound.move();
+					GameSound.sound.move();
 					switch(direction) {
 						case "Left":
 							location.x = location.x == 1 ? 0: location.x - 2;
@@ -3165,7 +3274,7 @@
 						else {
 							if (location.x == 0) {
 								crossers.push(crosser);
-								GameSound.score(); Game.score();
+								GameSound.sound.score(); Game.score();
 								if(crossers.length == 10) {
 									stop();
 									Game.levelUp();
@@ -3176,9 +3285,9 @@
 					}
 				}
 				function gameOver() {
-					stop();
-					GameSound.explosion();
-					Game.blinkBrickObjects({ brickObjects: [crosser], interval: 400, count: 3, endFunction: function() { Game.lifeLost(initialize) } });
+					stop(); GameSound.stop();
+					GameSound.sound.explosion();
+					Game.blinkBrickObjects({ brickObjects: [crosser], interval: 400, count: 3, endFunction: function() { Game.lifeLost() } });
 				}
 
 				function loadWays() {
@@ -3214,14 +3323,21 @@
 				}
 
 				// INITIALIZATION
+				this.initialize = function() {
+					crossers = [];
+					crosser.setLocation(19, 4);
+					loadWays();
+					loadWalls(); 
+				}
+
 				loadObstacles();
-				initialize();
+				
 				//moveObstacleAnim.start();
 			}
 		},
 		{
 			character: 'H', gameType: "unnamed1", mode: 7, score: 0, speedTimeout: [2000, 1900, 1800, 1700, 1600, 1500, 1400, 1300, 1200, 1100],
-			load: function($game) {
+			load: function() {
 				// DECLARATIONS
 				var position = 4;
 				var soldierObject = new BrickObject({ tiles: getBrickTiles("soldierTile") });
@@ -3246,21 +3362,13 @@
 				var movePinballTileAnim = new Timer({ func: movePinballTile, interval: speedInMillis });
 
 				// FUNCTIONS
-				function initialize() {
-					position = 4;
-					fallenTiles = [];
-					removeBrickObjectsBut(soldierObject);
-					pinballTile = new BrickObject(params);
-					soldierObject.setLocation(18, 4);
-					movePinballTileAnim.start();
-				}
-
 				function levelUp() { pinballTile.remove(); stop(); Game.levelUp(); }
 				function gameOver(fallenTile) {
 					stop();
 					if(fallenTile != undefined) fallenTile.remove();
-					GameSound.explosion();
-					Game.blinkBrickObjects({ brickObjects: [soldierObject], interval: 400, count: 3, endFunction: function() { Game.lifeLost(initialize) } });
+					GameSound.stop();
+					GameSound.sound.explosion();
+					Game.blinkBrickObjects({ brickObjects: [soldierObject], interval: 400, count: 3, endFunction: function() { Game.lifeLost() } });
 				}
 				function moveSoldier(direction) {
 					position = soldierObject.getLocation().y;
@@ -3323,7 +3431,7 @@
 				function fire() {
 					var fallenTile = fallenTiles.filter(function(ft) { return ft.getLocation().y == position + 1; })
 						.sort(function(t1, t2) { return t1.x - t2.x; }).first();
-					GameSound.fire();
+					GameSound.sound.fire();
 					if (fallenTile != undefined) {
 						fallenTile.remove();
 						fallenTiles.splice(fallenTiles.indexOf(fallenTile), 1);
@@ -3350,7 +3458,14 @@
 				}
 
 				// INITIALIZATION
-				initialize();
+				this.initialize = function() {
+					position = 4;
+					fallenTiles = [];
+					removeBrickObjectsBut(soldierObject);
+					pinballTile = new BrickObject(params);
+					soldierObject.setLocation(18, 4);
+					movePinballTileAnim.start();
+				}
 			}
 		},
 		{
@@ -3442,18 +3557,6 @@
 				var currentScore = 0;
 				
 				// FUNCTIONS
-				function initialize() {
-					isCrawling = false;
-					direction = gameLevelTiles[level - 1].snake.direction;
-					currentDirection = direction;
-					snakeObject = [];
-					currentScore = BrickGameModel.getScore();
-					snakeLocation = gameLevelTiles[level - 1].snake.location;
-					snakeCrawlAnim.setTimerInterval(speedInMillis);
-					removeBrickObjectsBut(obstacles, [foodObject]);
-					loadSnake(); loadFood(); snakeCrawlAnim.start();
-				}
-
 				function loadSnake() {
 					var t = 1;
 				    snakeObject = [new BrickObject({ tiles: [{ x: 0, y: 0 }], color: "Green" })];
@@ -3509,16 +3612,16 @@
 					var isCollided = collidedObject != undefined;
 					var isFoodEaten = areEqual(collidedObject, foodObject);
 					if (isCollided && !isFoodEaten) { 
-						stop();
-						GameSound.explosion();
-						Game.blinkBrickObjects({ brickObjects: snakeObject, interval: 400, count: 3, endFunction: function() { Game.lifeLost(initialize) } });
+						stop(); GameSound.stop();
+						GameSound.sound.explosion();
+						Game.blinkBrickObjects({ brickObjects: snakeObject, interval: 400, count: 3, endFunction: function() { Game.lifeLost() } });
 					}
 					else {
 						if(isFoodEaten) {
 							console.log("food is eaten");
 							var tailLocation = snakeObject[snakeObject.length - 1].getLocation(); loadFood();
 							snakeObject.push(new BrickObject({ tiles: getBrickTiles("singleTile"), color: "Black" }));
-							GameSound.score(); Game.score();
+							GameSound.sound.score(); Game.score();
 							var score = BrickGameModel.getScore();
 							if (score == currentScore + 30) {
 								stop();
@@ -3540,7 +3643,7 @@
 						(currentDirection == "Left" && _direction != "Right") ||
 						(currentDirection == "Up" && _direction != "Down") || 
 						(currentDirection == "Down" && _direction != "Up"))) { 
-							GameSound.move(); snakeCrawlAnim.setTimerInterval(50);
+							GameSound.sound.move(); snakeCrawlAnim.setTimerInterval(50);
 							direction = _direction; isCrawling = true;
 						}
 				}
@@ -3562,8 +3665,19 @@
 				}
 
 				// INITIALIZATION
+				this.initialize = function() {
+					isCrawling = false;
+					direction = gameLevelTiles[level - 1].snake.direction;
+					currentDirection = direction;
+					snakeObject = [];
+					currentScore = BrickGameModel.getScore();
+					snakeLocation = gameLevelTiles[level - 1].snake.location;
+					snakeCrawlAnim.setTimerInterval(speedInMillis);
+					removeBrickObjectsBut(obstacles, [foodObject]);
+					loadSnake(); loadFood(); snakeCrawlAnim.start();
+				};
+
 				loadObstacles(); 
-				initialize();
 			},
 		},
 		{
@@ -3578,14 +3692,6 @@
 				var wall2 = new BrickObject({ tiles: getBrickTiles("twentyByOne"), brickLocation: { x: 0, y: 9 } });
 
 				// FUNCTIONS
-				function initialize() {
-					firstObstacle = 6;
-					_obstacle1 = []; _obstacle2 = [];
-					removeBrickObjectsBut(wall1, wall2);
-					myCar.setLocation(16, 5);
-					loadObstacles(); GameSound.carSound1(true); moveRoadAnim.start();
-				}
-
 				function loadIndividualObstacle(x, topObstacleCount) {
 					var _o1 = [], _o2 = [], bottomObstacleCount = 3 - topObstacleCount;
 					for (var i = 1; i < topObstacleCount + 1; i++)
@@ -3642,8 +3748,8 @@
 					}
 				}
 				function gameOver() {
-					GameSound.explosion(); stop();
-					Game.blinkBrickObjects({ brickObjects: [myCar], interval: 400, count: 3, endFunction: function() { Game.lifeLost(initialize) } });
+					stop(); GameSound.stop(); GameSound.sound.explosion(); 
+					Game.blinkBrickObjects({ brickObjects: [myCar], interval: 400, count: 3, endFunction: function() { Game.lifeLost() } });
 				}
 
 				// KEY FUNCTIONS
@@ -3663,7 +3769,13 @@
 				}
 
 				// INITIALIZATION
-				initialize();
+				this.initialize = function() {
+					firstObstacle = 6;
+					_obstacle1 = []; _obstacle2 = [];
+					removeBrickObjectsBut(wall1, wall2);
+					myCar.setLocation(16, 5);
+					loadObstacles(); GameSound.sound.carSound1(true); moveRoadAnim.start();
+				}
 			}
 		},
 		{
@@ -3685,11 +3797,11 @@
 						if (brickLocation >= 15 && (brickObjects[0].getCollidedObjects("Left").left.length > 0 ||
 							brickObjects[1].getCollidedObjects("Left").left.length > 0 ||
 							brickObjects[2].getCollidedObjects("Left").left.length > 0)) {
-							stop();
-							GameSound.explosion();
+							stop(); GameSound.stop();
+							GameSound.sound.explosion();
 							Game.blinkBrickObjects({
 								brickObjects: matchBrickObjects.concat(brickObjects), interval: 400, count: 3, endFunction: function() {
-									Game.lifeLost(initialize);
+									Game.lifeLost();
 								}
 							})
 						}
@@ -3709,11 +3821,11 @@
 							brickObjects[2].getCollidedObjects("Left").left.length > 0) {
 							matchBricksAnim.stop();
 							if(getMatch()) {
-								stop(); GameSound.move2(); Game.score();
+								stop(); GameSound.sound.move2(); Game.score();
 								brickObjects.forEach(function(bo) { bo.hide(); });
 								Game.blinkBrickObjects({ brickObjects: matchBrickObjects, interval: 400, count: 3, endFunction: function() {
 									var score = BrickGameModel.getScore();
-									if (score % 30 == 0) { stop(); Game.levelUp(); }
+									if (score % 20 == 0) { stop(); Game.levelUp(); }
 									else startMatch();
 								} });
 							}
@@ -3729,10 +3841,6 @@
 				});
 
 				// FUNCTIONS
-				function initialize() {
-					 startMatch();
-				}
-
 				function loadMatches() { for (var i = 0; i < 3; i++) brickToMatch[i] = Math.round(Math.random() * 100) % 4; }
 				function loadBrickTiles() {
 					for (var i = 0; i < 3; i ++) {
@@ -3754,12 +3862,12 @@
 					brickInvasionAnim.start();
 				}
 				function changeBrickObject(number) {
-					GameSound.move();
+					GameSound.sound.move();
 					brickMatches[number]++;
 					if(brickMatches[number] > 3) brickMatches[number] = 0;
 					brickObjects[number].setLocation(17, 1 + (number * 3), brickTiles[brickMatches[number]]);
 				}
-				function matchBricks() { if(!matchBricksAnim.isRunning()) { GameSound.fire2(); matchBricksAnim.start(); } }
+				function matchBricks() { if(!matchBricksAnim.isRunning()) { GameSound.sound.fire2(); matchBricksAnim.start(); } }
 				function getMatch() {
 					var isMatched = true, a = 0;
 					while(isMatched == true && a < 3) { isMatched = brickToMatch[a] == brickMatches[a]; a++; }
@@ -3783,8 +3891,9 @@
 				}
 
 				// INITIALIZATION
+				this.initialize = function() { startMatch(); }
+
 				loadBrickTiles();
-				initialize();
 			},
 		},
 		{
@@ -3797,16 +3906,6 @@
 				var moveRoadAnim = new Timer({ func: moveRoad, interval: speedInMillis });
 
 				// FUNCTIONS
-				function initialize() {
-					_road1 = []; cars = [];
-					removeBrickObjectsBut(myCar);
-					if (myCar == undefined) myCar = newCar(16, 7); else myCar.setLocation(16, 7);
-					loadRoadAndCars();
-					moveRoad();
-					GameSound.carSound1(true);
-					moveRoadAnim.start();
-				}
-
 				function newCar(x, y) { return new BrickObject({ tiles: getBrickTiles("carTile"), brickLocation: { x: x, y: y }, }); }
 				function addCar() { return newCar(-4, ((Math.floor(Math.random() * 100) % 3) * 3) + 1); }
 				function loadRoadAndCars() {
@@ -3818,9 +3917,9 @@
 					var willCollide = myCar.getCollidedObjects("Left").left.length > 0;
 					var willOverlap = myCar.isOverlapped();
 					if (willCollide || willOverlap) {
-						GameSound.explosion(); stop();
+						stop(); GameSound.stop(); GameSound.sound.explosion(); 
 						Game.blinkBrickObjects({ brickObjects: [cars.last(), myCar], interval: 400, count: 3, endFunction: function() {
-							Game.lifeLost(initialize);
+							Game.lifeLost();
 						} });
 					}
 					else {
@@ -3864,13 +3963,21 @@
 				}
 
 				// INITIALIZATION
-				initialize();
+				this.initialize = function() {
+					_road1 = []; cars = [];
+					removeBrickObjectsBut(myCar);
+					if (myCar == undefined) myCar = newCar(16, 7); else myCar.setLocation(16, 7);
+					loadRoadAndCars();
+					moveRoad();
+					GameSound.sound.carSound1(true);
+					moveRoadAnim.start();
+				}
 			}
 		},
 		{
 			character: 'M', gameType: "pinball3", mode: 3, score: 0, speedTimeout: [250, 235, 220, 205, 190, 175, 160, 145, 130, 115],
-			load: function($game) { 
-
+			load: function() { 
+				// DECLARATIONS
 				var level = BrickGameModel.getLevel(), speedInMillis = BrickGameModel.getSpeedInMillis();
 				var pinballCatcher = new BrickObject({ tiles: getBrickTiles("quadrupleTiles") });
 				var pinball = new BrickObject({ tiles: getBrickTiles("singleTile"), color: "Green" });
@@ -3883,16 +3990,7 @@
 				var pinballThrowAnim = new Timer({ func: throwPinball, interval: speedInMillis });
 				var alt = true;
 
-				function initialize() {
-					pinball.setLocation(18, 5);
-					pinballCatcher.setLocation(19, 3);
-					pinballCounterCatcher.setLocation(8, 2);
-					isPinballThrown = false;
-					pinballDirection = "BottomLeft";
-					alt = true;
-					moveCounterCatcherAnim.start();
-				}
-
+				// FUNCTIONS
 				function moveCounterCatcher() {
 					var loc = pinballCounterCatcher.getLocation();
 					if(loc.y == 2) alt = true;
@@ -3905,19 +4003,17 @@
 				}
 				function isObstacleBumped(x, y) {
 					var bumped = topObstacle.hasTile(x, y);
-					if(bumped) GameSound.move2();
+					if(bumped) GameSound.sound.move2();
 					return bumped;
 				}
 				function throwPinball() {
 					var pinballLocation = pinball.getLocation();
 					var pinballX = pinballLocation.x, pinballY = pinballLocation.y;
 					if(pinballX == 19) {
-						stop(); GameSound.explosion();
+						stop(); GameSound.stop(); GameSound.sound.explosion();
 						Game.blinkBrickObjects({ 
 							brickObjects: [pinballCatcher, pinball],
-							interval: 400, count: 3, endFunction: function() {
-								Game.lifeLost(initialize);
-							}
+							interval: 400, count: 3, endFunction: function() { Game.lifeLost(); }
 						});
 					}
 					else {
@@ -3976,10 +4072,10 @@
 						}
 						pinball.setLocation(pinballX, pinballY);
 
-						if (pinballY == 0 || pinballY == 9) GameSound.move2();
+						if (pinballY == 0 || pinballY == 9) GameSound.sound.move2();
 
 						if (pinballX == -1) {
-							GameSound.score();
+							GameSound.sound.score();
 							Game.score();
 							var score = BrickGameModel.getScore();
 							if (score % 30 == 0) {
@@ -3997,7 +4093,7 @@
 				}
 				function isPinballCaught(x, y) {
 					var catched = pinballCatcher.hasTile(x, y) || pinballCounterCatcher.hasTile(x, y);
-					if (catched) GameSound.move();
+					if (catched) GameSound.sound.move();
 					return catched;
 				}
 				function moveCatcher(direction) {
@@ -4038,14 +4134,22 @@
 					onSpace: function() { pinballThrowAnim.setTimerInterval(speedInMillis); }, 
 				}
 
-				initialize();
+				this.initialize = function() {
+					pinball.setLocation(18, 5);
+					pinballCatcher.setLocation(19, 3);
+					pinballCounterCatcher.setLocation(8, 2);
+					isPinballThrown = false;
+					pinballDirection = "BottomLeft";
+					alt = true;
+					moveCounterCatcherAnim.start();
+				}
 			}
 		}
 	];
 
 	// WINDOW INITIALIZATION
 	_window_.onload = function() {
-		loadTiles(); loadLifeTiles(); GameSound.opening();
+		loadTiles(); loadLifeTiles(); GameSound.music.opening();
 		new Marquee({ word: "BRICK GAME", onUnload: function() { GameProperties() } });
 	}
 	_window_.onkeydown = function() { GameKeys.onkeydown(event); }
