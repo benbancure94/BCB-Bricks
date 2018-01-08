@@ -1,0 +1,28 @@
+html
+  head 
+    title= title
+  link(rel="stylesheet", type="text/css", href="stylesheets/Font-Awesome/font-awesome.min.css")
+  link(rel="stylesheet", type="text/css", href="stylesheets/brick-game-style.css")
+
+  script(src="javascripts/test/brickGame.js")
+
+  body(bgcolor="#cccccc")
+    div(style="width: 820px; margin:auto")
+      div(style="display:inline-flex")
+        div#mainContainer
+        div#scoreBoard
+          div.scoreContainer
+            span#scoreNumber ---
+          div#lifeBrickContainer 
+            div(style="display:inline-block")
+          div.levelSpeedContainer
+            div(style="width:50%")
+              div.levelSpeedHeader LEVEL
+              div.levelSpeedNumber#levelNumber 1
+            div(style="width:50%")
+              div.levelSpeedHeader SPEED
+              div.levelSpeedNumber#speedNumber 1
+          div.iconsContainer
+            div.musicContainer.fa.fa-volume-up.fa-2x#soundIcon
+            div.pauseContainer.fa.fa-pause.fa-2x.deact#pauseIcon
+    block content
